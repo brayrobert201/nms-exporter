@@ -25,7 +25,15 @@
       "15m"
     ]
   },
-  "links": [],
+  "links": [
+    {
+      "title": "Crafting",
+      "type": "link",
+      "url": "/d/no-mans-sky-crafting",
+      "icon": "dashboard",
+      "keepTime": true
+    }
+  ],
   "annotations": {
     "list": []
   },

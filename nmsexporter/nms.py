@@ -21,6 +21,7 @@ import time
 import urllib.request
 
 from . import nmssave
+from .crafting import Crafting
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -100,6 +101,9 @@ class Collector:
         self.snapshot: dict = {"errors": {"save": "not loaded yet"}}
         self._loaded_path, self._loaded_mtime = "", 0.0
         self.tables = self._load_tables()
+        self.crafting = Crafting(self.tables)
+        self.crafting_result: dict = {}
+        self.crafting_seconds = 0.0
         self.mapping: dict = {}
         self.state = self._load_state()
         self.decode_seconds = 0.0
@@ -160,6 +164,18 @@ class Collector:
             self._loaded_path, self._loaded_mtime = path, mtime
             self.snapshot = snap
             self._save_state()
+            threading.Thread(target=self._compute_crafting, args=(snap,), daemon=True).start()
+
+    def _compute_crafting(self, snap: dict):
+        """Multi-level crafting search takes a few seconds; never hold a scrape for it."""
+        t0 = time.time()
+        try:
+            stock = {iid: rec["total"] for iid, rec in snap["items"].items()}
+            res = self.crafting.evaluate(stock, snap["known"]["products"], snap["known"]["recipes"])
+            self.crafting_result = res
+            self.crafting_seconds = time.time() - t0
+        except Exception as e:
+            self.snapshot.setdefault("errors", {})["crafting"] = str(e)
 
     # -- snapshot (static part, computed once per save) ----------------------
     def _build(self, save: dict, path: str, mtime: float) -> dict:
@@ -220,6 +236,9 @@ class Collector:
             known_products=len(ps.get("KnownProducts", [])), known_recipes=len(ps.get("KnownRefinerRecipes", [])),
             known_words=len(ps.get("KnownWords", [])), discoveries=len(dd.get("Store", {}).get("Record", [])),
             vehicles=len(ps.get("VehicleOwnership", [])), settlements=sum(1 for x in ps.get("SettlementStatesV2", []) if x.get("Name")))
+
+        snap["known"] = {"products": {k.lstrip("^") for k in ps.get("KnownProducts", [])},
+                         "recipes": {k.lstrip("^") for k in ps.get("KnownRefinerRecipes", [])}}
 
         # inventories: per-location and aggregate
         def add_inv(inv: dict, where: str):
@@ -393,7 +412,7 @@ class Collector:
     def projected(self, now: float | None = None) -> dict:
         """Snapshot plus time-dependent fields, evaluated at `now`."""
         now = now or time.time()
-        snap = json.loads(json.dumps(self.snapshot))   # cheap deep copy
+        snap = json.loads(json.dumps(self.snapshot, default=list))   # cheap deep copy
         if "save" not in snap or not snap["save"]:
             return snap
         snap["now"] = now
@@ -542,4 +561,25 @@ class Collector:
         m("nms_expedition_frigates_damaged", "Frigates damaged on the expedition.", "gauge", [(el(e), e["damaged"]) for e in E])
         m("nms_expedition_frigates_destroyed", "Frigates destroyed on the expedition.", "gauge", [(el(e), e["destroyed"]) for e in E])
         m("nms_expedition_returned", "1 once the projected return time has passed.", "gauge", [(el(e), e["returned"]) for e in E])
+
+        C = self.crafting_result
+        nm = self.crafting.name
+        m("nms_crafting_compute_seconds", "Time the last crafting evaluation took.", "gauge", [({}, round(self.crafting_seconds, 2))])
+        il = lambda c: {"item": c["item"], "id": c["id"], "known": "1" if c["known"] else "0"}
+        m("nms_craftable", "Units makeable now from stock, crafting missing intermediates via known routes.", "gauge",
+          [(dict(il(c), route=c["best_route"] or "none", recipe=c["best_recipe"] or "none"), c["makeable"]) for c in C.values()])
+        m("nms_craftable_direct", "Units makeable now from stock alone, per route (one level).", "gauge",
+          [(dict(il(c), route=r["route"], recipe=r["recipe"], recipe_known="1" if r["known"] else "0"), r["direct"])
+           for c in C.values() for r in c["routes"]])
+        m("nms_recipe_yield", "Units produced per craft or refiner operation.", "gauge",
+          [(dict(il(c), route=r["route"], recipe=r["recipe"], recipe_known="1" if r["known"] else "0"), r["yield"])
+           for c in C.values() for r in c["routes"]])
+        m("nms_recipe_need", "Ingredient amount per craft or refiner operation.", "gauge",
+          [(dict(il(c), route=r["route"], recipe=r["recipe"], recipe_known="1" if r["known"] else "0",
+                 ingredient=nm(ing), ingredient_id=ing), amt)
+           for c in C.values() for r in c["routes"] for ing, amt in r["needs"]])
+        m("nms_craft_raw_need", "Raw materials per unit with every intermediate expanded through the best known route.", "gauge",
+          [(dict(il(c), ingredient=nm(ing), ingredient_id=ing), amt) for c in C.values() for ing, amt in c["raw_need"].items()])
+        m("nms_craft_shortfall", "Raw materials missing to make one unit now, using intermediates already in stock.", "gauge",
+          [(dict(il(c), ingredient=nm(ing), ingredient_id=ing), amt) for c in C.values() for ing, amt in c["shortfall"].items()])
         return "\n".join(L) + "\n"

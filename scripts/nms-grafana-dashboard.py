@@ -339,7 +339,8 @@ def build():
         "uid": "no-mans-sky", "title": "No Man's Sky", "tags": ["games", "no-mans-sky"], "editable": True,
         "schemaVersion": 39, "graphTooltip": 1, "fiscalYearStartMonth": 0, "timezone": "browser",
         "time": {"from": "now-3h", "to": "now"}, "refresh": "auto",
-        "timepicker": {"refresh_intervals": ["auto", "15s", "30s", "1m", "5m", "15m"]}, "links": [], "annotations": {"list": []},
+        "timepicker": {"refresh_intervals": ["auto", "15s", "30s", "1m", "5m", "15m"]},
+        "links": [{"title": "Crafting", "type": "link", "url": "/d/no-mans-sky-crafting", "icon": "dashboard", "keepTime": True}], "annotations": {"list": []},
         "description": "Read from the newest save file by nms-exporter. Anything marked projected is extrapolated from the save's own timestamps at the game's rates.",
         "templating": {"list": [
             {"name": "item", "label": "Item", "type": "query", "datasource": DS, "query": {"query": "label_values(nms_item_total, item)", "refId": "v"},

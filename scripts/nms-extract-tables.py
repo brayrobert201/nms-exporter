@@ -109,6 +109,12 @@ def parse_items(work, loc):
                 if not name or "%" in name or name == key:   # procedural name templates: fall back to the subtitle
                     name = loc.get(val(e, "Subtitle"), name)
                 rec = {"name": name, "type": kind}
+                req = props(e).get("Requirements")
+                if kind == "Product" and req is not None and val(e, "IsCraftable") == "true":
+                    ings = [{"id": val(r, "ID"), "type": val(props(r)["Type"], "InventoryType"), "amount": int(val(r, "Amount"))}
+                            for r in req.findall("Property")]
+                    if ings:
+                        rec["craft"] = {"ingredients": ings, "yield": int(val(e, "CraftAmountMultiplier") or 1)}
                 sym = val(e, "Symbol")
                 if sym and loc.get(sym):
                     rec["symbol"] = loc[sym]
@@ -265,6 +271,7 @@ def main():
             "buildings.rate_per_s": "link-grid units per second; negative = consumes. Power network units are kP.",
             "buildings.storage": "link-grid units; for Resources networks divide by resource_units_per_item to get items (extractor 250, supply depot 1000); for Power it is kPs (battery 45000); for PlantGrowth it is seconds to mature",
             "fleet.events_by_duration": "number of expedition events per duration class; an expedition lasts events * event_seconds from StartTime",
+            "items.<id>.craft": "crafting blueprint: ingredients per craft and units made per craft (CraftAmountMultiplier)",
             "save.base_object.UserData": "for U_EXTRACTOR_S / U_SILO_S the upper 32 bits hold the current fill in resource units (divide by resource_units_per_item); the base's LastUpdateTimestamp says when",
         },
         "refiner": {"made_in_time": made},
