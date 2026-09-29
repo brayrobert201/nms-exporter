@@ -67,10 +67,12 @@ def build():
         description="Products expand through their blueprint and refined substances through their recipe, choosing routes by what you hold. Ignores intermediates already in stock; the shortfall table below does not.",
         extra_transforms=[{"id": "organize", "options": {"excludeByName": {"id": True, "item": True, "known": True, "ingredient_id": True}}}]))
     y += 9
-    P.append(table("Shortfall for one unit, using intermediates in stock", [
+    short = table("Shortfall for one unit, using intermediates in stock", [
         target('nms_craft_shortfall{item="$item"}', instant=True, ref="A", fmt="table"),
     ], 0, y, 12, 8, [("ingredient", "Missing"), ("Value", "Amount", "short")], sort=("Amount", True),
-        description="Exact for one unit: stock is drawn down level by level. Empty means you can make at least one now."))
+        description="Exact for one unit: stock is drawn down level by level. Empty means you can make at least one now.")
+    short["fieldConfig"]["defaults"]["noValue"] = "Nothing missing"
+    P.append(short)
     P.append(table("What uses $item", [
         target('nms_recipe_need{ingredient="$item"}', instant=True, ref="A", fmt="table"),
     ], 12, y, 12, 8, [("item", "Makes"), ("route", "Via"), ("recipe", "Recipe"), ("Value", "Per craft", "short")], sort=("Makes", False),

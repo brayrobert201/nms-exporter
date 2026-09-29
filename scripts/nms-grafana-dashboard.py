@@ -134,7 +134,7 @@ def timeseries(title, targets, x, y, w, h, unit="short", vmin=None, vmax=None, f
 def table(title, targets, x, y, w, h, columns, sort=None, description=None, extra_transforms=None, overrides=None):
     """columns: ordered list of (source field, display name, unit or None, extra fieldConfig)."""
     rename = {src: name for src, name, *_ in columns}
-    index = {name: i for i, (_, name, *_) in enumerate(columns)}
+    index = {src: i for i, (src, *_) in enumerate(columns)}   # Grafana keys indexByName by the original field name
     # drop __name__ first, otherwise merge sees every query's rows as distinct
     tr = [{"id": "organize", "options": {"excludeByName": {"__name__": True}}}, {"id": "merge", "options": {}}] if len(targets) > 1 else []
     tr += extra_transforms or []

@@ -356,10 +356,10 @@
               "recipe": "Recipe"
             },
             "indexByName": {
-              "Item": 0,
-              "Can make": 1,
-              "Via": 2,
-              "Recipe": 3
+              "item": 0,
+              "Value": 1,
+              "route": 2,
+              "recipe": 3
             }
           }
         },
@@ -581,13 +581,13 @@
               "recipe_known": "Known"
             },
             "indexByName": {
-              "Via": 0,
-              "Recipe": 1,
-              "Ingredient": 2,
-              "Need": 3,
-              "Have": 4,
-              "Missing": 5,
-              "Known": 6
+              "route": 0,
+              "recipe": 1,
+              "ingredient": 2,
+              "Value #A": 3,
+              "Value #B": 4,
+              "Value #C": 5,
+              "recipe_known": 6
             }
           }
         },
@@ -768,10 +768,10 @@
               "Value #C": "Missing"
             },
             "indexByName": {
-              "Raw material": 0,
-              "Need": 1,
-              "Have": 2,
-              "Missing": 3
+              "ingredient": 0,
+              "Value #A": 1,
+              "Value #B": 2,
+              "Value #C": 3
             }
           }
         },
@@ -837,7 +837,8 @@
               "type": "auto"
             },
             "filterable": true
-          }
+          },
+          "noValue": "Nothing missing"
         },
         "overrides": [
           {
@@ -879,8 +880,8 @@
               "Value": "Amount"
             },
             "indexByName": {
-              "Missing": 0,
-              "Amount": 1
+              "ingredient": 0,
+              "Value": 1
             }
           }
         },
@@ -1002,10 +1003,10 @@
               "Value": "Per craft"
             },
             "indexByName": {
-              "Makes": 0,
-              "Via": 1,
-              "Recipe": 2,
-              "Per craft": 3
+              "item": 0,
+              "route": 1,
+              "recipe": 2,
+              "Value": 3
             }
           }
         },
@@ -1270,13 +1271,13 @@
               "recipe_known": "Known"
             },
             "indexByName": {
-              "Makes": 0,
-              "Via": 1,
-              "Recipe": 2,
-              "Ingredient": 3,
-              "Per craft": 4,
-              "Yield": 5,
-              "Known": 6
+              "item": 0,
+              "route": 1,
+              "recipe": 2,
+              "ingredient": 3,
+              "Value #A": 4,
+              "Value #B": 5,
+              "recipe_known": 6
             }
           }
         },

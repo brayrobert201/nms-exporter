@@ -961,14 +961,14 @@
               "refiner": "Refiner"
             },
             "indexByName": {
-              "Makes": 0,
-              "Output": 1,
-              "Progress": 2,
-              "Remaining": 3,
-              "Done at": 4,
-              "Input left": 5,
-              "Recipe": 6,
-              "Refiner": 7
+              "output": 0,
+              "Value #A": 1,
+              "Value #C": 2,
+              "Value #D": 3,
+              "Value #E": 4,
+              "Value #B": 5,
+              "recipe": 6,
+              "refiner": 7
             }
           }
         },
@@ -1492,15 +1492,15 @@
               "Value #G": "Depots"
             },
             "indexByName": {
-              "Base": 0,
-              "Full in": 1,
-              "Stored": 2,
-              "Capacity": 3,
-              "Rate /h": 4,
-              "Rate": 5,
-              "Kind": 6,
-              "Extractors": 7,
-              "Depots": 8
+              "base": 0,
+              "Value #E": 1,
+              "Value #A": 2,
+              "Value #B": 3,
+              "Value #C": 4,
+              "Value #D": 5,
+              "kind": 6,
+              "Value #F": 7,
+              "Value #G": 8
             }
           }
         },
@@ -2030,16 +2030,16 @@
               "Value #H": "Damaged"
             },
             "indexByName": {
-              "Category": 0,
-              "Back in": 1,
-              "Due": 2,
-              "Progress": 3,
-              "Length": 4,
-              "Frigates": 5,
-              "Events done": 6,
-              "Events": 7,
-              "Failed": 8,
-              "Damaged": 9
+              "category": 0,
+              "Value #B": 1,
+              "Value #C": 2,
+              "Value #A": 3,
+              "duration": 4,
+              "Value #D": 5,
+              "Value #E": 6,
+              "Value #F": 7,
+              "Value #G": 8,
+              "Value #H": 9
             }
           }
         },
@@ -2348,10 +2348,10 @@
               "type": "Type"
             },
             "indexByName": {
-              "Item": 0,
-              "Where": 1,
-              "Amount": 2,
-              "Type": 3
+              "item": 0,
+              "location": 1,
+              "Value": 2,
+              "type": 3
             }
           }
         },
@@ -2484,10 +2484,10 @@
               "type": "Type"
             },
             "indexByName": {
-              "Item": 0,
-              "Total": 1,
-              "Stacks": 2,
-              "Type": 3
+              "item": 0,
+              "Value #A": 1,
+              "Value #B": 2,
+              "type": 3
             }
           }
         },
@@ -2755,10 +2755,10 @@
               "index": "#"
             },
             "indexByName": {
-              "Plant": 0,
-              "Ready in": 1,
-              "Base": 2,
-              "#": 3
+              "plant": 0,
+              "Value": 1,
+              "base": 2,
+              "index": 3
             }
           }
         },
