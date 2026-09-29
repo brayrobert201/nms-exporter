@@ -168,7 +168,12 @@ class Collector:
         items = self.tables.get("items", {})
 
         def name(iid: str) -> str:
-            return items.get(iid.lstrip("^"), {}).get("name") or iid.lstrip("^")
+            iid = iid.lstrip("^")
+            if "#" in iid:                       # procedural item: "<type>#<seed>", the type may be a binary blob
+                base, seed = iid.rsplit("#", 1)
+                base_name = items.get(base, {}).get("name") if base.isprintable() and base.isascii() else None
+                return f"{base_name or 'Procedural item'} #{seed}"
+            return items.get(iid, {}).get("name") or iid
 
         def itype(iid: str) -> str:
             return items.get(iid.lstrip("^"), {}).get("type") or "Unknown"

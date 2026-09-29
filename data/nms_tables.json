@@ -1,6 +1,6 @@
 {
  "meta": {
-  "generated": "2026-09-29T21:17:54+00:00",
+  "generated": "2026-09-29T22:29:55+00:00",
   "game_build_id": "25607545",
   "mbincompiler_version": "7.04.0.1",
   "save_key_mapping_url": "https://github.com/monkeyman192/MBINCompiler/releases/latest/download/mapping.json",
@@ -2714,7 +2714,7 @@
    "type": "Product"
   },
   "BONE_TEMP": {
-   "name": "%NAME% Exhibit",
+   "name": "Pre-assembled Fossil Display",
    "type": "Product"
   },
   "HULK_COMMON": {
@@ -2962,15 +2962,15 @@
    "type": "Product"
   },
   "BIOSHIP_COMP5_0": {
-   "name": "Soul Chamber (0%)",
+   "name": "Bionic Ark",
    "type": "Product"
   },
   "BIOSHIP_COMP5_1": {
-   "name": "Soul Chamber (33%)",
+   "name": "Bionic Ark",
    "type": "Product"
   },
   "BIOSHIP_COMP5_2": {
-   "name": "Soul Chamber (66%)",
+   "name": "Bionic Ark",
    "type": "Product"
   },
   "EXOTIC_BIOPROD": {
@@ -6790,11 +6790,11 @@
    "type": "Product"
   },
   "BANNER_MAINFAM": {
-   "name": "UI_BANNER_MAINFAM_NAME_L",
+   "name": "Bespoke Personal Identification",
    "type": "Product"
   },
   "BANNER_NMSA": {
-   "name": "UI_BANNER_NMSA_NAME_L",
+   "name": "Bespoke Personal Identification",
    "type": "Product"
   },
   "ODD_EGG": {
@@ -8122,19 +8122,19 @@
    "type": "Product"
   },
   "U_TECHBOX_CORE": {
-   "name": "Pre-Packaged %NAME% Unit",
+   "name": "Installable Technology Package",
    "type": "Product"
   },
   "U_TECHBOX_ALIEN": {
-   "name": "%NAME% Implant",
+   "name": "Potent Nodule",
    "type": "Product"
   },
   "U_TECHPACK_CORE": {
-   "name": "%NAME% Package",
+   "name": "Archived Technology Package",
    "type": "Product"
   },
   "U_TECHPACK_ALIE": {
-   "name": "%NAME% Node",
+   "name": "Genetic Repository",
    "type": "Product"
   },
   "U_CRFIGHT1": {
@@ -10671,6 +10671,9106 @@
   },
   "POWERCELL2": {
    "name": "Advanced Ion Battery",
+   "type": "Product"
+  },
+  "CUBEROOM_SPACE": {
+   "name": "Large Freighter Room A",
+   "type": "Product"
+  },
+  "CUBEROOMB_SPACE": {
+   "name": "Large Freighter Room B",
+   "type": "Product"
+  },
+  "CUBEROOMC_SPACE": {
+   "name": "Large Freighter Room C",
+   "type": "Product"
+  },
+  "BRIDGECONNECTOR": {
+   "name": "Freighter Interior Module",
+   "type": "Product"
+  },
+  "CORRIDOR_S": {
+   "name": "Freighter Corridor",
+   "type": "Product"
+  },
+  "CORRIDOR_SPACE": {
+   "name": "Freighter Corridor",
+   "type": "Product"
+  },
+  "CORRIDORL_SPACE": {
+   "name": "Curved Freighter Corridor",
+   "type": "Product"
+  },
+  "CORRIDORT_SPACE": {
+   "name": "Freighter Junction",
+   "type": "Product"
+  },
+  "CORSTAIRS_SPACE": {
+   "name": "Freighter Stairs",
+   "type": "Product"
+  },
+  "CUBEWALL_SPACE": {
+   "name": "Internal Freighter Wall",
+   "type": "Product"
+  },
+  "CORRIDORX_SPACE": {
+   "name": "Freighter Cross Junction",
+   "type": "Product"
+  },
+  "S_CONTAINER0": {
+   "name": "Freighter Storage Unit",
+   "type": "Product"
+  },
+  "S_CONTAINER1": {
+   "name": "Freighter Storage Unit",
+   "type": "Product"
+  },
+  "S_CONTAINER2": {
+   "name": "Freighter Storage Unit",
+   "type": "Product"
+  },
+  "S_CONTAINER3": {
+   "name": "Freighter Storage Unit",
+   "type": "Product"
+  },
+  "S_CONTAINER4": {
+   "name": "Freighter Storage Unit",
+   "type": "Product"
+  },
+  "S_CONTAINER5": {
+   "name": "Freighter Storage Unit",
+   "type": "Product"
+  },
+  "S_CONTAINER6": {
+   "name": "Freighter Storage Unit",
+   "type": "Product"
+  },
+  "S_CONTAINER7": {
+   "name": "Freighter Storage Unit",
+   "type": "Product"
+  },
+  "S_CONTAINER8": {
+   "name": "Freighter Storage Unit",
+   "type": "Product"
+  },
+  "S_CONTAINER9": {
+   "name": "Freighter Storage Unit",
+   "type": "Product"
+  },
+  "NPCFRIGTERM": {
+   "name": "Fleet Command Room",
+   "type": "Product"
+  },
+  "GARAGE_FREIGHT": {
+   "name": "Orbital Exocraft Materialiser",
+   "type": "Product"
+  },
+  "FRE_CORR_A": {
+   "name": "Freighter Corridor",
+   "type": "Product"
+  },
+  "FRE_CORR_A_STR": {
+   "name": "Straight",
+   "type": "Product"
+  },
+  "FRE_CORR_A_L": {
+   "name": "L-Junction",
+   "type": "Product"
+  },
+  "FRE_CORR_A_T": {
+   "name": "T-Junction",
+   "type": "Product"
+  },
+  "FRE_CORR_A_GLAS": {
+   "name": "Freighter Glass Corridor",
+   "type": "Product"
+  },
+  "FRE_CORR_GLA_ST": {
+   "name": "Straight",
+   "type": "Product"
+  },
+  "FRE_CORR_GLA_L": {
+   "name": "L-Junction",
+   "type": "Product"
+  },
+  "FRE_CORR_GLA_T": {
+   "name": "T-Junction",
+   "type": "Product"
+  },
+  "FRE_ROOM_LADDER": {
+   "name": "Ladder Module",
+   "type": "Product"
+  },
+  "FRE_EXT_PLATFOR": {
+   "name": "Exterior Platform",
+   "type": "Product"
+  },
+  "FRE_EXT_WALKWAY": {
+   "name": "Exterior Catwalk",
+   "type": "Product"
+  },
+  "FRE_FACE_DOOR_A": {
+   "name": "Bulkhead Door",
+   "type": "Product"
+  },
+  "FRE_FACE_WINDOW": {
+   "name": "Reinforced Window",
+   "type": "Product"
+  },
+  "FRE_FACE_WALL": {
+   "name": "Internal Freighter Wall",
+   "type": "Product"
+  },
+  "FRE_ROOM_SCAN": {
+   "name": "Scanner Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_SHOP": {
+   "name": "Galactic Trade Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_FLEET": {
+   "name": "Fleet Command Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_TELEPO": {
+   "name": "Teleport Chamber",
+   "type": "Product"
+  },
+  "FRE_ROOM_DRESS": {
+   "name": "Appearance Modifier Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_NPCSCI": {
+   "name": "Science Specialist's Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_NPCBUI": {
+   "name": "Construction Specialist's Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_ROCLOC": {
+   "name": "Storage Shuttle Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_TECH": {
+   "name": "Technology Room (Expansion)",
+   "type": "Product"
+  },
+  "FRE_ROOM_PLANT1": {
+   "name": "Cultivation Chamber",
+   "type": "Product"
+  },
+  "FRE_ROOM_PLANT0": {
+   "name": "Double Cultivation Chamber",
+   "type": "Product"
+  },
+  "FRE_ROOM_COOK": {
+   "name": "Nutrition Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_NPCFAR": {
+   "name": "Agricultural Specialist's Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_BIO": {
+   "name": "Biological Room (Expansion)",
+   "type": "Product"
+  },
+  "FRE_ROOM_REFINE": {
+   "name": "Refiner Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_EXTR": {
+   "name": "Stellar Extractor Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_VEHICL": {
+   "name": "Orbital Exocraft Materialiser",
+   "type": "Product"
+  },
+  "FRE_ROOM_NPCVEH": {
+   "name": "Exocraft Specialist's Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_NPCWEA": {
+   "name": "Weapons Terminal Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_STORE0": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_STORE1": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_STORE2": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_STORE3": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_STORE4": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_STORE5": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_STORE6": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_STORE7": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_STORE8": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_STORE9": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "FRE_ROOM_IND": {
+   "name": "Industrial Room (Expansion)",
+   "type": "Product"
+  },
+  "FRE_ROOM_IND1": {
+   "name": "Expansion Room Variant",
+   "type": "Product"
+  },
+  "FRE_CORR_STA": {
+   "name": "Freighter Stairs",
+   "type": "Product"
+  },
+  "FRE_CORR_G_STA": {
+   "name": "Freighter Glass Stairs",
+   "type": "Product"
+  },
+  "FRE_EXT_W_STA": {
+   "name": "Freighter Exterior Stairs",
+   "type": "Product"
+  },
+  "FRE_CORR_STA_B": {
+   "name": "Steel Staircase",
+   "type": "Product"
+  },
+  "STA_SMALLSIGN": {
+   "name": "Satellite Sign",
+   "type": "Product"
+  },
+  "STA_HOLOMED": {
+   "name": "Hologram Display",
+   "type": "Product"
+  },
+  "STA_HOLOSMALL": {
+   "name": "Holographic Sign",
+   "type": "Product"
+  },
+  "STA_HOLO3D": {
+   "name": "Culinary Advertisement",
+   "type": "Product"
+  },
+  "STA_STATUEMED": {
+   "name": "Lift-Off Statue",
+   "type": "Product"
+  },
+  "STA_STATUESMALL": {
+   "name": "Tribute to Balaron",
+   "type": "Product"
+  },
+  "STA_DRAPE": {
+   "name": "Nano-Fibre Drapery",
+   "type": "Product"
+  },
+  "STA_REFUEL": {
+   "name": "Refueling Dock",
+   "type": "Product"
+  },
+  "STA_BUILDINGL": {
+   "name": "Data Tower",
+   "type": "Product"
+  },
+  "STA_HOLOBUI": {
+   "name": "Autophage Holo-Sculpture",
+   "type": "Product"
+  },
+  "STA_HOLOAST": {
+   "name": "Traveller Holo-Sculpture",
+   "type": "Product"
+  },
+  "STA_HOLOGEK": {
+   "name": "Gek Holo-Sculpture",
+   "type": "Product"
+  },
+  "STA_HOLOKORV": {
+   "name": "Korvax Holo-Sculpture",
+   "type": "Product"
+  },
+  "STA_HOLOVYK": {
+   "name": "Vy'keen Holo-Sculpture",
+   "type": "Product"
+  },
+  "STA_SMALLBUI": {
+   "name": "Autophage Sign",
+   "type": "Product"
+  },
+  "STA_SMALLAST": {
+   "name": "Traveller Sign",
+   "type": "Product"
+  },
+  "STA_SMALLGEK": {
+   "name": "Gek Sign",
+   "type": "Product"
+  },
+  "STA_SMALLKOR": {
+   "name": "Korvax Sign",
+   "type": "Product"
+  },
+  "STA_SMALLVYK": {
+   "name": "Vy'keen Sign",
+   "type": "Product"
+  },
+  "STA_00": {
+   "name": "Horizontal Annexe",
+   "type": "Product"
+  },
+  "STA_01": {
+   "name": "Vertical Annexe",
+   "type": "Product"
+  },
+  "STA_02": {
+   "name": "Cylindrical Annexe",
+   "type": "Product"
+  },
+  "STA_03": {
+   "name": "Pentagonal Annexe",
+   "type": "Product"
+  },
+  "STA_04": {
+   "name": "Receiver Annexe",
+   "type": "Product"
+  },
+  "STA_05": {
+   "name": "Sphere Annexe",
+   "type": "Product"
+  },
+  "STA_06": {
+   "name": "Minotaur Holo-Sculpture",
+   "type": "Product"
+  },
+  "STA_07": {
+   "name": "Starship Holo-Sculpture",
+   "type": "Product"
+  },
+  "STA_08": {
+   "name": "Vacated Shell",
+   "type": "Product"
+  },
+  "STA_09": {
+   "name": "Titanic Skull",
+   "type": "Product"
+  },
+  "STA_10": {
+   "name": "Resonance Chamber",
+   "type": "Product"
+  },
+  "STA_11": {
+   "name": "Radio Matrix",
+   "type": "Product"
+  },
+  "STA_12": {
+   "name": "Reconstructed Metalloid",
+   "type": "Product"
+  },
+  "STA_13": {
+   "name": "Red Floodlight",
+   "type": "Product"
+  },
+  "STA_14": {
+   "name": "Blue Floodlight",
+   "type": "Product"
+  },
+  "STA_15": {
+   "name": "White Floodlight",
+   "type": "Product"
+  },
+  "STA_16": {
+   "name": "Containment Device",
+   "type": "Product"
+  },
+  "STA_17": {
+   "name": "Ironbound Relic",
+   "type": "Product"
+  },
+  "STA_18": {
+   "name": "First Spawn Replica",
+   "type": "Product"
+  },
+  "STA_19": {
+   "name": "Ornate Pyramid",
+   "type": "Product"
+  },
+  "STA_20": {
+   "name": "Storage Block",
+   "type": "Product"
+  },
+  "STA_21": {
+   "name": "Hyperspace Beacon",
+   "type": "Product"
+  },
+  "STA_22": {
+   "name": "Condensed Stellar Ice",
+   "type": "Product"
+  },
+  "STA_23": {
+   "name": "Shelter Pod",
+   "type": "Product"
+  },
+  "STA_24": {
+   "name": "Surveillance Asteroid",
+   "type": "Product"
+  },
+  "STA_25": {
+   "name": "Plasmic Accident",
+   "type": "Product"
+  },
+  "STA_26": {
+   "name": "Anomalous Timepiece",
+   "type": "Product"
+  },
+  "STA_27": {
+   "name": "Dyson Lens",
+   "type": "Product"
+  },
+  "STA_28": {
+   "name": "Hazard Containment Field",
+   "type": "Product"
+  },
+  "STA_29": {
+   "name": "Recovered Silo",
+   "type": "Product"
+  },
+  "STA_30": {
+   "name": "Circular Plasma Display",
+   "type": "Product"
+  },
+  "STA_31": {
+   "name": "Hexagonal Plasma Display",
+   "type": "Product"
+  },
+  "STA_32": {
+   "name": "Triangular Plasma Display",
+   "type": "Product"
+  },
+  "STA_33": {
+   "name": "Storage Canisters",
+   "type": "Product"
+  },
+  "STA_34": {
+   "name": "Storage Spheres",
+   "type": "Product"
+  },
+  "STA_35": {
+   "name": "Angled Tower",
+   "type": "Product"
+  },
+  "STA_36": {
+   "name": "Tower Block",
+   "type": "Product"
+  },
+  "STA_37": {
+   "name": "Plasma Display",
+   "type": "Product"
+  },
+  "STA_38": {
+   "name": "Rock Asteroid",
+   "type": "Product"
+  },
+  "STA_39": {
+   "name": "Frozen Asteroid",
+   "type": "Product"
+  },
+  "STA_40": {
+   "name": "Infested Entrail",
+   "type": "Product"
+  },
+  "STA_41": {
+   "name": "Infested Tendril",
+   "type": "Product"
+  },
+  "STA_42": {
+   "name": "Infested Nodule",
+   "type": "Product"
+  },
+  "STA_43": {
+   "name": "Compound Alloy Annexe",
+   "type": "Product"
+  },
+  "STA_44": {
+   "name": "Sleek Alloy Annexe",
+   "type": "Product"
+  },
+  "STA_45": {
+   "name": "Stag Alloy Annexe",
+   "type": "Product"
+  },
+  "STA_46": {
+   "name": "Stellar Fragment",
+   "type": "Product"
+  },
+  "STA_47": {
+   "name": "Relic Eye",
+   "type": "Product"
+  },
+  "STA_48": {
+   "name": "Relic Gazebo",
+   "type": "Product"
+  },
+  "STA_49": {
+   "name": "Shaped-Beam Receiver",
+   "type": "Product"
+  },
+  "STA_50": {
+   "name": "Entrance Ring",
+   "type": "Product"
+  },
+  "STA_51": {
+   "name": "Contained Fissure",
+   "type": "Product"
+  },
+  "STA_52": {
+   "name": "Deflection Generator",
+   "type": "Product"
+  },
+  "STA_53": {
+   "name": "Aeron Pyramid",
+   "type": "Product"
+  },
+  "STA_54": {
+   "name": "High-Energy Orb",
+   "type": "Product"
+  },
+  "STA_55": {
+   "name": "Aeron Orb",
+   "type": "Product"
+  },
+  "STA_56": {
+   "name": "Station Defence",
+   "type": "Product"
+  },
+  "STA_57": {
+   "name": "Botanical Pod IV",
+   "type": "Product"
+  },
+  "STA_58": {
+   "name": "Botanical Pod II",
+   "type": "Product"
+  },
+  "STA_59": {
+   "name": "Botanical Pod I",
+   "type": "Product"
+  },
+  "STA_60": {
+   "name": "Hand of Approval Display",
+   "type": "Product"
+  },
+  "STA_61": {
+   "name": "Flight Path Display",
+   "type": "Product"
+  },
+  "STA_62": {
+   "name": "Blue Stripes Display",
+   "type": "Product"
+  },
+  "STA_63": {
+   "name": "Golden Gek Display",
+   "type": "Product"
+  },
+  "STA_64": {
+   "name": "Ship Sale Display",
+   "type": "Product"
+  },
+  "STA_65": {
+   "name": "Korvax Guild Display",
+   "type": "Product"
+  },
+  "STA_66": {
+   "name": "Atlas Infinity Display",
+   "type": "Product"
+  },
+  "STA_67": {
+   "name": "Anomalous Home Display",
+   "type": "Product"
+  },
+  "STA_68": {
+   "name": "Milk? Display",
+   "type": "Product"
+  },
+  "STA_69": {
+   "name": "Atlas Cake Display",
+   "type": "Product"
+  },
+  "STA_70": {
+   "name": "Counterfeit Pass Display",
+   "type": "Product"
+  },
+  "STA_71": {
+   "name": "Friend-Entity Display",
+   "type": "Product"
+  },
+  "STA_72": {
+   "name": "Hazard Display",
+   "type": "Product"
+  },
+  "STA_73": {
+   "name": "Warning Display",
+   "type": "Product"
+  },
+  "STA_74": {
+   "name": "Horrific Display",
+   "type": "Product"
+  },
+  "STA_75": {
+   "name": "Cosmic Flight Display",
+   "type": "Product"
+  },
+  "STA_76": {
+   "name": "ByteBeat Display",
+   "type": "Product"
+  },
+  "STA_77": {
+   "name": "Blob Display",
+   "type": "Product"
+  },
+  "STA_78": {
+   "name": "Curious Fauna Display",
+   "type": "Product"
+  },
+  "STA_79": {
+   "name": "Atlas Display",
+   "type": "Product"
+  },
+  "B_COK_A": {
+   "name": "Titan-Class Cockpit",
+   "type": "Product"
+  },
+  "B_COK_B": {
+   "name": "Ambassador-Class Cockpit",
+   "type": "Product"
+  },
+  "B_COK_D": {
+   "name": "Thunderbird-Class Cockpit",
+   "type": "Product"
+  },
+  "B_HAB_A": {
+   "name": "Titan-Class Hab",
+   "type": "Product"
+  },
+  "B_HAB_B": {
+   "name": "Thunderbird-Class Hab",
+   "type": "Product"
+  },
+  "B_HAB_C": {
+   "name": "Ambassador-Class Hab",
+   "type": "Product"
+  },
+  "B_HAB1_A": {
+   "name": "Titan-Class Walkway",
+   "type": "Product"
+  },
+  "B_HAB1_B": {
+   "name": "Thunderbird-Class Walkway",
+   "type": "Product"
+  },
+  "B_HAB1_C": {
+   "name": "Ambassador-Class Walkway",
+   "type": "Product"
+  },
+  "B_HOP_A": {
+   "name": "BLD_BIG_HOP1X2_A_NAME_L",
+   "type": "Product"
+  },
+  "B_LND_A": {
+   "name": "Landing Gear",
+   "type": "Product"
+  },
+  "B_LND_B": {
+   "name": "Mag-Field Landing Thrusters",
+   "type": "Product"
+  },
+  "B_LND_C": {
+   "name": "Hydraulic Legs",
+   "type": "Product"
+  },
+  "B_LAN_B": {
+   "name": "Heavy Landing Gear",
+   "type": "Product"
+  },
+  "B_WNG_A": {
+   "name": "Titan Heavy Booster",
+   "type": "Product"
+  },
+  "B_WNG_A_R": {
+   "name": "Titan Heavy Booster",
+   "type": "Product"
+  },
+  "B_WNG_B": {
+   "name": "Thunderbird Landing Thrusters",
+   "type": "Product"
+  },
+  "B_WNG_B_R": {
+   "name": "Thunderbird Landing Thrusters",
+   "type": "Product"
+  },
+  "B_WNG_C": {
+   "name": "Ambassador Heavy Booster",
+   "type": "Product"
+  },
+  "B_WNG_C_R": {
+   "name": "Ambassador Heavy Booster",
+   "type": "Product"
+  },
+  "B_WNG_D": {
+   "name": "Thunderbird Heavy Booster",
+   "type": "Product"
+  },
+  "B_WNG_D_R": {
+   "name": "Thunderbird Heavy Booster",
+   "type": "Product"
+  },
+  "B_WNG_E": {
+   "name": "Osprey Wing Module",
+   "type": "Product"
+  },
+  "B_WNG_E_R": {
+   "name": "Osprey Wing Module",
+   "type": "Product"
+  },
+  "B_WNG_F": {
+   "name": "Ambassador Sublight Thruster",
+   "type": "Product"
+  },
+  "B_WNG_F_R": {
+   "name": "Ambassador Sublight Thruster",
+   "type": "Product"
+  },
+  "B_WNG_G": {
+   "name": "Titan Wing Module",
+   "type": "Product"
+  },
+  "B_WNG_G_R": {
+   "name": "Titan Wing Module",
+   "type": "Product"
+  },
+  "B_WNG_H": {
+   "name": "Titan Sublight Thruster",
+   "type": "Product"
+  },
+  "B_WNG_H_R": {
+   "name": "Titan Sublight Thruster",
+   "type": "Product"
+  },
+  "B_WNG_I": {
+   "name": "Arcadia S-Foil",
+   "type": "Product"
+  },
+  "B_WNG_I_R": {
+   "name": "Arcadia S-Foil",
+   "type": "Product"
+  },
+  "B_WNG_J": {
+   "name": "Arcadia Wing Module",
+   "type": "Product"
+  },
+  "B_WNG_J_R": {
+   "name": "Arcadia Wing Module",
+   "type": "Product"
+  },
+  "B_WNG_K": {
+   "name": "Arcadia Aerofoil",
+   "type": "Product"
+  },
+  "B_WNG_K_R": {
+   "name": "Arcadia Aerofoil",
+   "type": "Product"
+  },
+  "B_WNG_L": {
+   "name": "Arcadia Sublight Thruster",
+   "type": "Product"
+  },
+  "B_WNG_L_R": {
+   "name": "Arcadia Sublight Thruster",
+   "type": "Product"
+  },
+  "B_WNG_M": {
+   "name": "Ambassador Wing Module",
+   "type": "Product"
+  },
+  "B_WNG_M_R": {
+   "name": "Ambassador Wing Module",
+   "type": "Product"
+  },
+  "B_WNG_N": {
+   "name": "Arcadia Heavy Booster",
+   "type": "Product"
+  },
+  "B_WNG_N_R": {
+   "name": "Arcadia Heavy Booster",
+   "type": "Product"
+  },
+  "B_WNG_O_0": {
+   "name": "Rockhopper Wing Module",
+   "type": "Product"
+  },
+  "B_WNG_O_0_R": {
+   "name": "Rockhopper Wing Module",
+   "type": "Product"
+  },
+  "B_WNG_O_1": {
+   "name": "Rockhopper Propeller Module",
+   "type": "Product"
+  },
+  "B_WNG_O_1_R": {
+   "name": "Rockhopper Propeller Module",
+   "type": "Product"
+  },
+  "B_WNG_O_2": {
+   "name": "Rockhopper Fin Module",
+   "type": "Product"
+  },
+  "B_WNG_O_2_R": {
+   "name": "Rockhopper Fin Module",
+   "type": "Product"
+  },
+  "B_WNG_P": {
+   "name": "Aeron Drive",
+   "type": "Product"
+  },
+  "B_WNG_P_R": {
+   "name": "Aeron Drive",
+   "type": "Product"
+  },
+  "B_WNG_P_T": {
+   "name": "Aeron Drive",
+   "type": "Product"
+  },
+  "B_WNG_P_B": {
+   "name": "Aeron Drive",
+   "type": "Product"
+  },
+  "B_WNG_Q": {
+   "name": "Wings of Aeron",
+   "type": "Product"
+  },
+  "B_WNG_Q_R": {
+   "name": "Wings of Aeron",
+   "type": "Product"
+  },
+  "B_WNG_R": {
+   "name": "Aeron Blade",
+   "type": "Product"
+  },
+  "B_WNG_R_R": {
+   "name": "Aeron Blade",
+   "type": "Product"
+  },
+  "B_WNG_R_T": {
+   "name": "Aeron Blade",
+   "type": "Product"
+  },
+  "B_WNG_R_B": {
+   "name": "Aeron Blade",
+   "type": "Product"
+  },
+  "B_TUR_A": {
+   "name": "Photon Cannon Array",
+   "type": "Product"
+  },
+  "B_TUR_B": {
+   "name": "Deadeye Cannon",
+   "type": "Product"
+  },
+  "B_TUR_C": {
+   "name": "Phase Beam Array",
+   "type": "Product"
+  },
+  "B_TUR_D": {
+   "name": "Cyclotron Defence Cannon",
+   "type": "Product"
+  },
+  "B_TUR_E": {
+   "name": "Infra-Knife Platform",
+   "type": "Product"
+  },
+  "B_TUR_F": {
+   "name": "Corvette Weapon System",
+   "type": "Product"
+  },
+  "B_SHL_A": {
+   "name": "Deflector Shield",
+   "type": "Product"
+  },
+  "B_SHL_B": {
+   "name": "Ion Barrier",
+   "type": "Product"
+  },
+  "B_SHL_C": {
+   "name": "High-Energy Shield",
+   "type": "Product"
+  },
+  "B_SHL_D": {
+   "name": "Defence Field",
+   "type": "Product"
+  },
+  "B_SHL_E": {
+   "name": "Aeron Powershield",
+   "type": "Product"
+  },
+  "B_TRU_A": {
+   "name": "Twin Echo Jets",
+   "type": "Product"
+  },
+  "B_TRU_B": {
+   "name": "Twin Dynamo Jets",
+   "type": "Product"
+  },
+  "B_TRU_C": {
+   "name": "Kineostream Thruster",
+   "type": "Product"
+  },
+  "B_TRU_D": {
+   "name": "Pyrodrive Booster",
+   "type": "Product"
+  },
+  "B_TRU_E": {
+   "name": "Widebody Thruster",
+   "type": "Product"
+  },
+  "B_TRU_F": {
+   "name": "Twin Sublight Jets",
+   "type": "Product"
+  },
+  "B_TRU_G": {
+   "name": "Firebox Thruster",
+   "type": "Product"
+  },
+  "B_TRU_H": {
+   "name": "Longshore Thruster",
+   "type": "Product"
+  },
+  "B_ALK_A": {
+   "name": "Titan-Class Landing Bay",
+   "type": "Product"
+  },
+  "B_ALK_Z_A": {
+   "name": "Titan-Class Landing Bay",
+   "type": "Product"
+  },
+  "B_ALK_B": {
+   "name": "Ambassador-Class Landing Bay",
+   "type": "Product"
+  },
+  "B_ALK_Z_B": {
+   "name": "Ambassador-Class Landing Bay",
+   "type": "Product"
+  },
+  "B_ALK_C": {
+   "name": "Thunderbird-Class Landing Bay",
+   "type": "Product"
+  },
+  "B_ALK_Z_C": {
+   "name": "Thunderbird-Class Landing Bay",
+   "type": "Product"
+  },
+  "B_ALK_D": {
+   "name": "Internal Landing Bay",
+   "type": "Product"
+  },
+  "B_ALK_Z_D": {
+   "name": "Internal Landing Bay",
+   "type": "Product"
+  },
+  "B_BTRU_A": {
+   "name": "BLD_BIG_BTRU_A_NAME_L",
+   "type": "Product"
+  },
+  "B_BTRU_B": {
+   "name": "BLD_BIG_BTRU_B_NAME_L",
+   "type": "Product"
+  },
+  "B_BTRU_C": {
+   "name": "BLD_BIG_BTRU_C_NAME_L",
+   "type": "Product"
+  },
+  "B_WALL_TOIL0": {
+   "name": "Waste Disposal Unit",
+   "type": "Product"
+  },
+  "B_WALL_KITC0": {
+   "name": "Nutrition Unit",
+   "type": "Product"
+  },
+  "B_WALL_BUNK0": {
+   "name": "Crew Berth",
+   "type": "Product"
+  },
+  "B_WALL_CARG0": {
+   "name": "Cargo Rack 0",
+   "type": "Product"
+  },
+  "B_WALL_CARG1": {
+   "name": "Cargo Rack 1",
+   "type": "Product"
+  },
+  "B_WALL_CARG2": {
+   "name": "Cargo Rack 2",
+   "type": "Product"
+  },
+  "B_WALL_CARG3": {
+   "name": "Cargo Rack 3",
+   "type": "Product"
+  },
+  "B_WALL_CARG4": {
+   "name": "Cargo Rack 4",
+   "type": "Product"
+  },
+  "B_WALL_CARG5": {
+   "name": "Cargo Rack 5",
+   "type": "Product"
+  },
+  "B_WALL_CARG6": {
+   "name": "Cargo Rack 6",
+   "type": "Product"
+  },
+  "B_WALL_CARG7": {
+   "name": "Cargo Rack 7",
+   "type": "Product"
+  },
+  "B_WALL_CARG8": {
+   "name": "Cargo Rack 8",
+   "type": "Product"
+  },
+  "B_WALL_CARG9": {
+   "name": "Cargo Rack 9",
+   "type": "Product"
+  },
+  "B_WALL_MED0": {
+   "name": "Medi-Pod",
+   "type": "Product"
+  },
+  "B_WALL_TECH0": {
+   "name": "Refiner Unit",
+   "type": "Product"
+  },
+  "B_WALL_TECH1": {
+   "name": "Mission Radar",
+   "type": "Product"
+  },
+  "B_WALL_WIND0": {
+   "name": "Panelled Window",
+   "type": "Product"
+  },
+  "B_WALL_WIND1": {
+   "name": "Seamless Window",
+   "type": "Product"
+  },
+  "B_WALL_WIND2": {
+   "name": "Rounded Window",
+   "type": "Product"
+  },
+  "B_WALL_PLAN0": {
+   "name": "Living Wall",
+   "type": "Product"
+  },
+  "B_DOOR0": {
+   "name": "Internal Door",
+   "type": "Product"
+  },
+  "B_STR_A_NE": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_NE1": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_NE2": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_NE3": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_Y_NE": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_Y_NE1": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_Y_NE2": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_Y_NE3": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_NW": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_NW1": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_NW2": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_NW3": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_Y_NW": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_Y_NW1": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_Y_NW2": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_Y_NW3": {
+   "name": "Argonaut Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_A_N": {
+   "name": "Argonaut Cowling",
+   "type": "Product"
+  },
+  "B_STR_A_E": {
+   "name": "Argonaut Cowling",
+   "type": "Product"
+  },
+  "B_STR_A_S": {
+   "name": "Argonaut Cowling",
+   "type": "Product"
+  },
+  "B_STR_A_W": {
+   "name": "Argonaut Cowling",
+   "type": "Product"
+  },
+  "B_STR_A_Y_N": {
+   "name": "Argonaut Cowling",
+   "type": "Product"
+  },
+  "B_STR_A_Y_E": {
+   "name": "Argonaut Cowling",
+   "type": "Product"
+  },
+  "B_STR_A_Y_S": {
+   "name": "Argonaut Cowling",
+   "type": "Product"
+  },
+  "B_STR_A_Y_W": {
+   "name": "Argonaut Cowling",
+   "type": "Product"
+  },
+  "B_STR_B_NE": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_NE1": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_NE2": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_NE3": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_Y_NE": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_Y_NE1": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_Y_NE2": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_Y_NE3": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_NW": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_NW1": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_NW2": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_NW3": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_Y_NW": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_Y_NW1": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_Y_NW2": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_Y_NW3": {
+   "name": "Supercruise Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_B_N": {
+   "name": "Supercruise Cowling",
+   "type": "Product"
+  },
+  "B_STR_B_E": {
+   "name": "Supercruise Cowling",
+   "type": "Product"
+  },
+  "B_STR_B_S": {
+   "name": "Supercruise Cowling",
+   "type": "Product"
+  },
+  "B_STR_B_W": {
+   "name": "Supercruise Cowling",
+   "type": "Product"
+  },
+  "B_STR_B_Y_N": {
+   "name": "Supercruise Cowling",
+   "type": "Product"
+  },
+  "B_STR_B_Y_E": {
+   "name": "Supercruise Cowling",
+   "type": "Product"
+  },
+  "B_STR_B_Y_S": {
+   "name": "Supercruise Cowling",
+   "type": "Product"
+  },
+  "B_STR_B_Y_W": {
+   "name": "Supercruise Cowling",
+   "type": "Product"
+  },
+  "B_STR_C_NE": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_NE1": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_NE2": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_NE3": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_Y_NE": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_Y_NE1": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_Y_NE2": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_Y_NE3": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_NW": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_NW1": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_NW2": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_NW3": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_Y_NW": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_Y_NW1": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_Y_NW2": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_Y_NW3": {
+   "name": "Argonaut Winglet",
+   "type": "Product"
+  },
+  "B_STR_C_N": {
+   "name": "Hardframe Cowling",
+   "type": "Product"
+  },
+  "B_STR_C_E": {
+   "name": "Hardframe Cowling",
+   "type": "Product"
+  },
+  "B_STR_C_S": {
+   "name": "Hardframe Cowling",
+   "type": "Product"
+  },
+  "B_STR_C_W": {
+   "name": "Hardframe Cowling",
+   "type": "Product"
+  },
+  "B_STR_C_Y_N": {
+   "name": "Hardframe Cowling",
+   "type": "Product"
+  },
+  "B_STR_C_Y_E": {
+   "name": "Hardframe Cowling",
+   "type": "Product"
+  },
+  "B_STR_C_Y_S": {
+   "name": "Hardframe Cowling",
+   "type": "Product"
+  },
+  "B_STR_C_Y_W": {
+   "name": "Hardframe Cowling",
+   "type": "Product"
+  },
+  "B_STR_D_NE": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_NE1": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_NE2": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_NE3": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_Y_NE": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_Y_NE1": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_Y_NE2": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_Y_NE3": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_NW": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_NW1": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_NW2": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_NW3": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_Y_NW": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_Y_NW1": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_Y_NW2": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_Y_NW3": {
+   "name": "Turbine Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_D_N": {
+   "name": "Turbine Cowling",
+   "type": "Product"
+  },
+  "B_STR_D_E": {
+   "name": "Turbine Cowling",
+   "type": "Product"
+  },
+  "B_STR_D_S": {
+   "name": "Turbine Cowling",
+   "type": "Product"
+  },
+  "B_STR_D_W": {
+   "name": "Turbine Cowling",
+   "type": "Product"
+  },
+  "B_STR_D_Y_N": {
+   "name": "Turbine Cowling",
+   "type": "Product"
+  },
+  "B_STR_D_Y_E": {
+   "name": "Turbine Cowling",
+   "type": "Product"
+  },
+  "B_STR_D_Y_S": {
+   "name": "Turbine Cowling",
+   "type": "Product"
+  },
+  "B_STR_D_Y_W": {
+   "name": "Turbine Cowling",
+   "type": "Product"
+  },
+  "B_STR_E_NE": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_NE1": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_NE2": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_NE3": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_Y_NE": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_Y_NE1": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_Y_NE2": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_Y_NE3": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_NW": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_NW1": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_NW2": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_NW3": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_Y_NW": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_Y_NW1": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_Y_NW2": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_Y_NW3": {
+   "name": "Hardframe Diffuser",
+   "type": "Product"
+  },
+  "B_STR_E_N": {
+   "name": "Argonaut Fuel Cover",
+   "type": "Product"
+  },
+  "B_STR_E_E": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_E_S": {
+   "name": "Argonaut Fuel Cover",
+   "type": "Product"
+  },
+  "B_STR_E_W": {
+   "name": "Argonaut Fuel Cover",
+   "type": "Product"
+  },
+  "B_STR_E_Y_N": {
+   "name": "Argonaut Fuel Cover",
+   "type": "Product"
+  },
+  "B_STR_E_Y_E": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_E_Y_S": {
+   "name": "Argonaut Fuel Cover",
+   "type": "Product"
+  },
+  "B_STR_E_Y_W": {
+   "name": "Argonaut Fuel Cover",
+   "type": "Product"
+  },
+  "B_STR_F_NE": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_NE1": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_NE2": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_NE3": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_Y_NE": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_Y_NE1": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_Y_NE2": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_Y_NE3": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_NW": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_NW1": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_NW2": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_NW3": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_Y_NW": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_Y_NW1": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_Y_NW2": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_Y_NW3": {
+   "name": "Vesper Diffuser",
+   "type": "Product"
+  },
+  "B_STR_F_N": {
+   "name": "Longshore Cowling",
+   "type": "Product"
+  },
+  "B_STR_F_E": {
+   "name": "Longshore Cowling",
+   "type": "Product"
+  },
+  "B_STR_F_S": {
+   "name": "Longshore Cowling",
+   "type": "Product"
+  },
+  "B_STR_F_W": {
+   "name": "Longshore Cowling",
+   "type": "Product"
+  },
+  "B_STR_F_Y_N": {
+   "name": "Longshore Cowling",
+   "type": "Product"
+  },
+  "B_STR_F_Y_E": {
+   "name": "Longshore Cowling",
+   "type": "Product"
+  },
+  "B_STR_F_Y_S": {
+   "name": "Longshore Cowling",
+   "type": "Product"
+  },
+  "B_STR_F_Y_W": {
+   "name": "Longshore Cowling",
+   "type": "Product"
+  },
+  "B_STR_G_NE": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_NE1": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_NE2": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_NE3": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_Y_NE": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_Y_NE1": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_Y_NE2": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_Y_NE3": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_NW": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_NW1": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_NW2": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_NW3": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_Y_NW": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_Y_NW1": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_Y_NW2": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_Y_NW3": {
+   "name": "Fuel Pod Cover",
+   "type": "Product"
+  },
+  "B_STR_G_N": {
+   "name": "Argonaut Hydraulics",
+   "type": "Product"
+  },
+  "B_STR_G_E": {
+   "name": "Argonaut Hydraulics",
+   "type": "Product"
+  },
+  "B_STR_G_S": {
+   "name": "Argonaut Hydraulics",
+   "type": "Product"
+  },
+  "B_STR_G_W": {
+   "name": "Argonaut Hydraulics",
+   "type": "Product"
+  },
+  "B_STR_G_Y_N": {
+   "name": "Argonaut Hydraulics",
+   "type": "Product"
+  },
+  "B_STR_G_Y_E": {
+   "name": "Argonaut Hydraulics",
+   "type": "Product"
+  },
+  "B_STR_G_Y_S": {
+   "name": "Argonaut Hydraulics",
+   "type": "Product"
+  },
+  "B_STR_G_Y_W": {
+   "name": "Argonaut Hydraulics",
+   "type": "Product"
+  },
+  "B_STR_H_NE": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_NE1": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_NE2": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_NE3": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_Y_NE": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_Y_NE1": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_Y_NE2": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_Y_NE3": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_NW": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_NW1": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_NW2": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_NW3": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_Y_NW": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_Y_NW1": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_Y_NW2": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_Y_NW3": {
+   "name": "Engine Cover",
+   "type": "Product"
+  },
+  "B_STR_H_N": {
+   "name": "Firebox Cowling",
+   "type": "Product"
+  },
+  "B_STR_H_E": {
+   "name": "Firebox Cowling",
+   "type": "Product"
+  },
+  "B_STR_H_S": {
+   "name": "Firebox Cowling",
+   "type": "Product"
+  },
+  "B_STR_H_W": {
+   "name": "Firebox Cowling",
+   "type": "Product"
+  },
+  "B_STR_H_Y_N": {
+   "name": "Firebox Cowling",
+   "type": "Product"
+  },
+  "B_STR_H_Y_E": {
+   "name": "Firebox Cowling",
+   "type": "Product"
+  },
+  "B_STR_H_Y_S": {
+   "name": "Firebox Cowling",
+   "type": "Product"
+  },
+  "B_STR_H_Y_W": {
+   "name": "Firebox Cowling",
+   "type": "Product"
+  },
+  "B_STR_I_NE": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_NE1": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_NE2": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_NE3": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_Y_NE": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_Y_NE1": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_Y_NE2": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_Y_NE3": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_NW": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_NW1": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_NW2": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_NW3": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_Y_NW": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_Y_NW1": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_Y_NW2": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_Y_NW3": {
+   "name": "Speedbird Dome Section",
+   "type": "Product"
+  },
+  "B_STR_I_N": {
+   "name": "Radiator Casing",
+   "type": "Product"
+  },
+  "B_STR_I_E": {
+   "name": "Radiator Casing",
+   "type": "Product"
+  },
+  "B_STR_I_S": {
+   "name": "Radiator Casing",
+   "type": "Product"
+  },
+  "B_STR_I_W": {
+   "name": "Radiator Casing",
+   "type": "Product"
+  },
+  "B_STR_I_Y_N": {
+   "name": "Radiator Casing",
+   "type": "Product"
+  },
+  "B_STR_I_Y_E": {
+   "name": "Radiator Casing",
+   "type": "Product"
+  },
+  "B_STR_I_Y_S": {
+   "name": "Radiator Casing",
+   "type": "Product"
+  },
+  "B_STR_I_Y_W": {
+   "name": "Radiator Casing",
+   "type": "Product"
+  },
+  "B_STR_J_NE": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_NE1": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_NE2": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_NE3": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_Y_NE": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_Y_NE1": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_Y_NE2": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_Y_NE3": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_NW": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_NW1": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_NW2": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_NW3": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_Y_NW": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_Y_NW1": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_Y_NW2": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_Y_NW3": {
+   "name": "Speedbird Nacelle",
+   "type": "Product"
+  },
+  "B_STR_J_N": {
+   "name": "Speedbird Diffuser",
+   "type": "Product"
+  },
+  "B_STR_J_E": {
+   "name": "Speedbird Diffuser",
+   "type": "Product"
+  },
+  "B_STR_J_S": {
+   "name": "Speedbird Diffuser",
+   "type": "Product"
+  },
+  "B_STR_J_W": {
+   "name": "Speedbird Diffuser",
+   "type": "Product"
+  },
+  "B_STR_J_Y_N": {
+   "name": "Speedbird Diffuser",
+   "type": "Product"
+  },
+  "B_STR_J_Y_E": {
+   "name": "Speedbird Diffuser",
+   "type": "Product"
+  },
+  "B_STR_J_Y_S": {
+   "name": "Speedbird Diffuser",
+   "type": "Product"
+  },
+  "B_STR_J_Y_W": {
+   "name": "Speedbird Diffuser",
+   "type": "Product"
+  },
+  "B_STR_K_NE": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_NE1": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_NE2": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_NE3": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_Y_NE": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_Y_NE1": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_Y_NE2": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_Y_NE3": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_NW": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_NW1": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_NW2": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_NW3": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_Y_NW": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_Y_NW1": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_Y_NW2": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_Y_NW3": {
+   "name": "Arcadia Blade",
+   "type": "Product"
+  },
+  "B_STR_K_N": {
+   "name": "Albatross Sidepod",
+   "type": "Product"
+  },
+  "B_STR_K_E": {
+   "name": "Albatross Sidepod",
+   "type": "Product"
+  },
+  "B_STR_K_S": {
+   "name": "Albatross Sidepod",
+   "type": "Product"
+  },
+  "B_STR_K_W": {
+   "name": "Albatross Sidepod",
+   "type": "Product"
+  },
+  "B_STR_K_Y_N": {
+   "name": "Albatross Sidepod",
+   "type": "Product"
+  },
+  "B_STR_K_Y_E": {
+   "name": "Albatross Sidepod",
+   "type": "Product"
+  },
+  "B_STR_K_Y_S": {
+   "name": "Albatross Sidepod",
+   "type": "Product"
+  },
+  "B_STR_K_Y_W": {
+   "name": "Albatross Sidepod",
+   "type": "Product"
+  },
+  "B_STR_L_NE": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_NE1": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_NE2": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_NE3": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_Y_NE": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_Y_NE1": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_Y_NE2": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_Y_NE3": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_NW": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_NW1": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_NW2": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_NW3": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_Y_NW": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_Y_NW1": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_Y_NW2": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_Y_NW3": {
+   "name": "Arcadia Stabiliser",
+   "type": "Product"
+  },
+  "B_STR_L_N": {
+   "name": "Albatross Cargo Tank",
+   "type": "Product"
+  },
+  "B_STR_L_E": {
+   "name": "Albatross Cargo Tank",
+   "type": "Product"
+  },
+  "B_STR_L_S": {
+   "name": "Albatross Cargo Tank",
+   "type": "Product"
+  },
+  "B_STR_L_W": {
+   "name": "Albatross Cargo Tank",
+   "type": "Product"
+  },
+  "B_STR_L_Y_N": {
+   "name": "Albatross Cargo Tank",
+   "type": "Product"
+  },
+  "B_STR_L_Y_E": {
+   "name": "Albatross Cargo Tank",
+   "type": "Product"
+  },
+  "B_STR_L_Y_S": {
+   "name": "Albatross Cargo Tank",
+   "type": "Product"
+  },
+  "B_STR_L_Y_W": {
+   "name": "Albatross Cargo Tank",
+   "type": "Product"
+  },
+  "B_STR_M_NE": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_NE1": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_NE2": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_NE3": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_Y_NE": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_Y_NE1": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_Y_NE2": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_Y_NE3": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_NW": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_NW1": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_NW2": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_NW3": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_Y_NW": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_Y_NW1": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_Y_NW2": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_Y_NW3": {
+   "name": "Vesper Aerofoil",
+   "type": "Product"
+  },
+  "B_STR_M_N": {
+   "name": "Vesper Cowling",
+   "type": "Product"
+  },
+  "B_STR_M_E": {
+   "name": "Vesper Cowling",
+   "type": "Product"
+  },
+  "B_STR_M_S": {
+   "name": "Vesper Cowling",
+   "type": "Product"
+  },
+  "B_STR_M_W": {
+   "name": "Vesper Cowling",
+   "type": "Product"
+  },
+  "B_STR_M_Y_N": {
+   "name": "Vesper Cowling",
+   "type": "Product"
+  },
+  "B_STR_M_Y_E": {
+   "name": "Vesper Cowling",
+   "type": "Product"
+  },
+  "B_STR_M_Y_S": {
+   "name": "Vesper Cowling",
+   "type": "Product"
+  },
+  "B_STR_M_Y_W": {
+   "name": "Vesper Cowling",
+   "type": "Product"
+  },
+  "B_STR_N_NE": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_NE1": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_NE2": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_NE3": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_Y_NE": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_Y_NE1": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_Y_NE2": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_Y_NE3": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_NW": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_NW1": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_NW2": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_NW3": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_Y_NW": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_Y_NW1": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_Y_NW2": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_Y_NW3": {
+   "name": "Thermal Grille Cap",
+   "type": "Product"
+  },
+  "B_STR_N_N": {
+   "name": "Thermal Grille",
+   "type": "Product"
+  },
+  "B_STR_N_E": {
+   "name": "Thermal Grille",
+   "type": "Product"
+  },
+  "B_STR_N_S": {
+   "name": "Thermal Grille",
+   "type": "Product"
+  },
+  "B_STR_N_W": {
+   "name": "Thermal Grille",
+   "type": "Product"
+  },
+  "B_STR_N_Y_N": {
+   "name": "Thermal Grille",
+   "type": "Product"
+  },
+  "B_STR_N_Y_E": {
+   "name": "Thermal Grille",
+   "type": "Product"
+  },
+  "B_STR_N_Y_S": {
+   "name": "Thermal Grille",
+   "type": "Product"
+  },
+  "B_STR_N_Y_W": {
+   "name": "Thermal Grille",
+   "type": "Product"
+  },
+  "B_STR_O_N": {
+   "name": "Firebox Fairing",
+   "type": "Product"
+  },
+  "B_STR_O_E": {
+   "name": "Firebox Fairing",
+   "type": "Product"
+  },
+  "B_STR_O_S": {
+   "name": "Firebox Fairing",
+   "type": "Product"
+  },
+  "B_STR_O_W": {
+   "name": "Firebox Fairing",
+   "type": "Product"
+  },
+  "B_STR_O_Y_N": {
+   "name": "Firebox Fairing",
+   "type": "Product"
+  },
+  "B_STR_O_Y_E": {
+   "name": "Firebox Fairing",
+   "type": "Product"
+  },
+  "B_STR_O_Y_S": {
+   "name": "Firebox Fairing",
+   "type": "Product"
+  },
+  "B_STR_O_Y_W": {
+   "name": "Firebox Fairing",
+   "type": "Product"
+  },
+  "B_STR_P_N": {
+   "name": "Swept Casing",
+   "type": "Product"
+  },
+  "B_STR_P_E": {
+   "name": "Swept Casing",
+   "type": "Product"
+  },
+  "B_STR_P_S": {
+   "name": "Swept Casing",
+   "type": "Product"
+  },
+  "B_STR_P_W": {
+   "name": "Swept Casing",
+   "type": "Product"
+  },
+  "B_STR_P_Y_N": {
+   "name": "Swept Casing",
+   "type": "Product"
+  },
+  "B_STR_P_Y_E": {
+   "name": "Swept Casing",
+   "type": "Product"
+  },
+  "B_STR_P_Y_S": {
+   "name": "Swept Casing",
+   "type": "Product"
+  },
+  "B_STR_P_Y_W": {
+   "name": "Swept Casing",
+   "type": "Product"
+  },
+  "B_STR_Q_N": {
+   "name": "Domed Casing",
+   "type": "Product"
+  },
+  "B_STR_Q_E": {
+   "name": "Domed Casing",
+   "type": "Product"
+  },
+  "B_STR_Q_S": {
+   "name": "Domed Casing",
+   "type": "Product"
+  },
+  "B_STR_Q_W": {
+   "name": "Domed Casing",
+   "type": "Product"
+  },
+  "B_STR_Q_Y_N": {
+   "name": "Domed Casing",
+   "type": "Product"
+  },
+  "B_STR_Q_Y_E": {
+   "name": "Domed Casing",
+   "type": "Product"
+  },
+  "B_STR_Q_Y_S": {
+   "name": "Domed Casing",
+   "type": "Product"
+  },
+  "B_STR_Q_Y_W": {
+   "name": "Domed Casing",
+   "type": "Product"
+  },
+  "B_STR_R_N": {
+   "name": "Speedbird Fairing",
+   "type": "Product"
+  },
+  "B_STR_R_E": {
+   "name": "Speedbird Fairing",
+   "type": "Product"
+  },
+  "B_STR_R_S": {
+   "name": "Speedbird Fairing",
+   "type": "Product"
+  },
+  "B_STR_R_W": {
+   "name": "Speedbird Fairing",
+   "type": "Product"
+  },
+  "B_STR_R_Y_N": {
+   "name": "Speedbird Fairing",
+   "type": "Product"
+  },
+  "B_STR_R_Y_E": {
+   "name": "Speedbird Fairing",
+   "type": "Product"
+  },
+  "B_STR_R_Y_S": {
+   "name": "Speedbird Fairing",
+   "type": "Product"
+  },
+  "B_STR_R_Y_W": {
+   "name": "Speedbird Fairing",
+   "type": "Product"
+  },
+  "B_STR_S_N": {
+   "name": "Speedbird Cowling",
+   "type": "Product"
+  },
+  "B_STR_S_E": {
+   "name": "Speedbird Cowling",
+   "type": "Product"
+  },
+  "B_STR_S_S": {
+   "name": "Speedbird Cowling",
+   "type": "Product"
+  },
+  "B_STR_S_W": {
+   "name": "Speedbird Cowling",
+   "type": "Product"
+  },
+  "B_STR_S_Y_N": {
+   "name": "Speedbird Cowling",
+   "type": "Product"
+  },
+  "B_STR_S_Y_E": {
+   "name": "Speedbird Cowling",
+   "type": "Product"
+  },
+  "B_STR_S_Y_S": {
+   "name": "Speedbird Cowling",
+   "type": "Product"
+  },
+  "B_STR_S_Y_W": {
+   "name": "Speedbird Cowling",
+   "type": "Product"
+  },
+  "B_STR_T_NETB": {
+   "name": "Fuel Pod Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_T_NETB1": {
+   "name": "Fuel Pod Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_T_NETB2": {
+   "name": "Fuel Pod Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_T_NETB3": {
+   "name": "Fuel Pod Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_T_NWTB": {
+   "name": "Fuel Pod Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_T_NWTB1": {
+   "name": "Fuel Pod Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_T_NWTB2": {
+   "name": "Fuel Pod Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_T_NWTB3": {
+   "name": "Fuel Pod Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_U_NETB": {
+   "name": "Engine Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_U_NETB1": {
+   "name": "Engine Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_U_NETB2": {
+   "name": "Engine Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_U_NETB3": {
+   "name": "Engine Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_U_NWTB": {
+   "name": "Engine Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_U_NWTB1": {
+   "name": "Engine Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_U_NWTB2": {
+   "name": "Engine Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_U_NWTB3": {
+   "name": "Engine Cover Rim",
+   "type": "Product"
+  },
+  "B_STR_V_NETB": {
+   "name": "Hardframe Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_V_NETB1": {
+   "name": "Hardframe Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_V_NETB2": {
+   "name": "Hardframe Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_V_NETB3": {
+   "name": "Hardframe Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_V_NWTB": {
+   "name": "Hardframe Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_V_NWTB1": {
+   "name": "Hardframe Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_V_NWTB2": {
+   "name": "Hardframe Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_V_NWTB3": {
+   "name": "Hardframe Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_W_NETB": {
+   "name": "Vesper Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_W_NETB1": {
+   "name": "Vesper Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_W_NETB2": {
+   "name": "Vesper Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_W_NETB3": {
+   "name": "Vesper Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_W_NWTB": {
+   "name": "Vesper Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_W_NWTB1": {
+   "name": "Vesper Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_W_NWTB2": {
+   "name": "Vesper Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_W_NWTB3": {
+   "name": "Vesper Diffuser Rim",
+   "type": "Product"
+  },
+  "B_STR_X_NETB": {
+   "name": "Speedbird Dome Rim",
+   "type": "Product"
+  },
+  "B_STR_X_NETB1": {
+   "name": "Speedbird Dome Rim",
+   "type": "Product"
+  },
+  "B_STR_X_NETB2": {
+   "name": "Speedbird Dome Rim",
+   "type": "Product"
+  },
+  "B_STR_X_NETB3": {
+   "name": "Speedbird Dome Rim",
+   "type": "Product"
+  },
+  "B_STR_X_NWTB": {
+   "name": "Speedbird Dome Rim",
+   "type": "Product"
+  },
+  "B_STR_X_NWTB1": {
+   "name": "Speedbird Dome Rim",
+   "type": "Product"
+  },
+  "B_STR_X_NWTB2": {
+   "name": "Speedbird Dome Rim",
+   "type": "Product"
+  },
+  "B_STR_X_NWTB3": {
+   "name": "Speedbird Dome Rim",
+   "type": "Product"
+  },
+  "B_STR_Y_NETB": {
+   "name": "Speedbird Nacelle Rim",
+   "type": "Product"
+  },
+  "B_STR_Y_NETB1": {
+   "name": "Speedbird Nacelle Rim",
+   "type": "Product"
+  },
+  "B_STR_Y_NETB2": {
+   "name": "Speedbird Nacelle Rim",
+   "type": "Product"
+  },
+  "B_STR_Y_NETB3": {
+   "name": "Speedbird Nacelle Rim",
+   "type": "Product"
+  },
+  "B_STR_Y_NWTB": {
+   "name": "Speedbird Nacelle Rim",
+   "type": "Product"
+  },
+  "B_STR_Y_NWTB1": {
+   "name": "Speedbird Nacelle Rim",
+   "type": "Product"
+  },
+  "B_STR_Y_NWTB2": {
+   "name": "Speedbird Nacelle Rim",
+   "type": "Product"
+  },
+  "B_STR_Y_NWTB3": {
+   "name": "Speedbird Nacelle Rim",
+   "type": "Product"
+  },
+  "B_STR_Z_NETB": {
+   "name": "Arcadia Stabiliser Rim",
+   "type": "Product"
+  },
+  "B_STR_Z_NETB1": {
+   "name": "Arcadia Stabiliser Rim",
+   "type": "Product"
+  },
+  "B_STR_Z_NETB2": {
+   "name": "Arcadia Stabiliser Rim",
+   "type": "Product"
+  },
+  "B_STR_Z_NETB3": {
+   "name": "Arcadia Stabiliser Rim",
+   "type": "Product"
+  },
+  "B_STR_Z_NWTB": {
+   "name": "Arcadia Stabiliser Rim",
+   "type": "Product"
+  },
+  "B_STR_Z_NWTB1": {
+   "name": "Arcadia Stabiliser Rim",
+   "type": "Product"
+  },
+  "B_STR_Z_NWTB2": {
+   "name": "Arcadia Stabiliser Rim",
+   "type": "Product"
+  },
+  "B_STR_Z_NWTB3": {
+   "name": "Arcadia Stabiliser Rim",
+   "type": "Product"
+  },
+  "B_STR_AA_N": {
+   "name": "Aeron Winglet",
+   "type": "Product"
+  },
+  "B_STR_AA_E": {
+   "name": "Aeron Winglet",
+   "type": "Product"
+  },
+  "B_STR_AA_S": {
+   "name": "Aeron Winglet",
+   "type": "Product"
+  },
+  "B_STR_AA_W": {
+   "name": "Aeron Winglet",
+   "type": "Product"
+  },
+  "B_STR_AA_Y_N": {
+   "name": "Aeron Winglet",
+   "type": "Product"
+  },
+  "B_STR_AA_Y_E": {
+   "name": "Aeron Winglet",
+   "type": "Product"
+  },
+  "B_STR_AA_Y_S": {
+   "name": "Aeron Winglet",
+   "type": "Product"
+  },
+  "B_STR_AA_Y_W": {
+   "name": "Aeron Winglet",
+   "type": "Product"
+  },
+  "B_STR_AA_NE": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_NE1": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_NE2": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_NE3": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_Y_NE": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_Y_NE1": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_Y_NE2": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_Y_NE3": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_NW": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_NW1": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_NW2": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_NW3": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_Y_NW": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_Y_NW1": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_Y_NW2": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AA_Y_NW3": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_N": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_E": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_S": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_W": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_Y_N": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_Y_E": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_Y_S": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_Y_W": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_NE": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_NE1": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_NE2": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_NE3": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_Y_NE": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_Y_NE1": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_Y_NE2": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_Y_NE3": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_NW": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_NW1": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_NW2": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_NW3": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_Y_NW": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_Y_NW1": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_Y_NW2": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STR_AB_Y_NW3": {
+   "name": "Corvette External Plating",
+   "type": "Product"
+  },
+  "B_STAIRS0": {
+   "name": "Internal Stairway",
+   "type": "Product"
+  },
+  "B_GEN_0": {
+   "name": "Zenith-Class Reactor",
+   "type": "Product"
+  },
+  "B_GEN_1": {
+   "name": "Medusa-Class Reactor",
+   "type": "Product"
+  },
+  "B_GEN_2": {
+   "name": "Azimuth-Class Reactor",
+   "type": "Product"
+  },
+  "B_GEN_3": {
+   "name": "Ceto-Class Reactor",
+   "type": "Product"
+  },
+  "B_GEN_4": {
+   "name": "Corvette Reactor Module",
+   "type": "Product"
+  },
+  "B_GEN_5": {
+   "name": "Corvette Reactor Module",
+   "type": "Product"
+  },
+  "B_CON_L_0": {
+   "name": "Girder Array",
+   "type": "Product"
+  },
+  "B_CON_R_0": {
+   "name": "Girder Array",
+   "type": "Product"
+  },
+  "B_CON_L_1": {
+   "name": "Light Scaffold",
+   "type": "Product"
+  },
+  "B_CON_R_1": {
+   "name": "Light Scaffold",
+   "type": "Product"
+  },
+  "B_CON_L_2": {
+   "name": "Heavy Scaffold",
+   "type": "Product"
+  },
+  "B_CON_R_2": {
+   "name": "Heavy Scaffold",
+   "type": "Product"
+  },
+  "B_CON_L_3": {
+   "name": "Hull Linkage",
+   "type": "Product"
+  },
+  "B_CON_R_3": {
+   "name": "Hull Linkage",
+   "type": "Product"
+  },
+  "B_CON_4": {
+   "name": "Cell Joint",
+   "type": "Product"
+  },
+  "B_CON_5": {
+   "name": "Industrial Joint",
+   "type": "Product"
+  },
+  "B_CON_6": {
+   "name": "Heavy Linkage",
+   "type": "Product"
+  },
+  "B_CON_7": {
+   "name": "Relay Joint",
+   "type": "Product"
+  },
+  "B_CON_8": {
+   "name": "Bolted Joint",
+   "type": "Product"
+  },
+  "B_CON_9": {
+   "name": "Ducting Joint",
+   "type": "Product"
+  },
+  "B_CON_10": {
+   "name": "Ballast Tank",
+   "type": "Product"
+  },
+  "B_CON_11": {
+   "name": "Coolant Distributor",
+   "type": "Product"
+  },
+  "B_CON_12": {
+   "name": "Fuel Cell",
+   "type": "Product"
+  },
+  "B_CON_13": {
+   "name": "Plasma Core",
+   "type": "Product"
+  },
+  "B_CON_14": {
+   "name": "Shielded Joint",
+   "type": "Product"
+  },
+  "B_CON_15": {
+   "name": "High-Energy Ducting",
+   "type": "Product"
+  },
+  "B_CON2_0": {
+   "name": "Reinforced Hull Link",
+   "type": "Product"
+  },
+  "B_CON2_1": {
+   "name": "Industrial Cargo Link",
+   "type": "Product"
+  },
+  "B_CON2_2": {
+   "name": "Oversized Canister Link",
+   "type": "Product"
+  },
+  "B_CON2_3": {
+   "name": "Structural Gantry Link",
+   "type": "Product"
+  },
+  "B_DECO_A": {
+   "name": "Antenna",
+   "type": "Product"
+  },
+  "B_DECO_B": {
+   "name": "Cargo Link",
+   "type": "Product"
+  },
+  "B_DECO_C": {
+   "name": "Small Vent",
+   "type": "Product"
+  },
+  "B_DECO_D": {
+   "name": "Cargo Capsule",
+   "type": "Product"
+  },
+  "B_DECO_E": {
+   "name": "Cargo Box",
+   "type": "Product"
+  },
+  "B_DECO_F": {
+   "name": "Cargo Pod",
+   "type": "Product"
+  },
+  "B_DECO_G": {
+   "name": "Cargo Sphere",
+   "type": "Product"
+  },
+  "B_DECO_H": {
+   "name": "Satellite Receiver",
+   "type": "Product"
+  },
+  "B_DECO_I": {
+   "name": "Torpedo Launcher",
+   "type": "Product"
+  },
+  "B_DECO_J": {
+   "name": "Air Purifier",
+   "type": "Product"
+  },
+  "B_DECO_K": {
+   "name": "Fuel Rods",
+   "type": "Product"
+  },
+  "B_DECO_L": {
+   "name": "Radiator Vent",
+   "type": "Product"
+  },
+  "B_DECO_M": {
+   "name": "Ducting Outlet",
+   "type": "Product"
+  },
+  "B_DECO_N_0": {
+   "name": "Streamlined Trim Cap",
+   "type": "Product"
+  },
+  "B_DECO_N_1": {
+   "name": "Streamlined Trim Cap",
+   "type": "Product"
+  },
+  "B_DECO_O": {
+   "name": "Streamlined Trim",
+   "type": "Product"
+  },
+  "B_DECO_P": {
+   "name": "Radar Dome",
+   "type": "Product"
+  },
+  "B_DECO_Q_0": {
+   "name": "Aeron Diffuser",
+   "type": "Product"
+  },
+  "B_DECO_Q_1": {
+   "name": "Aeron Diffuser",
+   "type": "Product"
+  },
+  "B_DECO_R": {
+   "name": "Aeron Cowling",
+   "type": "Product"
+  },
+  "B_DECO_S": {
+   "name": "Aeron Pillar",
+   "type": "Product"
+  },
+  "B_DECO_T": {
+   "name": "Aeron Pyramid",
+   "type": "Product"
+  },
+  "B_MAG_1X2": {
+   "name": "Corvette Utility Module",
+   "type": "Product"
+  },
+  "B_MAG_1X1": {
+   "name": "Corvette Utility Module",
+   "type": "Product"
+  },
+  "SB_BEACON": {
+   "name": "Deep-Space Base Computer",
+   "type": "Product"
+  },
+  "FRE_CORR_B": {
+   "name": "Freighter Passageway",
+   "type": "Product"
+  },
+  "FRE_CORR_B_STR": {
+   "name": "Straight",
+   "type": "Product"
+  },
+  "FRE_CORR_B_L": {
+   "name": "L-Junction",
+   "type": "Product"
+  },
+  "FRE_CORR_B_T": {
+   "name": "T-Junction",
+   "type": "Product"
+  },
+  "FRE_ROOM_B": {
+   "name": "Commercial Room (Expansion)",
+   "type": "Product"
+  },
+  "STA_CORR_B": {
+   "name": "Station Passageway",
+   "type": "Product"
+  },
+  "STA_CORR_B_STR": {
+   "name": "Straight",
+   "type": "Product"
+  },
+  "STA_CORR_B_L": {
+   "name": "L-Junction",
+   "type": "Product"
+  },
+  "STA_CORR_B_T": {
+   "name": "T-Junction",
+   "type": "Product"
+  },
+  "STA_ROOM_B": {
+   "name": "Commercial Room (Expansion)",
+   "type": "Product"
+  },
+  "STA_CORR_A": {
+   "name": "Station Corridor",
+   "type": "Product"
+  },
+  "STA_CORR_A_STR": {
+   "name": "Straight",
+   "type": "Product"
+  },
+  "STA_CORR_A_L": {
+   "name": "L-Junction",
+   "type": "Product"
+  },
+  "STA_CORR_A_T": {
+   "name": "T-Junction",
+   "type": "Product"
+  },
+  "STA_CORR_A_GLAS": {
+   "name": "Glass Corridor",
+   "type": "Product"
+  },
+  "STA_CORR_GLA_ST": {
+   "name": "Straight",
+   "type": "Product"
+  },
+  "STA_CORR_GLA_L": {
+   "name": "L-Junction",
+   "type": "Product"
+  },
+  "STA_CORR_GLA_T": {
+   "name": "T-Junction",
+   "type": "Product"
+  },
+  "STA_ROOM_LADDER": {
+   "name": "Ladder Module",
+   "type": "Product"
+  },
+  "STA_EXT_PLATFOR": {
+   "name": "Exterior Platform",
+   "type": "Product"
+  },
+  "STA_EXT_WALKWAY": {
+   "name": "Exterior Catwalk",
+   "type": "Product"
+  },
+  "STA_FACE_DOOR_A": {
+   "name": "Reinforced Door",
+   "type": "Product"
+  },
+  "STA_FACE_WINDOW": {
+   "name": "Reinforced Window",
+   "type": "Product"
+  },
+  "STA_FACE_WALL": {
+   "name": "Internal Wall",
+   "type": "Product"
+  },
+  "STA_ROOM_SHOP": {
+   "name": "Galactic Trade Room",
+   "type": "Product"
+  },
+  "STA_ROOM_TELEPO": {
+   "name": "Teleport Chamber",
+   "type": "Product"
+  },
+  "STA_ROOM_DRESS": {
+   "name": "Appearance Modifier Room",
+   "type": "Product"
+  },
+  "STA_ROOM_TECH": {
+   "name": "Technology Room (Expansion)",
+   "type": "Product"
+  },
+  "STA_ROOM_PLANT1": {
+   "name": "Cultivation Chamber",
+   "type": "Product"
+  },
+  "STA_ROOM_PLANT0": {
+   "name": "Double Cultivation Chamber",
+   "type": "Product"
+  },
+  "STA_ROOM_COOK": {
+   "name": "Nutrition Room",
+   "type": "Product"
+  },
+  "STA_ROOM_BIO": {
+   "name": "Biological Room (Expansion)",
+   "type": "Product"
+  },
+  "STA_ROOM_REFINE": {
+   "name": "Refiner Room",
+   "type": "Product"
+  },
+  "STA_ROOM_EXTR": {
+   "name": "Stellar Extractor Room",
+   "type": "Product"
+  },
+  "STA_ROOM_NPCSCI": {
+   "name": "Science Terminal",
+   "type": "Product"
+  },
+  "STA_ROOM_NPCWEA": {
+   "name": "Weapons Terminal",
+   "type": "Product"
+  },
+  "STA_ROOM_NPCFAR": {
+   "name": "Agricultural Terminal",
+   "type": "Product"
+  },
+  "STA_ROOM_NPCVEH": {
+   "name": "Exocraft Terminal",
+   "type": "Product"
+  },
+  "STA_ROOM_NPCBUI": {
+   "name": "Construction Terminal",
+   "type": "Product"
+  },
+  "STA_ROOM_STORE0": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "STA_ROOM_STORE1": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "STA_ROOM_STORE2": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "STA_ROOM_STORE3": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "STA_ROOM_STORE4": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "STA_ROOM_STORE5": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "STA_ROOM_STORE6": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "STA_ROOM_STORE7": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "STA_ROOM_STORE8": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "STA_ROOM_STORE9": {
+   "name": "Storage Room",
+   "type": "Product"
+  },
+  "STA_ROOM_IND": {
+   "name": "Industrial Room (Expansion)",
+   "type": "Product"
+  },
+  "STA_ROOM_IND1": {
+   "name": "Expansion Room Variant",
+   "type": "Product"
+  },
+  "STA_CORR_G_STA": {
+   "name": "Glass Stairs",
+   "type": "Product"
+  },
+  "STA_CORR_STA": {
+   "name": "Station Stairs",
+   "type": "Product"
+  },
+  "STA_EXT_W_STA": {
+   "name": "Exterior Stairs",
+   "type": "Product"
+  },
+  "STA_CORR_STA_B": {
+   "name": "Steel Staircase",
+   "type": "Product"
+  },
+  "FOUNDATION": {
+   "name": "Foundation",
+   "type": "Product"
+  },
+  "CORRIDOR": {
+   "name": "Straight Corridor",
+   "type": "Product"
+  },
+  "CORRIDORL": {
+   "name": "L-Shaped Corridor",
+   "type": "Product"
+  },
+  "CORRIDORT": {
+   "name": "T-Shaped Corridor",
+   "type": "Product"
+  },
+  "CORRIDORX": {
+   "name": "X-Shaped Corridor",
+   "type": "Product"
+  },
+  "MAINROOM": {
+   "name": "Cylindrical Room",
+   "type": "Product"
+  },
+  "FOUNDLEG4": {
+   "name": "Foundation Strut Quad",
+   "type": "Product"
+  },
+  "FOUNDLEG": {
+   "name": "Foundation Strut",
+   "type": "Product"
+  },
+  "BUILDTOWER": {
+   "name": "Tower Module",
+   "type": "Product"
+  },
+  "CUBEROOM": {
+   "name": "Cuboid Room",
+   "type": "Product"
+  },
+  "CUBEFOUND": {
+   "name": "Cuboid Room Foundation Strut",
+   "type": "Product"
+  },
+  "CUBEFOUND4": {
+   "name": "Cuboid Room Foundation Strut Quad",
+   "type": "Product"
+  },
+  "CUBEFLOOR": {
+   "name": "Cuboid Room Flooring",
+   "type": "Product"
+  },
+  "GLASSCORRIDOR": {
+   "name": "Glass Roofed Corridor",
+   "type": "Product"
+  },
+  "BUILDRAMP": {
+   "name": "Access Ramp",
+   "type": "Product"
+  },
+  "BIOROOM": {
+   "name": "Bio-Dome",
+   "type": "Product"
+  },
+  "CURVEDCUBEROOF": {
+   "name": "Curved Cuboid Roof",
+   "type": "Product"
+  },
+  "CUBEROOMCURVED": {
+   "name": "Curved Cuboid Wall",
+   "type": "Product"
+  },
+  "CUBEGLASS": {
+   "name": "Glass Cuboid Room",
+   "type": "Product"
+  },
+  "CUBEFRAME": {
+   "name": "Cuboid Room Frame",
+   "type": "Product"
+  },
+  "CUBEINNERDOOR": {
+   "name": "Cuboid Inner Door",
+   "type": "Product"
+  },
+  "CUBEWALL": {
+   "name": "Cuboid Inner Wall",
+   "type": "Product"
+  },
+  "CUBEROOF": {
+   "name": "Cuboid Roof Cap",
+   "type": "Product"
+  },
+  "CUBESTAIRS": {
+   "name": "Interior Stairs",
+   "type": "Product"
+  },
+  "BUILDDOOR": {
+   "name": "Door",
+   "type": "Product"
+  },
+  "DOOR2": {
+   "name": "Holo-Door",
+   "type": "Product"
+  },
+  "VIEWSPHERE": {
+   "name": "Viewing Sphere",
+   "type": "Product"
+  },
+  "MAINROOMFRAME": {
+   "name": "Cylindrical Room Frame",
+   "type": "Product"
+  },
+  "CORRIDORC": {
+   "name": "Curved Corridor",
+   "type": "Product"
+  },
+  "MAINROOMCUBE": {
+   "name": "Square Room",
+   "type": "Product"
+  },
+  "MAINROOMCUBEF": {
+   "name": "Square Room",
+   "type": "Product"
+  },
+  "BASE_FLAG": {
+   "name": "Base Computer",
+   "type": "Product"
+  },
+  "BUILDLANDINGPAD": {
+   "name": "Landing Pad",
+   "type": "Product"
+  },
+  "BUILDTERMINAL": {
+   "name": "Galactic Trade Terminal",
+   "type": "Product"
+  },
+  "HEALTHSTATION": {
+   "name": "Health Station",
+   "type": "Product"
+  },
+  "SHIELDSTATION": {
+   "name": "Hazard Protection Unit",
+   "type": "Product"
+  },
+  "BUILDSAVE": {
+   "name": "Save Point",
+   "type": "Product"
+  },
+  "BUILDBEACON": {
+   "name": "Save Beacon",
+   "type": "Product"
+  },
+  "BUILDSIGNAL": {
+   "name": "Signal Booster",
+   "type": "Product"
+  },
+  "BUILDANTIMATTER": {
+   "name": "Antimatter Reactor",
+   "type": "Product"
+  },
+  "TELEPORTER": {
+   "name": "Base Teleport Module",
+   "type": "Product"
+  },
+  "TELEPORTER_F": {
+   "name": "Base Teleport Module",
+   "type": "Product"
+  },
+  "BASECAPSULE": {
+   "name": "Base Salvage Capsule",
+   "type": "Product"
+  },
+  "BP_ANALYSER": {
+   "name": "Construction Research Unit",
+   "type": "Product"
+  },
+  "BUILD_REFINER1": {
+   "name": "Portable Refiner",
+   "type": "Product"
+  },
+  "BUILD_REFINER2": {
+   "name": "Medium Refiner",
+   "type": "Product"
+  },
+  "BUILD_REFINER3": {
+   "name": "Large Refiner",
+   "type": "Product"
+  },
+  "DRESSING_TABLE": {
+   "name": "Appearance Modifier",
+   "type": "Product"
+  },
+  "COOKER": {
+   "name": "Nutrient Processor",
+   "type": "Product"
+  },
+  "CREATURE_FEED": {
+   "name": "Automated Feeder",
+   "type": "Product"
+  },
+  "CREATURE_FARM": {
+   "name": "Livestock Unit",
+   "type": "Product"
+  },
+  "SHIPSUMMON": {
+   "name": "Muster Point",
+   "type": "Product"
+  },
+  "MESSAGEMODULE": {
+   "name": "Message Module",
+   "type": "Product"
+  },
+  "MESSAGE": {
+   "name": "Communications Station",
+   "type": "Product"
+  },
+  "GARAGE_S": {
+   "name": "Nomad Geobay",
+   "type": "Product"
+  },
+  "GARAGE_M": {
+   "name": "Roamer Geobay",
+   "type": "Product"
+  },
+  "GARAGE_L": {
+   "name": "Colossus Geobay",
+   "type": "Product"
+  },
+  "GARAGE_B": {
+   "name": "Pilgrim Geobay",
+   "type": "Product"
+  },
+  "GARAGE_SUB": {
+   "name": "Nautilon Chamber",
+   "type": "Product"
+  },
+  "GARAGE_FLOAT": {
+   "name": "Nautilon Platform",
+   "type": "Product"
+  },
+  "SUMMON_GARAGE": {
+   "name": "Exocraft Summoning Station",
+   "type": "Product"
+  },
+  "GARAGE_MECH": {
+   "name": "Minotaur Geobay",
+   "type": "Product"
+  },
+  "NPCSCIENCETERM": {
+   "name": "Science Terminal",
+   "type": "Product"
+  },
+  "NPCWEAPONTERM": {
+   "name": "Weapons Terminal",
+   "type": "Product"
+  },
+  "NPCFARMTERM": {
+   "name": "Agricultural Terminal",
+   "type": "Product"
+  },
+  "NPCVEHICLETERM": {
+   "name": "Exocraft Terminal",
+   "type": "Product"
+  },
+  "NPCBUILDERTERM": {
+   "name": "Construction Terminal",
+   "type": "Product"
+  },
+  "PLANTER": {
+   "name": "Hydroponic Tray",
+   "type": "Product"
+  },
+  "PLANTERMEGA": {
+   "name": "Large Hydroponic Tray",
+   "type": "Product"
+  },
+  "TOXICPLANT": {
+   "name": "Fungal Cluster",
+   "type": "Product"
+  },
+  "SNOWPLANT": {
+   "name": "Frostwort",
+   "type": "Product"
+  },
+  "RADIOPLANT": {
+   "name": "Gamma Weed",
+   "type": "Product"
+  },
+  "BARRENPLANT": {
+   "name": "Echinocactus",
+   "type": "Product"
+  },
+  "LUSHPLANT": {
+   "name": "Star Bramble",
+   "type": "Product"
+  },
+  "SCORCHEDPLANT": {
+   "name": "Solar Vine",
+   "type": "Product"
+  },
+  "CREATUREPLANT": {
+   "name": "Mordite Root",
+   "type": "Product"
+  },
+  "POOPPLANT": {
+   "name": "Gutrot Flower",
+   "type": "Product"
+  },
+  "GRAVPLANT": {
+   "name": "Gravitino Host",
+   "type": "Product"
+  },
+  "SACVENOMPLANT": {
+   "name": "Venom Urchin",
+   "type": "Product"
+  },
+  "PEARLPLANT": {
+   "name": "Albumen Pearl Orb",
+   "type": "Product"
+  },
+  "NIPPLANT": {
+   "name": "NipNip",
+   "type": "Product"
+  },
+  "CARBONPLANTER": {
+   "name": "Standing Planter",
+   "type": "Product"
+  },
+  "CONTAINER0": {
+   "name": "Storage Container",
+   "type": "Product"
+  },
+  "CONTAINER1": {
+   "name": "Storage Container",
+   "type": "Product"
+  },
+  "CONTAINER2": {
+   "name": "Storage Container",
+   "type": "Product"
+  },
+  "CONTAINER3": {
+   "name": "Storage Container",
+   "type": "Product"
+  },
+  "CONTAINER4": {
+   "name": "Storage Container",
+   "type": "Product"
+  },
+  "CONTAINER5": {
+   "name": "Storage Container",
+   "type": "Product"
+  },
+  "CONTAINER6": {
+   "name": "Storage Container",
+   "type": "Product"
+  },
+  "CONTAINER7": {
+   "name": "Storage Container",
+   "type": "Product"
+  },
+  "CONTAINER8": {
+   "name": "Storage Container",
+   "type": "Product"
+  },
+  "CONTAINER9": {
+   "name": "Storage Container",
+   "type": "Product"
+  },
+  "WALLLIGHTBLUE": {
+   "name": "Blue Light",
+   "type": "Product"
+  },
+  "WALLLIGHTPINK": {
+   "name": "Pink Light",
+   "type": "Product"
+  },
+  "WALLLIGHTYELLOW": {
+   "name": "Yellow Light",
+   "type": "Product"
+  },
+  "WALLLIGHTGREEN": {
+   "name": "Green Light",
+   "type": "Product"
+  },
+  "WALLLIGHTRED": {
+   "name": "Red Light",
+   "type": "Product"
+  },
+  "WALLLIGHTWHITE": {
+   "name": "White Light",
+   "type": "Product"
+  },
+  "SMALLLIGHT": {
+   "name": "Lantern",
+   "type": "Product"
+  },
+  "BUILDLIGHT": {
+   "name": "Squared Standing Light",
+   "type": "Product"
+  },
+  "BUILDLIGHT2": {
+   "name": "Rounded Standing Light",
+   "type": "Product"
+  },
+  "BUILDLIGHT3": {
+   "name": "Capped Standing Light",
+   "type": "Product"
+  },
+  "LIGHTBOX": {
+   "name": "Light Box",
+   "type": "Product"
+  },
+  "L_FLOOR_Q": {
+   "name": "Light Floor",
+   "type": "Product"
+  },
+  "CEILINGLIGHT": {
+   "name": "Ceiling Light",
+   "type": "Product"
+  },
+  "BUILDPAVING": {
+   "name": "Small Paving",
+   "type": "Product"
+  },
+  "BUILDPAVING_BIG": {
+   "name": "Paving",
+   "type": "Product"
+  },
+  "BUILDPAVINGTALL": {
+   "name": "Raised Small Paving",
+   "type": "Product"
+  },
+  "BUILDLADDER": {
+   "name": "Ladder",
+   "type": "Product"
+  },
+  "CUBELADDER": {
+   "name": "Cuboid Room Ladder",
+   "type": "Product"
+  },
+  "BUILDWINDOW": {
+   "name": "Angled Window",
+   "type": "Product"
+  },
+  "CUBEWINDOW": {
+   "name": "Large Window",
+   "type": "Product"
+  },
+  "WALLDOOR": {
+   "name": "Shutter Door",
+   "type": "Product"
+  },
+  "WALLFLOORLADDER": {
+   "name": "Infrastructure Ladder",
+   "type": "Product"
+  },
+  "CUBEWINDOWOVAL": {
+   "name": "Circle Window",
+   "type": "Product"
+  },
+  "CUBEWINDOWSMALL": {
+   "name": "Small Window",
+   "type": "Product"
+  },
+  "BUILDCHAIR": {
+   "name": "Desk Chair",
+   "type": "Product"
+  },
+  "BUILDCHAIR2": {
+   "name": "Armchair",
+   "type": "Product"
+  },
+  "BUILDCHAIR3": {
+   "name": "Adjustable Chair",
+   "type": "Product"
+  },
+  "BUILDSOFA": {
+   "name": "Sofa",
+   "type": "Product"
+  },
+  "BUILDSOFA2L": {
+   "name": "Corner Sofa",
+   "type": "Product"
+  },
+  "BUILDSOFA2": {
+   "name": "Swept Sofa",
+   "type": "Product"
+  },
+  "BUILDTABLE": {
+   "name": "Round Table",
+   "type": "Product"
+  },
+  "BUILDTABLE2": {
+   "name": "Hexagonal Table",
+   "type": "Product"
+  },
+  "BUILDBED": {
+   "name": "Bed",
+   "type": "Product"
+  },
+  "LARGEDESK": {
+   "name": "Large Monitor Station",
+   "type": "Product"
+  },
+  "BUILDSIMPLEDESK": {
+   "name": "Simple Desk",
+   "type": "Product"
+  },
+  "CURVEDDESK": {
+   "name": "Curved Desk",
+   "type": "Product"
+  },
+  "MONITORDESK": {
+   "name": "Monitor Station",
+   "type": "Product"
+  },
+  "BUILDLIGHTTABLE": {
+   "name": "Light Table",
+   "type": "Product"
+  },
+  "BUILDWORKTOP": {
+   "name": "Worktop",
+   "type": "Product"
+  },
+  "PLANTPOT": {
+   "name": "Potted Plant",
+   "type": "Product"
+  },
+  "PLANTPOT1": {
+   "name": "Flora Containment 1",
+   "type": "Product"
+  },
+  "PLANTPOT2": {
+   "name": "Flora Containment 2",
+   "type": "Product"
+  },
+  "PLANTPOT3": {
+   "name": "Flora Containment 3",
+   "type": "Product"
+  },
+  "CHEST": {
+   "name": "Storage Container",
+   "type": "Product"
+  },
+  "BLDWALLUNIT": {
+   "name": "Wall Unit",
+   "type": "Product"
+  },
+  "DRAWS": {
+   "name": "Drawers",
+   "type": "Product"
+  },
+  "STORAGEPANEL": {
+   "name": "Storage Panel",
+   "type": "Product"
+  },
+  "SHELFPANEL": {
+   "name": "Shelf Panel",
+   "type": "Product"
+  },
+  "OCTACABINET": {
+   "name": "Octa-Cabinet",
+   "type": "Product"
+  },
+  "BUILDAMCRATE": {
+   "name": "Small Crate",
+   "type": "Product"
+  },
+  "CRATELRARE": {
+   "name": "Crate Fabricator",
+   "type": "Product"
+  },
+  "CRATELCYLINDER": {
+   "name": "Barrel Fabricator",
+   "type": "Product"
+  },
+  "BUILDLCRATE": {
+   "name": "Locked Crate",
+   "type": "Product"
+  },
+  "BUILDHCABINET": {
+   "name": "Tall Cabinet",
+   "type": "Product"
+  },
+  "BUILDLOCKER": {
+   "name": "Locker",
+   "type": "Product"
+  },
+  "BUILDSIDEPANEL": {
+   "name": "Side Panel",
+   "type": "Product"
+  },
+  "FLOORMAT1": {
+   "name": "Floor Mat",
+   "type": "Product"
+  },
+  "FLAG1": {
+   "name": "Flag 1",
+   "type": "Product"
+  },
+  "FLAG2": {
+   "name": "Flag 2",
+   "type": "Product"
+  },
+  "FLAG3": {
+   "name": "Flag 3",
+   "type": "Product"
+  },
+  "FLAG4": {
+   "name": "Flag 4",
+   "type": "Product"
+  },
+  "WALLFLAG1": {
+   "name": "Wall Flag 1",
+   "type": "Product"
+  },
+  "WALLFLAG2": {
+   "name": "Wall Flag 2",
+   "type": "Product"
+  },
+  "WALLFLAG3": {
+   "name": "Wall Flag 3",
+   "type": "Product"
+  },
+  "TECHPANEL": {
+   "name": "Tech Panel",
+   "type": "Product"
+  },
+  "WALLFAN": {
+   "name": "Wall Fan",
+   "type": "Product"
+  },
+  "WALLSCREEN": {
+   "name": "Wall Screen",
+   "type": "Product"
+  },
+  "SERVERSTACK": {
+   "name": "Server",
+   "type": "Product"
+  },
+  "ROOFMONITOR": {
+   "name": "Ceiling Panel",
+   "type": "Product"
+  },
+  "WEAPONRACK": {
+   "name": "Weapon Rack",
+   "type": "Product"
+  },
+  "BUILDCANRACK": {
+   "name": "Canister Rack",
+   "type": "Product"
+  },
+  "ROBOTICARM": {
+   "name": "Robotic Arm",
+   "type": "Product"
+  },
+  "BUILDFLATPANEL": {
+   "name": "Flat Panel",
+   "type": "Product"
+  },
+  "BOXEDSCREEN": {
+   "name": "Oscilloscope",
+   "type": "Product"
+  },
+  "WALLSCREENB": {
+   "name": "Green Wall Screen",
+   "type": "Product"
+  },
+  "WALLSCREENB2": {
+   "name": "Orange Wall Screen",
+   "type": "Product"
+  },
+  "BUILDLABLAMP": {
+   "name": "Lab Lamp",
+   "type": "Product"
+  },
+  "WEDGESHAPE": {
+   "name": "Large Wedge",
+   "type": "Product"
+  },
+  "WEDGESMALLSHAPE": {
+   "name": "Small Wedge",
+   "type": "Product"
+  },
+  "PYRAMIDSHAPE": {
+   "name": "Pyramid",
+   "type": "Product"
+  },
+  "CURVEPIPESHAPE": {
+   "name": "Curved Pipe",
+   "type": "Product"
+  },
+  "PIPESHAPE": {
+   "name": "Pipe",
+   "type": "Product"
+  },
+  "PIPE": {
+   "name": "Pipe",
+   "type": "Product"
+  },
+  "CUBESOLID": {
+   "name": "Solid Cube",
+   "type": "Product"
+  },
+  "CYLINDERSHAPE": {
+   "name": "Cylinder",
+   "type": "Product"
+  },
+  "CUBESHAPE": {
+   "name": "Cube",
+   "type": "Product"
+  },
+  "SPHERESHAPE": {
+   "name": "Sphere",
+   "type": "Product"
+  },
+  "BUILDTABLE3": {
+   "name": "Corner Table",
+   "type": "Product"
+  },
+  "WALL": {
+   "name": "Wall",
+   "type": "Product"
+  },
+  "CORNERPOST": {
+   "name": "Linking Post",
+   "type": "Product"
+  },
+  "ROOMFLOOR": {
+   "name": "Roof Platform",
+   "type": "Product"
+  },
+  "WALLTALL": {
+   "name": "Large Wall",
+   "type": "Product"
+  },
+  "WALLCURVED": {
+   "name": "Curved Wall",
+   "type": "Product"
+  },
+  "RACE_START": {
+   "name": "Race Initiator",
+   "type": "Product"
+  },
+  "RACE_START_SHIP": {
+   "name": "Starship Race Initiator",
+   "type": "Product"
+  },
+  "RACE_BOOSTER": {
+   "name": "Race Force Amplifier",
+   "type": "Product"
+  },
+  "RACE_RAMP": {
+   "name": "Race Obstacle",
+   "type": "Product"
+  },
+  "BUILDDECAL": {
+   "name": "White Design Decal",
+   "type": "Product"
+  },
+  "BUILDDECAL2": {
+   "name": "White Border Decal",
+   "type": "Product"
+  },
+  "BUILDDECALNMS": {
+   "name": "Atlas Decal",
+   "type": "Product"
+  },
+  "BUILDDECALNUM0": {
+   "name": "'0' Decal",
+   "type": "Product"
+  },
+  "BUILDDECALNUM1": {
+   "name": "'1' Decal",
+   "type": "Product"
+  },
+  "BUILDDECALNUM2": {
+   "name": "'2' Decal",
+   "type": "Product"
+  },
+  "BUILDDECALNUM3": {
+   "name": "'3' Decal",
+   "type": "Product"
+  },
+  "BUILDDECALNUM4": {
+   "name": "'4' Decal",
+   "type": "Product"
+  },
+  "BUILDDECALNUM5": {
+   "name": "'5' Decal",
+   "type": "Product"
+  },
+  "BUILDDECALNUM6": {
+   "name": "'6' Decal",
+   "type": "Product"
+  },
+  "BUILDDECALNUM7": {
+   "name": "'7' Decal",
+   "type": "Product"
+  },
+  "BUILDDECALNUM8": {
+   "name": "'8' Decal",
+   "type": "Product"
+  },
+  "BUILDDECALNUM9": {
+   "name": "'9' Decal",
+   "type": "Product"
+  },
+  "BUILDDECALVIS1": {
+   "name": "Vy'keen Decal",
+   "type": "Product"
+  },
+  "BUILDDECALVIS2": {
+   "name": "Gek Decal",
+   "type": "Product"
+  },
+  "BUILDDECALVIS3": {
+   "name": "Korvax Decal",
+   "type": "Product"
+  },
+  "BUILDDECALVIS4": {
+   "name": "Blob Decal",
+   "type": "Product"
+  },
+  "BUILDDECALVIS5": {
+   "name": "Curious Fauna Decal",
+   "type": "Product"
+  },
+  "BUILDDECALSIMP1": {
+   "name": "Blue Design Decal",
+   "type": "Product"
+  },
+  "BUILDDECALSIMP2": {
+   "name": "Green Design Decal",
+   "type": "Product"
+  },
+  "BUILDDECALSIMP3": {
+   "name": "Red Design Decal",
+   "type": "Product"
+  },
+  "BUILDDECALSIMP4": {
+   "name": "Black Design Decal",
+   "type": "Product"
+  },
+  "CORRIDOR_WINDOW": {
+   "name": "BLD_PRT_FOUNDATION_L",
+   "type": "Product"
+  },
+  "HEALTHPLANT": {
+   "name": "BLD_PRT_FOUNDATION_L",
+   "type": "Product"
+  },
+  "NPCEXPLORER001": {
+   "name": "BLD_PRT_FOUNDATION_L",
+   "type": "Product"
+  },
+  "CREATHOLOGRAM": {
+   "name": "Creature Hologram",
+   "type": "Product"
+  },
+  "CORRIDOR_WATER": {
+   "name": "Glass Tunnel",
+   "type": "Product"
+  },
+  "CORRIDORL_WATER": {
+   "name": "L-Shaped Glass Tunnel",
+   "type": "Product"
+  },
+  "CORRIDORT_WATER": {
+   "name": "T-Shaped Glass Tunnel",
+   "type": "Product"
+  },
+  "CORRIDORX_WATER": {
+   "name": "X-Shaped Glass Tunnel",
+   "type": "Product"
+  },
+  "CORRIDORV_WATER": {
+   "name": "Vertical Glass Tunnel",
+   "type": "Product"
+  },
+  "MAINROOM_WATER": {
+   "name": "Deepwater Chamber",
+   "type": "Product"
+  },
+  "MAINROOMCUBE_W": {
+   "name": "Square Deepwater Chamber",
+   "type": "Product"
+  },
+  "PANEL_GLASS": {
+   "name": "Large Glass Panel",
+   "type": "Product"
+  },
+  "WATERBUBBLE": {
+   "name": "Marine Shelter",
+   "type": "Product"
+  },
+  "MOONPOOL": {
+   "name": "Moon Pool Floor",
+   "type": "Product"
+  },
+  "BUILDDOOR_WATER": {
+   "name": "Watertight Door",
+   "type": "Product"
+  },
+  "BASE_ENGINEORB": {
+   "name": "Terbium Growth",
+   "type": "Product"
+  },
+  "BASE_BEAMSTONE": {
+   "name": "Light Fissure",
+   "type": "Product"
+  },
+  "BASE_BUBBLECLUS": {
+   "name": "Bubble Cluster",
+   "type": "Product"
+  },
+  "BASE_MEDGEOMETR": {
+   "name": "Hexplate Bush",
+   "type": "Product"
+  },
+  "BASE_SHARD": {
+   "name": "Glitching Separator",
+   "type": "Product"
+  },
+  "BASE_STARJOINT": {
+   "name": "Ossified Star",
+   "type": "Product"
+  },
+  "BASE_BONEGARDEN": {
+   "name": "Rattle Spine",
+   "type": "Product"
+  },
+  "BASE_CONTOURPOD": {
+   "name": "Cable Pod",
+   "type": "Product"
+  },
+  "BASE_HYDROPOD": {
+   "name": "Calcishroom",
+   "type": "Product"
+  },
+  "BASE_SHELLWHITE": {
+   "name": "Capilliary Shell",
+   "type": "Product"
+  },
+  "BASE_WEIRDCUBE": {
+   "name": "Electric Cube",
+   "type": "Product"
+  },
+  "SPAWNER_BALL": {
+   "name": "Sphere Creator",
+   "type": "Product"
+  },
+  "NOISEBOX": {
+   "name": "Noise Box",
+   "type": "Product"
+  },
+  "BYTEBEAT": {
+   "name": "ByteBeat Device",
+   "type": "Product"
+  },
+  "MEDTUBE": {
+   "name": "Sample Containment",
+   "type": "Product"
+  },
+  "HEATER": {
+   "name": "Emergency Heater",
+   "type": "Product"
+  },
+  "FOORLIGHT": {
+   "name": "Emergency Light",
+   "type": "Product"
+  },
+  "PLANTTUBE": {
+   "name": "Floral Canister",
+   "type": "Product"
+  },
+  "LOCKER2": {
+   "name": "Crew Locker",
+   "type": "Product"
+  },
+  "ABAND_SHELF": {
+   "name": "Heavy-Duty Furniture",
+   "type": "Product"
+  },
+  "ABAND_CRATE_M": {
+   "name": "Salvage Crate",
+   "type": "Product"
+  },
+  "ABAND_CRATE_L": {
+   "name": "Storage Unit",
+   "type": "Product"
+  },
+  "ABAND_CRATE_XL": {
+   "name": "Large Storage Unit",
+   "type": "Product"
+  },
+  "ABAND_CASE": {
+   "name": "Secure Briefcase",
+   "type": "Product"
+  },
+  "FOOTLOCKER": {
+   "name": "Crew Footlocker",
+   "type": "Product"
+  },
+  "ABAND_BENCH": {
+   "name": "Industrial Bench",
+   "type": "Product"
+  },
+  "PALLET": {
+   "name": "Industrial Pallet",
+   "type": "Product"
+  },
+  "ABAND_BARREL": {
+   "name": "Industrial Barrel",
+   "type": "Product"
+  },
+  "AM_SUITTREE": {
+   "name": "Exosuit Research Station",
+   "type": "Product"
+  },
+  "AM_WEAPONTREE": {
+   "name": "Multi-Tool Research Station",
+   "type": "Product"
+  },
+  "AM_EXOCRAFTTREE": {
+   "name": "Exocraft Research Station",
+   "type": "Product"
+  },
+  "AM_SHIPTREE": {
+   "name": "Ship Research Station",
+   "type": "Product"
+  },
+  "S9_SUITTREE": {
+   "name": "Utopia Exosuit Station",
+   "type": "Product"
+  },
+  "S9_WEAPONTREE": {
+   "name": "Utopia Multi-Tool Station",
+   "type": "Product"
+  },
+  "S9_EXOCRAFTTREE": {
+   "name": "Portable Exocraft Research Station",
+   "type": "Product"
+  },
+  "S9_SHIPTREE": {
+   "name": "Utopia Ship Station",
+   "type": "Product"
+  },
+  "S9_BUILDERTREE": {
+   "name": "Utopia Build Station",
+   "type": "Product"
+  },
+  "HOLO_DISCO_0": {
+   "name": "Wonder Projector",
+   "type": "Product"
+  },
+  "ARCHIVE": {
+   "name": "Secure Archive",
+   "type": "Product"
+  },
+  "CONT_S": {
+   "name": "Fuel Canister",
+   "type": "Product"
+  },
+  "STATIONCRATE": {
+   "name": "Orbital Storage",
+   "type": "Product"
+  },
+  "CRATEFRAME": {
+   "name": "Storage Frame",
+   "type": "Product"
+  },
+  "HOLO_TRA": {
+   "name": "Holographic Gek Display",
+   "type": "Product"
+  },
+  "HOLO_EXP": {
+   "name": "Holographic Korvax Display",
+   "type": "Product"
+  },
+  "HOLO_WAR": {
+   "name": "Holographic Vy'keen Display",
+   "type": "Product"
+  },
+  "HOLO_MED1": {
+   "name": "Holographic Wall Display A",
+   "type": "Product"
+  },
+  "HOLO_MED2": {
+   "name": "Holographic Wall Display B",
+   "type": "Product"
+  },
+  "HOLO_SMALL1": {
+   "name": "Small Holographic Display A",
+   "type": "Product"
+  },
+  "HOLO_SMALL2": {
+   "name": "Small Holographic Display B",
+   "type": "Product"
+  },
+  "HOLO_SMALL3": {
+   "name": "Small Holographic Display C",
+   "type": "Product"
+  },
+  "LIGHTFRAME": {
+   "name": "Frame Lighting",
+   "type": "Product"
+  },
+  "LIGHT_TALL": {
+   "name": "Lighting Array",
+   "type": "Product"
+  },
+  "LIGHT_PLINTH": {
+   "name": "Plinth Light",
+   "type": "Product"
+  },
+  "LIGHT_VERT": {
+   "name": "Pillar Light",
+   "type": "Product"
+  },
+  "PLANTBOX": {
+   "name": "Bio-Crate",
+   "type": "Product"
+  },
+  "PLANTER_S": {
+   "name": "Small Planter",
+   "type": "Product"
+  },
+  "SERVERBOX1": {
+   "name": "Server Block A",
+   "type": "Product"
+  },
+  "SERVERBOX2": {
+   "name": "Server Block B",
+   "type": "Product"
+  },
+  "HOLOFILES": {
+   "name": "Data Cabinet",
+   "type": "Product"
+  },
+  "POWERBOX": {
+   "name": "Power Transformer",
+   "type": "Product"
+  },
+  "SHIPARMS": {
+   "name": "Hydraulic Arms",
+   "type": "Product"
+  },
+  "STANDINGSIGN": {
+   "name": "Standing Sign",
+   "type": "Product"
+  },
+  "BILLBOARD": {
+   "name": "Station Billboard",
+   "type": "Product"
+  },
+  "MAPTABLE": {
+   "name": "Topographic Table",
+   "type": "Product"
+  },
+  "BLD_RUINS_01": {
+   "name": "Ruined Slab",
+   "type": "Product"
+  },
+  "BLD_RUINS_02": {
+   "name": "Ruined Monument",
+   "type": "Product"
+  },
+  "BLD_RUINS_03": {
+   "name": "Ruined Wall",
+   "type": "Product"
+  },
+  "BLD_RUINS_04": {
+   "name": "Ruined Totem",
+   "type": "Product"
+  },
+  "BLD_RUINS_05": {
+   "name": "Ruined Arch",
+   "type": "Product"
+  },
+  "BLD_RUINS_06": {
+   "name": "Ruined Gateway",
+   "type": "Product"
+  },
+  "BLD_RUINS_07": {
+   "name": "Ruined Statue",
+   "type": "Product"
+  },
+  "BLD_RUINS_08": {
+   "name": "Ruined Storehouse",
+   "type": "Product"
+  },
+  "BLD_RUINS_09": {
+   "name": "Ruined Dome",
+   "type": "Product"
+  },
+  "BLD_RUINS_10": {
+   "name": "Ruined Monolith",
+   "type": "Product"
+  },
+  "BLD_RUINS_11": {
+   "name": "Large Ruined Archway",
+   "type": "Product"
+  },
+  "BLD_RUINS_12": {
+   "name": "Ruined Column",
+   "type": "Product"
+  },
+  "FOS_QUAD": {
+   "name": "Quadruped Fossil Display",
+   "type": "Product"
+  },
+  "FOS_QUAD_DIS": {
+   "name": "Quadruped Fossil Display",
+   "type": "Product"
+  },
+  "FOS_BI": {
+   "name": "Biped Fossil Display",
+   "type": "Product"
+  },
+  "FOS_BI_DIS": {
+   "name": "Biped Fossil Display",
+   "type": "Product"
+  },
+  "FOS_WORM": {
+   "name": "Reptilian Fossil Display",
+   "type": "Product"
+  },
+  "FOS_WORM_DIS": {
+   "name": "Reptilian Fossil Display",
+   "type": "Product"
+  },
+  "FOS_BIRD": {
+   "name": "Avian Fossil Display",
+   "type": "Product"
+  },
+  "FOS_BIRD_DIS": {
+   "name": "Avian Fossil Display",
+   "type": "Product"
+  },
+  "FOS_GRUN": {
+   "name": "Protoform Fossil Display",
+   "type": "Product"
+  },
+  "FOS_GRUN_DIS": {
+   "name": "Protoform Fossil Display",
+   "type": "Product"
+  },
+  "FOS_SKULL": {
+   "name": "PLACED FOSSIL",
+   "type": "Product"
+  },
+  "FOS_SKULL_MNT": {
+   "name": "Fossil Display Case",
+   "type": "Product"
+  },
+  "FOS_SKULL_DISP": {
+   "name": "Fossil Display Case",
+   "type": "Product"
+  },
+  "FOS_LIMBS": {
+   "name": "PLACED FOSSIL",
+   "type": "Product"
+  },
+  "FOS_LIMBS_MNT": {
+   "name": "Fossil Display Case",
+   "type": "Product"
+  },
+  "FOS_LIMBS_DISP": {
+   "name": "Fossil Display Case",
+   "type": "Product"
+  },
+  "FOS_TAIL": {
+   "name": "PLACED FOSSIL",
+   "type": "Product"
+  },
+  "FOS_TAIL_MNT": {
+   "name": "Fossil Display Case",
+   "type": "Product"
+  },
+  "FOS_TAIL_DISP": {
+   "name": "Fossil Display Case",
+   "type": "Product"
+  },
+  "FOS_BODY": {
+   "name": "PLACED FOSSIL",
+   "type": "Product"
+  },
+  "FOS_BODY_MNT": {
+   "name": "Fossil Display Case",
+   "type": "Product"
+  },
+  "FOS_BODY_DISP": {
+   "name": "Fossil Display Case",
+   "type": "Product"
+  },
+  "STATION_LCASE": {
+   "name": "Hardside Case",
+   "type": "Product"
+  },
+  "STATION_SOFA": {
+   "name": "Moulded Sofa",
+   "type": "Product"
+  },
+  "STATION_LCRATE": {
+   "name": "Rounded-Corner Storage",
+   "type": "Product"
+  },
+  "STATION_LSHELVE": {
+   "name": "Utility Rack",
+   "type": "Product"
+  },
+  "STATION_HCRATE": {
+   "name": "Reinforced Crate",
+   "type": "Product"
+  },
+  "STATION_SERVR": {
+   "name": "Server Node",
+   "type": "Product"
+  },
+  "SET_CONSTRUCT": {
+   "name": "BLD_SET_CONSTRUCT_NAME_L",
+   "type": "Product"
+  },
+  "SET_GROUNDDECAL": {
+   "name": "BLD_SET_GROUNDDECAL_NAME_L",
+   "type": "Product"
+  },
+  "SET_MAYORTERM": {
+   "name": "BLD_SET_MAYORTERM_NAME_L",
+   "type": "Product"
+  },
+  "SET_MONUMENT": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "SET_MONUMENT_FA": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "SET_SFXCONST_S0": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "SET_SFXCONST_S1": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "SET_SFXCONST_S2": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "S_TOWER": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "S_TOWER_FA": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "S_TOWER_C": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "S_TOWER_B": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "S_TOWER_B_FA": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "B_TOWER": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "B_TOWER_C": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "B_TOWER_B": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "S_LANDINGZONE": {
+   "name": "Alternative Landing Pad",
+   "type": "Product"
+  },
+  "SET_LZ": {
+   "name": "Alternative Landing Pad",
+   "type": "Product"
+  },
+  "SET_LZ_SHIPBUIL": {
+   "name": "Alternative Landing Pad",
+   "type": "Product"
+  },
+  "SET_T_MONU": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "SET_T_MONU_FA": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "SET_F_MONU": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "SET_F_MONU_FA": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "SET_B_MONU": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "SET_B_MONU_FA": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "SET_INT_SUMMARY": {
+   "name": "BLD_SET_INT_SUMMARY_NAME_L",
+   "type": "Product"
+  },
+  "SET_STAFFBUILD": {
+   "name": "BLD_SET_STAFFBUILD_NAME_L",
+   "type": "Product"
+  },
+  "SET_INT_SHIPSAL": {
+   "name": "BLD_SET_INT_SHIPSAL_NAME_L",
+   "type": "Product"
+  },
+  "B_ROBOTARM": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "SET_CLASS_S": {
+   "name": "BLD_SET_CONSTRUCT_NAME_L",
+   "type": "Product"
+  },
+  "SET_CLASS_A": {
+   "name": "BLD_SET_CONSTRUCT_NAME_L",
+   "type": "Product"
+  },
+  "SET_CLASS_B": {
+   "name": "BLD_SET_CONSTRUCT_NAME_L",
+   "type": "Product"
+  },
+  "SET_FISHPOND": {
+   "name": "BLD_SET_MONUMENT_NAME_L",
+   "type": "Product"
+  },
+  "M_WALL": {
+   "name": "Metal Wall",
+   "type": "Product"
+  },
+  "M_WALL_H": {
+   "name": "Thin Metal Wall",
+   "type": "Product"
+  },
+  "M_WALL_Q": {
+   "name": "Small Metal Wall",
+   "type": "Product"
+  },
+  "M_WALL_Q_H": {
+   "name": "Short Metal Wall",
+   "type": "Product"
+  },
+  "M_WALLDIAGONAL": {
+   "name": "Sloping Metal Panel",
+   "type": "Product"
+  },
+  "M_WALL_WINDOW": {
+   "name": "Metal Window Panel",
+   "type": "Product"
+  },
+  "M_SDOOR": {
+   "name": "Small Metal Door",
+   "type": "Product"
+  },
+  "M_DOOR": {
+   "name": "Metal Door Frame",
+   "type": "Product"
+  },
+  "M_DOOR_H": {
+   "name": "Metal Doorway",
+   "type": "Product"
+  },
+  "M_GDOOR": {
+   "name": "Metal Power Door",
+   "type": "Product"
+  },
+  "M_GDOOR_D": {
+   "name": "Large Metal Power Door",
+   "type": "Product"
+  },
+  "M_DOORWINDOW": {
+   "name": "Metal Frontage",
+   "type": "Product"
+  },
+  "M_FLOOR": {
+   "name": "Metal Floor Panel",
+   "type": "Product"
+  },
+  "M_TRIFLOOR": {
+   "name": "Metal Triangle",
+   "type": "Product"
+  },
+  "M_TRIFLOOR_Q": {
+   "name": "Small Metal Triangle",
+   "type": "Product"
+  },
+  "M_GFLOOR": {
+   "name": "Metal-Framed Glass Panel",
+   "type": "Product"
+  },
+  "M_FLOOR_Q": {
+   "name": "Small Metal Panel",
+   "type": "Product"
+  },
+  "M_RAMP": {
+   "name": "Metal Ramp",
+   "type": "Product"
+  },
+  "M_RAMP_H": {
+   "name": "Metal Half Ramp",
+   "type": "Product"
+  },
+  "M_ROOF": {
+   "name": "Metal Roof",
+   "type": "Product"
+  },
+  "M_ROOF_M": {
+   "name": "Metal Roof Panel",
+   "type": "Product"
+  },
+  "M_ROOF_C": {
+   "name": "Metal Roof Corner",
+   "type": "Product"
+  },
+  "M_ROOF_IC": {
+   "name": "Metal Inner Roof Corner",
+   "type": "Product"
+  },
+  "M_ARCH": {
+   "name": "Metal Arch",
+   "type": "Product"
+  },
+  "M_ARCH_H": {
+   "name": "Metal Half Arch",
+   "type": "Product"
+  },
+  "C_WALL": {
+   "name": "Concrete Wall",
+   "type": "Product"
+  },
+  "C_WALL_H": {
+   "name": "Thin Concrete Wall",
+   "type": "Product"
+  },
+  "C_WALL_Q": {
+   "name": "Small Concrete Wall",
+   "type": "Product"
+  },
+  "C_WALL_Q_H": {
+   "name": "Short Concrete Wall",
+   "type": "Product"
+  },
+  "C_WALLDIAGONAL": {
+   "name": "Sloping Concrete Panel",
+   "type": "Product"
+  },
+  "C_WALL_WINDOW": {
+   "name": "Concrete Window Panel",
+   "type": "Product"
+  },
+  "C_DOOR": {
+   "name": "Concrete Door Frame",
+   "type": "Product"
+  },
+  "C_SDOOR": {
+   "name": "Small Concrete Door",
+   "type": "Product"
+  },
+  "C_DOOR_H": {
+   "name": "Concrete Doorway",
+   "type": "Product"
+  },
+  "C_GDOOR": {
+   "name": "Concrete Power Door",
+   "type": "Product"
+  },
+  "C_GDOOR_D": {
+   "name": "Large Concrete Power Door",
+   "type": "Product"
+  },
+  "C_DOORWINDOW": {
+   "name": "Concrete Frontage",
+   "type": "Product"
+  },
+  "C_FLOOR": {
+   "name": "Concrete Floor Panel",
+   "type": "Product"
+  },
+  "C_TRIFLOOR": {
+   "name": "Concrete Triangle",
+   "type": "Product"
+  },
+  "C_TRIFLOOR_Q": {
+   "name": "Small Concrete Triangle",
+   "type": "Product"
+  },
+  "C_GFLOOR": {
+   "name": "Concrete-Framed Glass Panel",
+   "type": "Product"
+  },
+  "C_FLOOR_Q": {
+   "name": "Small Concrete Panel",
+   "type": "Product"
+  },
+  "C_RAMP": {
+   "name": "Concrete Ramp",
+   "type": "Product"
+  },
+  "C_RAMP_H": {
+   "name": "Concrete Half Ramp",
+   "type": "Product"
+  },
+  "C_ROOF": {
+   "name": "Concrete Roof",
+   "type": "Product"
+  },
+  "C_ROOF_M": {
+   "name": "Concrete Roof Panel",
+   "type": "Product"
+  },
+  "C_ROOF_C": {
+   "name": "Concrete Roof Corner",
+   "type": "Product"
+  },
+  "C_ROOF_IC": {
+   "name": "Concrete Inner Roof Corner",
+   "type": "Product"
+  },
+  "C_ARCH": {
+   "name": "Concrete Arch",
+   "type": "Product"
+  },
+  "C_ARCH_H": {
+   "name": "Concrete Half Arch",
+   "type": "Product"
+  },
+  "W_WALL": {
+   "name": "Wooden Wall",
+   "type": "Product"
+  },
+  "W_WALL_H": {
+   "name": "Thin Wooden Wall",
+   "type": "Product"
+  },
+  "W_WALL_Q": {
+   "name": "Small Wooden Wall",
+   "type": "Product"
+  },
+  "W_WALL_Q_H": {
+   "name": "Short Wooden Wall",
+   "type": "Product"
+  },
+  "W_WALLDIAGONAL": {
+   "name": "Sloping Wood Panel",
+   "type": "Product"
+  },
+  "W_WALL_WINDOW": {
+   "name": "Wooden Window Panel",
+   "type": "Product"
+  },
+  "W_SDOOR": {
+   "name": "Small Wooden Door",
+   "type": "Product"
+  },
+  "W_DOOR": {
+   "name": "Wooden Door Frame",
+   "type": "Product"
+  },
+  "W_DOOR_H": {
+   "name": "Wooden Doorway",
+   "type": "Product"
+  },
+  "W_GDOOR": {
+   "name": "Wooden Power Door",
+   "type": "Product"
+  },
+  "W_GDOOR_D": {
+   "name": "Large Wooden Power Door",
+   "type": "Product"
+  },
+  "W_DOORWINDOW": {
+   "name": "Wooden Frontage",
+   "type": "Product"
+  },
+  "W_FLOOR": {
+   "name": "Wood Floor Panel",
+   "type": "Product"
+  },
+  "W_TRIFLOOR": {
+   "name": "Wooden Triangle",
+   "type": "Product"
+  },
+  "W_TRIFLOOR_Q": {
+   "name": "Small Wooden Triangle",
+   "type": "Product"
+  },
+  "W_GFLOOR": {
+   "name": "Wood-Framed Glass Panel",
+   "type": "Product"
+  },
+  "W_FLOOR_Q": {
+   "name": "Small Wood Panel",
+   "type": "Product"
+  },
+  "W_RAMP": {
+   "name": "Wooden Ramp",
+   "type": "Product"
+  },
+  "W_RAMP_H": {
+   "name": "Wooden Half Ramp",
+   "type": "Product"
+  },
+  "W_ROOF": {
+   "name": "Wooden Roof",
+   "type": "Product"
+  },
+  "W_ROOF_M": {
+   "name": "Wooden Roof Panel",
+   "type": "Product"
+  },
+  "W_ROOF_C": {
+   "name": "Wooden Roof Corner",
+   "type": "Product"
+  },
+  "W_ROOF_IC": {
+   "name": "Wooden Inner Roof Corner",
+   "type": "Product"
+  },
+  "W_ARCH": {
+   "name": "Wooden Arch",
+   "type": "Product"
+  },
+  "W_ARCH_H": {
+   "name": "Wooden Half Arch",
+   "type": "Product"
+  },
+  "O2_HARVESTER": {
+   "name": "Oxygen Harvester",
+   "type": "Product"
+  },
+  "BUILDHARVESTER": {
+   "name": "Autonomous Mining Unit",
+   "type": "Product"
+  },
+  "BUILDGASHARVEST": {
+   "name": "Atmosphere Harvester",
+   "type": "Product"
+  },
+  "BUILDSEAHARVEST": {
+   "name": "Automated Trap",
+   "type": "Product"
+  },
+  "S_CANOPY_WALL0": {
+   "name": "Canvas Awning",
+   "type": "Product"
+  },
+  "S_CANOPY_WALL1": {
+   "name": "Twin Flag Awning",
+   "type": "Product"
+  },
+  "S_CANOPY_WALL2": {
+   "name": "Quad Flag Awning",
+   "type": "Product"
+  },
+  "B_CANOPY_WALL0": {
+   "name": "Salvaged Awning",
+   "type": "Product"
+  },
+  "B_CANOPY_WALL1": {
+   "name": "Decoration",
+   "type": "Product"
+  },
+  "B_CANOPY_WALL2": {
+   "name": "Decoration",
+   "type": "Product"
+  },
+  "S_WALL_SUPPORTS": {
+   "name": "Stone Support Pillar",
+   "type": "Product"
+  },
+  "S_WATERTOWER": {
+   "name": "Water Tower",
+   "type": "Product"
+  },
+  "B_WATERTOWER": {
+   "name": "Atlantideum Refiner",
+   "type": "Product"
+  },
+  "S_ANTENNA0": {
+   "name": "Dish Receptor Antenna",
+   "type": "Product"
+  },
+  "S_ANTENNA1": {
+   "name": "Tall Antenna",
+   "type": "Product"
+  },
+  "S_ANTENNA2": {
+   "name": "Dual-Pronged Antenna",
+   "type": "Product"
+  },
+  "S_ANTENNA3": {
+   "name": "Meteorological Spinner",
+   "type": "Product"
+  },
+  "B_ANTENNA0": {
+   "name": "Void Receptor Dish",
+   "type": "Product"
+  },
+  "B_ANTENNA3": {
+   "name": "Void Antenna",
+   "type": "Product"
+  },
+  "B_ANTENNA1": {
+   "name": "Tall Void Antenna",
+   "type": "Product"
+  },
+  "B_ANTENNA2": {
+   "name": "Crystal Antenna",
+   "type": "Product"
+  },
+  "S_FLAG5": {
+   "name": "Hanging Flag 1",
+   "type": "Product"
+  },
+  "S_FLAG6": {
+   "name": "Hanging Flag 2",
+   "type": "Product"
+  },
+  "S_RUG0": {
+   "name": "Kite-Patterned Rug",
+   "type": "Product"
+  },
+  "S_POT0": {
+   "name": "Kiln-Fired Pot",
+   "type": "Product"
+  },
+  "S_CHAIR0": {
+   "name": "Upholstered Chair",
+   "type": "Product"
+  },
+  "S_BARTABLE0": {
+   "name": "Golden Table",
+   "type": "Product"
+  },
+  "S_WALLLIGHT0": {
+   "name": "Wall Light",
+   "type": "Product"
+  },
+  "S_BAR_H": {
+   "name": "Golden Half Counter",
+   "type": "Product"
+  },
+  "S_BAR": {
+   "name": "Golden Counter",
+   "type": "Product"
+  },
+  "S_BAR_C": {
+   "name": "Golden Counter Corner",
+   "type": "Product"
+  },
+  "S_TABLEPOT0": {
+   "name": "Vintage Teapot",
+   "type": "Product"
+  },
+  "S_TABLELAMP0": {
+   "name": "Table Lamp",
+   "type": "Product"
+  },
+  "S_CUP0": {
+   "name": "Vintage Tumbler",
+   "type": "Product"
+  },
+  "S_TRAY0": {
+   "name": "Vintage Dish",
+   "type": "Product"
+  },
+  "S_CRATE0": {
+   "name": "Small Box",
+   "type": "Product"
+  },
+  "S_BURNER0": {
+   "name": "Oil Burner",
+   "type": "Product"
+  },
+  "S_PAN0": {
+   "name": "Vintage Cooking Pan",
+   "type": "Product"
+  },
+  "S_BARSTOOL0": {
+   "name": "Ornate Stool",
+   "type": "Product"
+  },
+  "S_CANISTER0": {
+   "name": "Reinforced Capsule",
+   "type": "Product"
+  },
+  "S_BARTAPS0": {
+   "name": "Vintage Tap",
+   "type": "Product"
+  },
+  "S_WALLHANGING1": {
+   "name": "Weathered Hanging",
+   "type": "Product"
+  },
+  "S_WALLHANGING2": {
+   "name": "Mini Weathered Hangings",
+   "type": "Product"
+  },
+  "S_WALLHANGING3": {
+   "name": "Weathered Hanging Triptych",
+   "type": "Product"
+  },
+  "B_WALLHANGING1": {
+   "name": "Hanging Cables (Twisted)",
+   "type": "Product"
+  },
+  "B_WALLHANGING2": {
+   "name": "Hanging Cables (Triple)",
+   "type": "Product"
+  },
+  "B_WALLHANGING3": {
+   "name": "Hanging Cables (Parallel)",
+   "type": "Product"
+  },
+  "S_PLANTER_M": {
+   "name": "Stone Trough",
+   "type": "Product"
+  },
+  "S_SIGN_BAR0": {
+   "name": "Illuminated Sign",
+   "type": "Product"
+  },
+  "S_STEPLADDER": {
+   "name": "Stepladder",
+   "type": "Product"
+  },
+  "S_SCAFFOLD_M": {
+   "name": "Scaffolding",
+   "type": "Product"
+  },
+  "S_SCAFFOLD_L": {
+   "name": "Large Scaffolding",
+   "type": "Product"
+  },
+  "S_BUCKET_S": {
+   "name": "Pail",
+   "type": "Product"
+  },
+  "S_BUCKET_M": {
+   "name": "Tall Bucket",
+   "type": "Product"
+  },
+  "S_PALLET": {
+   "name": "Wooden Pallet",
+   "type": "Product"
+  },
+  "S_PALLET_BRICK": {
+   "name": "Brick Pile",
+   "type": "Product"
+  },
+  "B_PALLET_BRICK": {
+   "name": "Monitor Stack",
+   "type": "Product"
+  },
+  "S_CEMENTBAG": {
+   "name": "Cement Bag",
+   "type": "Product"
+  },
+  "S_BARRIER": {
+   "name": "Barricade",
+   "type": "Product"
+  },
+  "S_RSJSTACK": {
+   "name": "H-Beam Stack",
+   "type": "Product"
+  },
+  "S_CEMENTMIXER": {
+   "name": "Cement Mixer",
+   "type": "Product"
+  },
+  "S_SHOVEL": {
+   "name": "Shovel",
+   "type": "Product"
+  },
+  "S_BRICKSWRAPPED": {
+   "name": "Covered Brick Pile",
+   "type": "Product"
+  },
+  "S_LARGETRYE0": {
+   "name": "Large Tyre",
+   "type": "Product"
+  },
+  "B_LARGETRYE0": {
+   "name": "Oversized Cog",
+   "type": "Product"
+  },
+  "S_COMPOSTBIN": {
+   "name": "Composter",
+   "type": "Product"
+  },
+  "S_FURNACE": {
+   "name": "Small Furnace",
+   "type": "Product"
+  },
+  "S_WHEELBARROW": {
+   "name": "Wheelbarrow",
+   "type": "Product"
+  },
+  "S_EXCBUCKET": {
+   "name": "Excavation Claw",
+   "type": "Product"
+  },
+  "S_TROUGH0": {
+   "name": "Wash Trough",
+   "type": "Product"
+  },
+  "S_MILKCRATE": {
+   "name": "Ventilated Crate",
+   "type": "Product"
+  },
+  "S_MILKBOTTLE": {
+   "name": "Insulated Flask",
+   "type": "Product"
+  },
+  "S_BARREL1": {
+   "name": "Sealed Barrel",
+   "type": "Product"
+  },
+  "S_SPARKPLUG": {
+   "name": "Spark Plug",
+   "type": "Product"
+  },
+  "S_CARRIAGE": {
+   "name": "Drawn Cart",
+   "type": "Product"
+  },
+  "S_CARRIAGEWHEEL": {
+   "name": "Cart Wheel",
+   "type": "Product"
+  },
+  "B_CARRIAGEWHEEL": {
+   "name": "Oversized Spool",
+   "type": "Product"
+  },
+  "S_SCISSORLIFT": {
+   "name": "Scissor Lift",
+   "type": "Product"
+  },
+  "B_SCISSORLIFT": {
+   "name": "Shell Assembly Station",
+   "type": "Product"
+  },
+  "S_PUMP": {
+   "name": "Industrial Pump",
+   "type": "Product"
+  },
+  "S_GENERATOR": {
+   "name": "Small Generator",
+   "type": "Product"
+  },
+  "S_CRATE1": {
+   "name": "Large Moulded Crate",
+   "type": "Product"
+  },
+  "S_CRATE2": {
+   "name": "Moulded Crate",
+   "type": "Product"
+  },
+  "S_CANISTER1": {
+   "name": "Gas Canister",
+   "type": "Product"
+  },
+  "S_FENCE0": {
+   "name": "Panelled Timber Divider",
+   "type": "Product"
+  },
+  "S_FENCE1": {
+   "name": "Propped Timber Divider",
+   "type": "Product"
+  },
+  "S_FENCE2": {
+   "name": "Propped Timber Mini-Dividers",
+   "type": "Product"
+  },
+  "S_FENCE3": {
+   "name": "Propped Flag Dividers",
+   "type": "Product"
+  },
+  "S_HANGLAMP0": {
+   "name": "Hanging Lamp",
+   "type": "Product"
+  },
+  "S_CURTAIN0": {
+   "name": "Tied Drapes",
+   "type": "Product"
+  },
+  "S_GLOWGLOBE": {
+   "name": "Planetary Globe",
+   "type": "Product"
+  },
+  "S_DRAPE0": {
+   "name": "Opulent Tapestry",
+   "type": "Product"
+  },
+  "S_RUG1": {
+   "name": "Circle-Patterned Rug",
+   "type": "Product"
+  },
+  "S_STREETLAMP0": {
+   "name": "Lamp Post",
+   "type": "Product"
+  },
+  "B_STREETLAMP0": {
+   "name": "Atlantideum Street Lamp",
+   "type": "Product"
+  },
+  "S_LIGHTSTRIP0": {
+   "name": "Tube Light",
+   "type": "Product"
+  },
+  "S_SHELVINGUNIT0": {
+   "name": "Timber Shelving Unit",
+   "type": "Product"
+  },
+  "S_GAZEBO0": {
+   "name": "Canvas Gazebo",
+   "type": "Product"
+  },
+  "S_CRATE3": {
+   "name": "Moulded Lockbox",
+   "type": "Product"
+  },
+  "S_CRATE3OPEN": {
+   "name": "Open Moulded Lockbox",
+   "type": "Product"
+  },
+  "S_CRATE4": {
+   "name": "Tall Moulded Lockbox",
+   "type": "Product"
+  },
+  "S_CRATE4OPEN": {
+   "name": "Open Tall Moulded Lockbox",
+   "type": "Product"
+  },
+  "S_FABROLL0": {
+   "name": "Rolled Canvas",
+   "type": "Product"
+  },
+  "S_FABROLLPILE0": {
+   "name": "Rolled Canvas Pile",
+   "type": "Product"
+  },
+  "S_WATERVALVE0": {
+   "name": "Sealed Reservoir",
+   "type": "Product"
+  },
+  "S_MACHINE0": {
+   "name": "Cyclonic Lathe",
+   "type": "Product"
+  },
+  "S_POSTER0": {
+   "name": "Flight Path Poster",
+   "type": "Product"
+  },
+  "S_POSTER1": {
+   "name": "Blue Stripes Poster",
+   "type": "Product"
+  },
+  "S_POSTER2": {
+   "name": "Golden Gek Poster",
+   "type": "Product"
+  },
+  "S_POSTER3": {
+   "name": "Drone Alert Poster",
+   "type": "Product"
+  },
+  "S_POSTER4": {
+   "name": "Pawprints Poster",
+   "type": "Product"
+  },
+  "S_POSTER5": {
+   "name": "Ship Sale Poster",
+   "type": "Product"
+  },
+  "S_POSTER6": {
+   "name": "Korvax Guild Poster",
+   "type": "Product"
+  },
+  "S_POSTER7": {
+   "name": "Korvax Swirl Poster",
+   "type": "Product"
+  },
+  "S_POSTER8": {
+   "name": "Atlas Infinity Poster",
+   "type": "Product"
+  },
+  "S_POSTER9": {
+   "name": "Atlas Race Poster",
+   "type": "Product"
+  },
+  "S_POSTER10": {
+   "name": "Cactus Flesh Poster",
+   "type": "Product"
+  },
+  "S_POSTER11": {
+   "name": "Gek Hypnosis Poster",
+   "type": "Product"
+  },
+  "S_POSTER13": {
+   "name": "Falling Shapes Poster",
+   "type": "Product"
+  },
+  "S_POSTER15": {
+   "name": "'Keen Poster",
+   "type": "Product"
+  },
+  "S_HANGLAMP1": {
+   "name": "Triple Hanging Lamp",
+   "type": "Product"
+  },
+  "S_HANGLAMP2": {
+   "name": "Circles Hanging Lamp",
+   "type": "Product"
+  },
+  "S_HANGLAMP3": {
+   "name": "Splayed Hanging Lamp",
+   "type": "Product"
+  },
+  "B_SAIL0": {
+   "name": "Compact Transmitter",
+   "type": "Product"
+  },
+  "B_SAIL1": {
+   "name": "Cylindrical Transmitter",
+   "type": "Product"
+  },
+  "B_SAIL2": {
+   "name": "Vertical Transmitter",
+   "type": "Product"
+  },
+  "B_SAIL3": {
+   "name": "Transmitter",
+   "type": "Product"
+  },
+  "B_WALL_SUPPORTS": {
+   "name": "Decoration",
+   "type": "Product"
+  },
+  "GAMETABLE": {
+   "name": "Decoration",
+   "type": "Product"
+  },
+  "S_S_WALL": {
+   "name": "Stone Wall",
+   "type": "Product"
+  },
+  "S_WALL": {
+   "name": "Stone Wall",
+   "type": "Product"
+  },
+  "S_WALLB": {
+   "name": "Stone Wall (Base)",
+   "type": "Product"
+  },
+  "S_WALLM": {
+   "name": "Stone Wall (Mid)",
+   "type": "Product"
+  },
+  "S_WALLT": {
+   "name": "Stone Wall (Top)",
+   "type": "Product"
+  },
+  "S_WALL_H": {
+   "name": "Thin Stone Wall",
+   "type": "Product"
+  },
+  "S_WALLB_H": {
+   "name": "Thin Stone Wall (Base)",
+   "type": "Product"
+  },
+  "S_WALLM_H": {
+   "name": "Thin Stone Wall (Mid)",
+   "type": "Product"
+  },
+  "S_WALLT_H": {
+   "name": "Thin Stone Wall (Top)",
+   "type": "Product"
+  },
+  "S_WALL_Q": {
+   "name": "Small Stone Wall A",
+   "type": "Product"
+  },
+  "S_WALL_Q1": {
+   "name": "Small Stone Wall B",
+   "type": "Product"
+  },
+  "S_WALL_Q_H": {
+   "name": "Short Stone Wall A",
+   "type": "Product"
+  },
+  "S_WALL_Q_H1": {
+   "name": "Short Stone Wall B",
+   "type": "Product"
+  },
+  "S_WALLDIAGONAL": {
+   "name": "Sloping Stone Panel",
+   "type": "Product"
+  },
+  "S_WALLB_DIAGONA": {
+   "name": "Sloping Stone Panel (Base)",
+   "type": "Product"
+  },
+  "S_WALLM_DIAGONA": {
+   "name": "Sloping Stone Panel (Mid)",
+   "type": "Product"
+  },
+  "S_WALLT_DIAGONA": {
+   "name": "Sloping Stone Panel (Top)",
+   "type": "Product"
+  },
+  "S_WALL_WINDOW": {
+   "name": "Stone Slit Window",
+   "type": "Product"
+  },
+  "S_WALLB_WIN0": {
+   "name": "Stone Slit Window (Base)",
+   "type": "Product"
+  },
+  "S_WALLM_WIN0": {
+   "name": "Stone Slit Window (Mid)",
+   "type": "Product"
+  },
+  "S_WALLT_WIN0": {
+   "name": "Stone Slit Window (Top)",
+   "type": "Product"
+  },
+  "S_WALL_WIN1": {
+   "name": "Stone Grille Window",
+   "type": "Product"
+  },
+  "S_WALLB_WIN1": {
+   "name": "Stone Grille Window (Base)",
+   "type": "Product"
+  },
+  "S_WALLM_WIN1": {
+   "name": "Stone Grille Window (Mid)",
+   "type": "Product"
+  },
+  "S_WALLT_WIN1": {
+   "name": "Stone Grille Window (Top)",
+   "type": "Product"
+  },
+  "S_WALL_WIN2": {
+   "name": "Stone Large Window",
+   "type": "Product"
+  },
+  "S_WALLB_WIN2": {
+   "name": "Stone Large Window (Base)",
+   "type": "Product"
+  },
+  "S_WALLM_WIN2": {
+   "name": "Stone Large Window (Mid)",
+   "type": "Product"
+  },
+  "S_WALLT_WIN2": {
+   "name": "Stone Large Window (Top)",
+   "type": "Product"
+  },
+  "S_WALL_WIN3": {
+   "name": "Stone Circle Window",
+   "type": "Product"
+  },
+  "S_WALLB_WIN3": {
+   "name": "Stone Circle Window (Base)",
+   "type": "Product"
+  },
+  "S_WALLM_WIN3": {
+   "name": "Stone Circle Window (Mid)",
+   "type": "Product"
+  },
+  "S_WALLT_WIN3": {
+   "name": "Stone Circle Window (Top)",
+   "type": "Product"
+  },
+  "S_DOOR": {
+   "name": "Stone Arch Door",
+   "type": "Product"
+  },
+  "S_DOORB0": {
+   "name": "Stone Arch Door (Base)",
+   "type": "Product"
+  },
+  "S_DOORM0": {
+   "name": "Stone Arch Door (Mid)",
+   "type": "Product"
+  },
+  "S_DOORT0": {
+   "name": "Stone Arch Door (Top)",
+   "type": "Product"
+  },
+  "S_DOOR1": {
+   "name": "Stone Rectangular Door",
+   "type": "Product"
+  },
+  "S_DOORB1": {
+   "name": "Stone Rectangular Door (Base)",
+   "type": "Product"
+  },
+  "S_DOORM1": {
+   "name": "Stone Rectangular Door (Mid)",
+   "type": "Product"
+  },
+  "S_DOORT1": {
+   "name": "Stone Rectangular Door (Top)",
+   "type": "Product"
+  },
+  "S_FLOOR": {
+   "name": "Stone Floor Panel",
+   "type": "Product"
+  },
+  "S_FLOOR_Q": {
+   "name": "Small Stone Panel",
+   "type": "Product"
+  },
+  "S_TRIFLOOR": {
+   "name": "Stone Triangle",
+   "type": "Product"
+  },
+  "S_TRIFLOOR_Q": {
+   "name": "Small Stone Triangle",
+   "type": "Product"
+  },
+  "S_GFLOOR": {
+   "name": "Stone Floor Grille",
+   "type": "Product"
+  },
+  "S_RAMP": {
+   "name": "Stone Ramp",
+   "type": "Product"
+  },
+  "S_RAMP_H": {
+   "name": "Stone Half Ramp",
+   "type": "Product"
+  },
+  "S_ROOF0": {
+   "name": "Rounded Flat Stone Roof",
+   "type": "Product"
+  },
+  "S_ROOF1": {
+   "name": "Ventilated Flat Stone Roof",
+   "type": "Product"
+  },
+  "S_ROOF2": {
+   "name": "Angled Flat Stone Roof",
+   "type": "Product"
+  },
+  "S_ROOF3": {
+   "name": "Flat Stone Roof",
+   "type": "Product"
+  },
+  "S_ROOF4": {
+   "name": "Canvas Stone Roof",
+   "type": "Product"
+  },
+  "S_ROOF5": {
+   "name": "Stone Dome Roof",
+   "type": "Product"
+  },
+  "S_ROOF_M": {
+   "name": "Stone Roof Panel",
+   "type": "Product"
+  },
+  "S_ROOF_M_WIN": {
+   "name": "Stone Skylight Roof",
+   "type": "Product"
+  },
+  "S_ROOF_C": {
+   "name": "Stone Roof Corner",
+   "type": "Product"
+  },
+  "S_ROOF_IC": {
+   "name": "Stone Inner Roof Corner",
+   "type": "Product"
+  },
+  "S_CHEV_WALL": {
+   "name": "Extruded Stone Wall",
+   "type": "Product"
+  },
+  "S_CHEV_DOOR": {
+   "name": "Extruded Stone Door",
+   "type": "Product"
+  },
+  "S_CHEV_WALL_H_C": {
+   "name": "Extruded Stone Wall Cap",
+   "type": "Product"
+  },
+  "S_CHEV_WIN0": {
+   "name": "Extruded Stone Grille A",
+   "type": "Product"
+  },
+  "S_CHEV_WIN1": {
+   "name": "Extruded Stone Circle Window",
+   "type": "Product"
+  },
+  "S_CHEV_WIN2": {
+   "name": "Extruded Stone Grille B",
+   "type": "Product"
+  },
+  "S_ROOF_M_Q": {
+   "name": "Sloping Stone Roof Panel",
+   "type": "Product"
+  },
+  "S_ROOF_E_Q": {
+   "name": "Sloping Stone Roof Gable",
+   "type": "Product"
+  },
+  "S_ROOF_M_CAP": {
+   "name": "Stone Roof Cap",
+   "type": "Product"
+  },
+  "S_ROOF_E_CAP": {
+   "name": "Stone Roof Gable",
+   "type": "Product"
+  },
+  "S_DOOR_H": {
+   "name": "Stone Doorway",
+   "type": "Product"
+  },
+  "S_DOORB0_H": {
+   "name": "Stone Doorway (Base)",
+   "type": "Product"
+  },
+  "S_DOORM0_H": {
+   "name": "Stone Doorway (Mid)",
+   "type": "Product"
+  },
+  "S_DOORT0_H": {
+   "name": "Stone Doorway (Top)",
+   "type": "Product"
+  },
+  "S_DOORWINDOW": {
+   "name": "Stone Frontage",
+   "type": "Product"
+  },
+  "S_DOORWINB0": {
+   "name": "Stone Frontage (Base)",
+   "type": "Product"
+  },
+  "S_DOORWINM0": {
+   "name": "Stone Frontage (Mid)",
+   "type": "Product"
+  },
+  "S_DOORWINT0": {
+   "name": "Stone Frontage (Top)",
+   "type": "Product"
+  },
+  "S_GDOOR": {
+   "name": "Stone Power Door",
+   "type": "Product"
+  },
+  "S_GDOORB0": {
+   "name": "Stone Power Door (Base)",
+   "type": "Product"
+  },
+  "S_GDOORM0": {
+   "name": "Stone Power Door (Mid)",
+   "type": "Product"
+  },
+  "S_GDOORT0": {
+   "name": "Stone Power Door (Top)",
+   "type": "Product"
+  },
+  "S_ARCH": {
+   "name": "Stone Arch",
+   "type": "Product"
+  },
+  "S_ARCHB": {
+   "name": "Stone Arch (Base)",
+   "type": "Product"
+  },
+  "S_ARCHM": {
+   "name": "Stone Arch (Mid)",
+   "type": "Product"
+  },
+  "S_ARCHT": {
+   "name": "Stone Arch (Top)",
+   "type": "Product"
+  },
+  "S_ARCH_H": {
+   "name": "Stone Half Arch",
+   "type": "Product"
+  },
+  "S_ARCHB_H": {
+   "name": "Stone Half Arch (Base)",
+   "type": "Product"
+  },
+  "S_ARCHM_H": {
+   "name": "Stone Half Arch (Mid)",
+   "type": "Product"
+  },
+  "S_ARCHT_H": {
+   "name": "Stone Half Arch (Top)",
+   "type": "Product"
+  },
+  "S_RAMP_Q_TOP": {
+   "name": "Stone Half Ramp Platform",
+   "type": "Product"
+  },
+  "T_WALL": {
+   "name": "Timber Wall",
+   "type": "Product"
+  },
+  "T_WALLB": {
+   "name": "Timber Wall (Base)",
+   "type": "Product"
+  },
+  "T_WALLM": {
+   "name": "Timber Wall (Mid)",
+   "type": "Product"
+  },
+  "T_WALLT": {
+   "name": "Timber Wall (Top)",
+   "type": "Product"
+  },
+  "T_WALL_H": {
+   "name": "Thin Timber Wall",
+   "type": "Product"
+  },
+  "T_WALLB_H": {
+   "name": "Thin Timber Wall (Base)",
+   "type": "Product"
+  },
+  "T_WALLM_H": {
+   "name": "Thin Timber Wall (Mid)",
+   "type": "Product"
+  },
+  "T_WALLT_H": {
+   "name": "Thin Timber Wall (Top)",
+   "type": "Product"
+  },
+  "T_WALL_Q": {
+   "name": "Small Timber Wall A",
+   "type": "Product"
+  },
+  "T_WALL_Q1": {
+   "name": "Small Timber Wall B",
+   "type": "Product"
+  },
+  "T_WALL_Q_H": {
+   "name": "Short Timber Wall A",
+   "type": "Product"
+  },
+  "T_WALL_Q_H1": {
+   "name": "Short Timber Wall B",
+   "type": "Product"
+  },
+  "T_WALLDIAGONAL": {
+   "name": "Sloping Timber Panel",
+   "type": "Product"
+  },
+  "T_WALLB_DIAGONA": {
+   "name": "Sloping Timber Panel (Base)",
+   "type": "Product"
+  },
+  "T_WALLM_DIAGONA": {
+   "name": "Sloping Timber Panel (Mid)",
+   "type": "Product"
+  },
+  "T_WALLT_DIAGONA": {
+   "name": "Sloping Timber Panel (Top)",
+   "type": "Product"
+  },
+  "T_WALL_WINDOW": {
+   "name": "Twin Timber Windows",
+   "type": "Product"
+  },
+  "T_WALLB_WIN0": {
+   "name": "Twin Timber Windows (Base)",
+   "type": "Product"
+  },
+  "T_WALLM_WIN0": {
+   "name": "Twin Timber Windows (Mid)",
+   "type": "Product"
+  },
+  "T_WALLT_WIN0": {
+   "name": "Twin Timber Windows (Top)",
+   "type": "Product"
+  },
+  "T_WALL_WIN1": {
+   "name": "Horizontal Timber Windows",
+   "type": "Product"
+  },
+  "T_WALLB_WIN1": {
+   "name": "Horizontal Timber Windows (Base)",
+   "type": "Product"
+  },
+  "T_WALLM_WIN1": {
+   "name": "Horizontal Timber Windows (Mid)",
+   "type": "Product"
+  },
+  "T_WALLT_WIN1": {
+   "name": "Horizontal Timber Windows (Top)",
+   "type": "Product"
+  },
+  "T_WALL_WIN2": {
+   "name": "Large Timber Double Window",
+   "type": "Product"
+  },
+  "T_WALLB_WIN2": {
+   "name": "Large Timber Double Window (Base)",
+   "type": "Product"
+  },
+  "T_WALLM_WIN2": {
+   "name": "Large Timber Double Window (Mid)",
+   "type": "Product"
+  },
+  "T_WALLT_WIN2": {
+   "name": "Large Timber Double Window (Top)",
+   "type": "Product"
+  },
+  "T_WALL_WIN3": {
+   "name": "Large Timber Triple Window",
+   "type": "Product"
+  },
+  "T_WALLB_WIN3": {
+   "name": "Large Timber Triple Window (Base)",
+   "type": "Product"
+  },
+  "T_WALLM_WIN3": {
+   "name": "Large Timber Triple Window (Mid)",
+   "type": "Product"
+  },
+  "T_WALLT_WIN3": {
+   "name": "Large Timber Triple Window (Top)",
+   "type": "Product"
+  },
+  "T_DOOR": {
+   "name": "Timber Rectangular Door",
+   "type": "Product"
+  },
+  "T_DOORB0": {
+   "name": "Timber Rectangular Door (Base)",
+   "type": "Product"
+  },
+  "T_DOORM0": {
+   "name": "Timber Rectangular Door (Mid)",
+   "type": "Product"
+  },
+  "T_DOORT0": {
+   "name": "Timber Rectangular Door (Top)",
+   "type": "Product"
+  },
+  "T_DOOR1": {
+   "name": "Timber Angled Door",
+   "type": "Product"
+  },
+  "T_DOORB1": {
+   "name": "Timber Angled Door (Base)",
+   "type": "Product"
+  },
+  "T_DOORM1": {
+   "name": "Timber Angled Door (Mid)",
+   "type": "Product"
+  },
+  "T_DOORT1": {
+   "name": "Timber Angled Door (Top)",
+   "type": "Product"
+  },
+  "T_FLOOR": {
+   "name": "Timber Floor Panel",
+   "type": "Product"
+  },
+  "T_FLOOR_Q": {
+   "name": "Small Timber Panel",
+   "type": "Product"
+  },
+  "T_TRIFLOOR": {
+   "name": "Timber Triangle",
+   "type": "Product"
+  },
+  "T_TRIFLOOR_Q": {
+   "name": "Small Timber Triangle",
+   "type": "Product"
+  },
+  "T_GFLOOR": {
+   "name": "Timber-Framed Glass Panel",
+   "type": "Product"
+  },
+  "T_RAMP": {
+   "name": "Timber Ramp",
+   "type": "Product"
+  },
+  "T_RAMP_H": {
+   "name": "Timber Half Ramp",
+   "type": "Product"
+  },
+  "T_ROOF0": {
+   "name": "Rounded Flat Timber-Glass Roof",
+   "type": "Product"
+  },
+  "T_ROOF1": {
+   "name": "Asymmetrical Timber-Glass Roof",
+   "type": "Product"
+  },
+  "T_ROOF2": {
+   "name": "L-Skylight Timber Roof",
+   "type": "Product"
+  },
+  "T_ROOF3": {
+   "name": "Folded Sail Timber Roof",
+   "type": "Product"
+  },
+  "T_ROOF4": {
+   "name": "U-Skylight Timber Roof",
+   "type": "Product"
+  },
+  "T_ROOF5": {
+   "name": "Draped Sail Timber Roof",
+   "type": "Product"
+  },
+  "T_ROOF6": {
+   "name": "Flat Timber Roof",
+   "type": "Product"
+  },
+  "T_ROOF7": {
+   "name": "Rounded Timber Roof",
+   "type": "Product"
+  },
+  "T_ROOF_M": {
+   "name": "Timber Roof Panel",
+   "type": "Product"
+  },
+  "T_ROOF_M_WIN": {
+   "name": "Timber Skylight Roof",
+   "type": "Product"
+  },
+  "T_ROOF_C": {
+   "name": "Timber Roof Corner",
+   "type": "Product"
+  },
+  "T_ROOF_IC": {
+   "name": "Timber Inner Roof Corner",
+   "type": "Product"
+  },
+  "T_CHEV_WALL": {
+   "name": "Extruded Timber Wall A",
+   "type": "Product"
+  },
+  "T_CHEV_DOOR": {
+   "name": "Extruded Timber-Glass Door",
+   "type": "Product"
+  },
+  "T_CHEV_WALL_H_C": {
+   "name": "Extruded Timber Wall Cap",
+   "type": "Product"
+  },
+  "T_CHEV_WIN0": {
+   "name": "Extruded Timber Wall B",
+   "type": "Product"
+  },
+  "T_CHEV_WIN1": {
+   "name": "Extruded Timber Large Window",
+   "type": "Product"
+  },
+  "T_CHEV_WIN2": {
+   "name": "Extruded Timber Small Window",
+   "type": "Product"
+  },
+  "T_ROOF_M_Q": {
+   "name": "Sloping Timber Roof Panel",
+   "type": "Product"
+  },
+  "T_ROOF_E_Q": {
+   "name": "Sloping Timber Roof Gable",
+   "type": "Product"
+  },
+  "T_ROOF_M_CAP": {
+   "name": "Timber Roof Cap",
+   "type": "Product"
+  },
+  "T_ROOF_E_CAP": {
+   "name": "Timber Roof Gable",
+   "type": "Product"
+  },
+  "T_DOOR_H": {
+   "name": "Timber Doorway",
+   "type": "Product"
+  },
+  "T_DOORB0_H": {
+   "name": "Timber Doorway (Base)",
+   "type": "Product"
+  },
+  "T_DOORM0_H": {
+   "name": "Timber Doorway (Mid)",
+   "type": "Product"
+  },
+  "T_DOORT0_H": {
+   "name": "Timber Doorway (Top)",
+   "type": "Product"
+  },
+  "T_DOORWINDOW": {
+   "name": "Timber Frontage",
+   "type": "Product"
+  },
+  "T_DOORWINB0": {
+   "name": "Timber Frontage (Base)",
+   "type": "Product"
+  },
+  "T_DOORWINM0": {
+   "name": "Timber Frontage (Mid)",
+   "type": "Product"
+  },
+  "T_DOORWINT0": {
+   "name": "Timber Frontage (Top)",
+   "type": "Product"
+  },
+  "T_GDOOR": {
+   "name": "Timber Power Door",
+   "type": "Product"
+  },
+  "T_GDOORB0": {
+   "name": "Timber Power Door (Base)",
+   "type": "Product"
+  },
+  "T_GDOORM0": {
+   "name": "Timber Power Door (Mid)",
+   "type": "Product"
+  },
+  "T_GDOORT0": {
+   "name": "Timber Power Door (Top)",
+   "type": "Product"
+  },
+  "T_ARCH": {
+   "name": "Timber Arch",
+   "type": "Product"
+  },
+  "T_ARCHB": {
+   "name": "Timber Arch (Base)",
+   "type": "Product"
+  },
+  "T_ARCHM": {
+   "name": "Timber Arch (Mid)",
+   "type": "Product"
+  },
+  "T_ARCHT": {
+   "name": "Timber Arch (Top)",
+   "type": "Product"
+  },
+  "T_ARCH_H": {
+   "name": "Timber Half Arch",
+   "type": "Product"
+  },
+  "T_ARCHB_H": {
+   "name": "Timber Half Arch (Base)",
+   "type": "Product"
+  },
+  "T_ARCHM_H": {
+   "name": "Timber Half Arch (Mid)",
+   "type": "Product"
+  },
+  "T_ARCHT_H": {
+   "name": "Timber Half Arch (Top)",
+   "type": "Product"
+  },
+  "T_RAMP_Q_TOP": {
+   "name": "Timber Half Ramp Platform",
+   "type": "Product"
+  },
+  "F_WALL": {
+   "name": "Alloy Wall",
+   "type": "Product"
+  },
+  "F_WALLB": {
+   "name": "Alloy Wall (Base)",
+   "type": "Product"
+  },
+  "F_WALLM": {
+   "name": "Alloy Wall (Mid)",
+   "type": "Product"
+  },
+  "F_WALLT": {
+   "name": "Alloy Wall (Top)",
+   "type": "Product"
+  },
+  "F_WALL_H": {
+   "name": "Thin Alloy Wall",
+   "type": "Product"
+  },
+  "F_WALLB_H": {
+   "name": "Thin Alloy Wall (Base)",
+   "type": "Product"
+  },
+  "F_WALLM_H": {
+   "name": "Thin Alloy Wall (Mid)",
+   "type": "Product"
+  },
+  "F_WALLT_H": {
+   "name": "Thin Alloy Wall (Top)",
+   "type": "Product"
+  },
+  "F_WALL_Q": {
+   "name": "Small Alloy Wall A",
+   "type": "Product"
+  },
+  "F_WALL_Q1": {
+   "name": "Small Alloy Wall B",
+   "type": "Product"
+  },
+  "F_WALL_Q_H": {
+   "name": "Short Alloy Wall A",
+   "type": "Product"
+  },
+  "F_WALL_Q_H1": {
+   "name": "Short Alloy Wall B",
+   "type": "Product"
+  },
+  "F_WALLDIAGONAL": {
+   "name": "Sloping Alloy Panel",
+   "type": "Product"
+  },
+  "F_WALLB_DIAGONA": {
+   "name": "Sloping Alloy Panel (Base)",
+   "type": "Product"
+  },
+  "F_WALLM_DIAGONA": {
+   "name": "Sloping Alloy Panel (Mid)",
+   "type": "Product"
+  },
+  "F_WALLT_DIAGONA": {
+   "name": "Sloping Alloy Panel (Top)",
+   "type": "Product"
+  },
+  "F_WALL_WINDOW": {
+   "name": "Alloy Window",
+   "type": "Product"
+  },
+  "F_WALLB_WIN0": {
+   "name": "Alloy Window (Base)",
+   "type": "Product"
+  },
+  "F_WALLM_WIN0": {
+   "name": "Alloy Window (Mid)",
+   "type": "Product"
+  },
+  "F_WALLT_WIN0": {
+   "name": "Alloy Window (Top)",
+   "type": "Product"
+  },
+  "F_WALL_WIN1": {
+   "name": "Irregular Alloy Window",
+   "type": "Product"
+  },
+  "F_WALLB_WIN1": {
+   "name": "Irregular Alloy Window (Base)",
+   "type": "Product"
+  },
+  "F_WALLM_WIN1": {
+   "name": "Irregular Alloy Window (Mid)",
+   "type": "Product"
+  },
+  "F_WALLT_WIN1": {
+   "name": "Irregular Alloy Window (Top)",
+   "type": "Product"
+  },
+  "F_WALL_WIN2": {
+   "name": "Twin Alloy Windows",
+   "type": "Product"
+  },
+  "F_WALLB_WIN2": {
+   "name": "Twin Alloy Windows (Base)",
+   "type": "Product"
+  },
+  "F_WALLM_WIN2": {
+   "name": "Twin Alloy Windows (Mid)",
+   "type": "Product"
+  },
+  "F_WALLT_WIN2": {
+   "name": "Twin Alloy Windows (Top)",
+   "type": "Product"
+  },
+  "F_WALL_WIN3": {
+   "name": "Horizontal Alloy Window",
+   "type": "Product"
+  },
+  "F_WALLB_WIN3": {
+   "name": "Horizontal Alloy Window (Base)",
+   "type": "Product"
+  },
+  "F_WALLM_WIN3": {
+   "name": "Horizontal Alloy Window (Mid)",
+   "type": "Product"
+  },
+  "F_WALLT_WIN3": {
+   "name": "Horizontal Alloy Window (Top)",
+   "type": "Product"
+  },
+  "F_DOOR": {
+   "name": "Alloy Door A",
+   "type": "Product"
+  },
+  "F_DOORB0": {
+   "name": "Alloy Door A (Base)",
+   "type": "Product"
+  },
+  "F_DOORM0": {
+   "name": "Alloy Door A (Mid)",
+   "type": "Product"
+  },
+  "F_DOORT0": {
+   "name": "Alloy Door A (Top)",
+   "type": "Product"
+  },
+  "F_DOOR1": {
+   "name": "Alloy Door B",
+   "type": "Product"
+  },
+  "F_DOORB1": {
+   "name": "Alloy Door B (Base)",
+   "type": "Product"
+  },
+  "F_DOORM1": {
+   "name": "Alloy Door B (Mid)",
+   "type": "Product"
+  },
+  "F_DOORT1": {
+   "name": "Alloy Door B (Top)",
+   "type": "Product"
+  },
+  "F_FLOOR": {
+   "name": "Alloy Floor Panel",
+   "type": "Product"
+  },
+  "F_FLOOR_Q": {
+   "name": "Small Alloy Panel",
+   "type": "Product"
+  },
+  "F_TRIFLOOR": {
+   "name": "Alloy Triangle",
+   "type": "Product"
+  },
+  "F_TRIFLOOR_Q": {
+   "name": "Small Alloy Triangle",
+   "type": "Product"
+  },
+  "F_GFLOOR": {
+   "name": "Alloy-Framed Glass Panel",
+   "type": "Product"
+  },
+  "F_RAMP": {
+   "name": "Alloy Ramp",
+   "type": "Product"
+  },
+  "F_RAMP_H": {
+   "name": "Alloy Half Ramp",
+   "type": "Product"
+  },
+  "F_ROOF0": {
+   "name": "Side-Lit Flat Alloy Roof",
+   "type": "Product"
+  },
+  "F_ROOF1": {
+   "name": "Tall Flat Alloy Roof",
+   "type": "Product"
+  },
+  "F_ROOF2": {
+   "name": "Skylight Alloy Roof",
+   "type": "Product"
+  },
+  "F_ROOF3": {
+   "name": "Top-Lit Flat Alloy Roof",
+   "type": "Product"
+  },
+  "F_ROOF4": {
+   "name": "Folded Sail Alloy Roof",
+   "type": "Product"
+  },
+  "F_ROOF5": {
+   "name": "Angled Flat Alloy Roof",
+   "type": "Product"
+  },
+  "F_ROOF6": {
+   "name": "Elaborate Alloy Roof",
+   "type": "Product"
+  },
+  "F_ROOF7": {
+   "name": "Flat Alloy Roof",
+   "type": "Product"
+  },
+  "F_ROOF8": {
+   "name": "Raised Platform Alloy Roof",
+   "type": "Product"
+  },
+  "F_ROOF_M": {
+   "name": "Alloy Roof Panel",
+   "type": "Product"
+  },
+  "F_ROOF_M_WIN": {
+   "name": "Alloy Skylight Roof",
+   "type": "Product"
+  },
+  "F_ROOF_C": {
+   "name": "Alloy Roof Corner",
+   "type": "Product"
+  },
+  "F_ROOF_IC": {
+   "name": "Alloy Inner Roof Corner",
+   "type": "Product"
+  },
+  "F_CHEV_WALL": {
+   "name": "Extruded Alloy Wall",
+   "type": "Product"
+  },
+  "F_CHEV_DOOR": {
+   "name": "Extruded Alloy Door",
+   "type": "Product"
+  },
+  "F_CHEV_WALL_H_C": {
+   "name": "Extruded Alloy Wall Cap",
+   "type": "Product"
+  },
+  "F_CHEV_WIN0": {
+   "name": "Extruded Alloy Window",
+   "type": "Product"
+  },
+  "F_CHEV_WIN1": {
+   "name": "Extruded Alloy Horizontal Window",
+   "type": "Product"
+  },
+  "F_CHEV_WIN2": {
+   "name": "Extruded Alloy Small Window",
+   "type": "Product"
+  },
+  "F_ROOF_M_Q": {
+   "name": "Sloping Alloy Roof Panel",
+   "type": "Product"
+  },
+  "F_ROOF_E_Q": {
+   "name": "Sloping Alloy Roof Gable",
+   "type": "Product"
+  },
+  "F_ROOF_M_CAP": {
+   "name": "Alloy Roof Cap",
+   "type": "Product"
+  },
+  "F_ROOF_E_CAP": {
+   "name": "Alloy Roof Gable",
+   "type": "Product"
+  },
+  "F_DOOR_H": {
+   "name": "Alloy Doorway",
+   "type": "Product"
+  },
+  "F_DOORB0_H": {
+   "name": "Alloy Doorway (Base)",
+   "type": "Product"
+  },
+  "F_DOORM0_H": {
+   "name": "Alloy Doorway (Mid)",
+   "type": "Product"
+  },
+  "F_DOORT0_H": {
+   "name": "Alloy Doorway (Top)",
+   "type": "Product"
+  },
+  "F_DOORWINDOW": {
+   "name": "Alloy Frontage",
+   "type": "Product"
+  },
+  "F_DOORWINB0": {
+   "name": "Alloy Frontage (Base)",
+   "type": "Product"
+  },
+  "F_DOORWINM0": {
+   "name": "Alloy Frontage (Mid)",
+   "type": "Product"
+  },
+  "F_DOORWINT0": {
+   "name": "Alloy Frontage (Top)",
+   "type": "Product"
+  },
+  "F_GDOOR": {
+   "name": "Alloy Power Door",
+   "type": "Product"
+  },
+  "F_GDOORB0": {
+   "name": "Alloy Power Door (Base)",
+   "type": "Product"
+  },
+  "F_GDOORM0": {
+   "name": "Alloy Power Door (Mid)",
+   "type": "Product"
+  },
+  "F_GDOORT0": {
+   "name": "Alloy Power Door (Top)",
+   "type": "Product"
+  },
+  "F_ARCH": {
+   "name": "Alloy Arch",
+   "type": "Product"
+  },
+  "F_ARCHB": {
+   "name": "Alloy Arch (Base)",
+   "type": "Product"
+  },
+  "F_ARCHM": {
+   "name": "Alloy Arch (Mid)",
+   "type": "Product"
+  },
+  "F_ARCHT": {
+   "name": "Alloy Arch (Top)",
+   "type": "Product"
+  },
+  "F_ARCH_H": {
+   "name": "Alloy Half Arch",
+   "type": "Product"
+  },
+  "F_ARCHB_H": {
+   "name": "Alloy Half Arch (Base)",
+   "type": "Product"
+  },
+  "F_ARCHM_H": {
+   "name": "Alloy Half Arch (Mid)",
+   "type": "Product"
+  },
+  "F_ARCHT_H": {
+   "name": "Alloy Half Arch (Top)",
+   "type": "Product"
+  },
+  "F_RAMP_Q_TOP": {
+   "name": "Alloy Half Ramp Platform",
+   "type": "Product"
+  },
+  "B_WALL": {
+   "name": "Salvaged Wall",
+   "type": "Product"
+  },
+  "B_WALLB": {
+   "name": "Salvaged Wall (Base)",
+   "type": "Product"
+  },
+  "B_WALLM": {
+   "name": "Salvaged Wall (Mid)",
+   "type": "Product"
+  },
+  "B_WALLT": {
+   "name": "Salvaged Wall (Top)",
+   "type": "Product"
+  },
+  "B_WALL_H": {
+   "name": "Thin Salvaged Wall",
+   "type": "Product"
+  },
+  "B_WALLB_H": {
+   "name": "Thin Salvaged Wall (Base)",
+   "type": "Product"
+  },
+  "B_WALLM_H": {
+   "name": "Thin Salvaged Wall (Mid)",
+   "type": "Product"
+  },
+  "B_WALLT_H": {
+   "name": "Thin Salvaged Wall (Top)",
+   "type": "Product"
+  },
+  "B_WALL_Q": {
+   "name": "Small Salvaged Wall A",
+   "type": "Product"
+  },
+  "B_WALL_Q1": {
+   "name": "Small Salvaged Wall B",
+   "type": "Product"
+  },
+  "B_WALL_Q_H": {
+   "name": "Short Salvaged Wall A",
+   "type": "Product"
+  },
+  "B_WALL_Q_H1": {
+   "name": "Short Salvaged Wall B",
+   "type": "Product"
+  },
+  "B_WALLDIAGONAL": {
+   "name": "Sloping Salvaged Panel",
+   "type": "Product"
+  },
+  "B_WALLB_DIAGONA": {
+   "name": "Sloping Salvaged Panel (Base)",
+   "type": "Product"
+  },
+  "B_WALLM_DIAGONA": {
+   "name": "Sloping Salvaged Panel (Mid)",
+   "type": "Product"
+  },
+  "B_WALLT_DIAGONA": {
+   "name": "Sloping Salvaged Panel (Top)",
+   "type": "Product"
+  },
+  "B_WALL_WINDOW": {
+   "name": "Salvaged Window",
+   "type": "Product"
+  },
+  "B_WALLB_WIN0": {
+   "name": "Salvaged Window (Base)",
+   "type": "Product"
+  },
+  "B_WALLM_WIN0": {
+   "name": "Salvaged Window (Mid)",
+   "type": "Product"
+  },
+  "B_WALLT_WIN0": {
+   "name": "Salvaged Window (Top)",
+   "type": "Product"
+  },
+  "B_WALL_WIN1": {
+   "name": "Irregular Salvaged Window",
+   "type": "Product"
+  },
+  "B_WALLB_WIN1": {
+   "name": "Irregular Salvaged Window (Base)",
+   "type": "Product"
+  },
+  "B_WALLM_WIN1": {
+   "name": "Irregular Salvaged Window (Mid)",
+   "type": "Product"
+  },
+  "B_WALLT_WIN1": {
+   "name": "Irregular Salvaged Window (Top)",
+   "type": "Product"
+  },
+  "B_WALL_WIN2": {
+   "name": "Twin Salvaged Windows",
+   "type": "Product"
+  },
+  "B_WALLB_WIN2": {
+   "name": "Twin Salvaged Windows (Base)",
+   "type": "Product"
+  },
+  "B_WALLM_WIN2": {
+   "name": "Twin Salvaged Windows (Mid)",
+   "type": "Product"
+  },
+  "B_WALLT_WIN2": {
+   "name": "Twin Salvaged Windows (Top)",
+   "type": "Product"
+  },
+  "B_WALL_WIN3": {
+   "name": "Horizontal Salvaged Window",
+   "type": "Product"
+  },
+  "B_WALLB_WIN3": {
+   "name": "Horizontal Salvaged Window (Base)",
+   "type": "Product"
+  },
+  "B_WALLM_WIN3": {
+   "name": "Horizontal Salvaged Window (Mid)",
+   "type": "Product"
+  },
+  "B_WALLT_WIN3": {
+   "name": "Horizontal Salvaged Window (Top)",
+   "type": "Product"
+  },
+  "B_DOOR": {
+   "name": "Salvaged Door A",
+   "type": "Product"
+  },
+  "B_DOORB0": {
+   "name": "Salvaged Door A (Base)",
+   "type": "Product"
+  },
+  "B_DOORM0": {
+   "name": "Salvaged Door A (Mid)",
+   "type": "Product"
+  },
+  "B_DOORT0": {
+   "name": "Salvaged Door A (Top)",
+   "type": "Product"
+  },
+  "B_DOOR1": {
+   "name": "Salvaged Door B",
+   "type": "Product"
+  },
+  "B_DOORB1": {
+   "name": "Salvaged Door B (Base)",
+   "type": "Product"
+  },
+  "B_DOORM1": {
+   "name": "Salvaged Door B (Mid)",
+   "type": "Product"
+  },
+  "B_DOORT1": {
+   "name": "Salvaged Door B (Top)",
+   "type": "Product"
+  },
+  "B_FLOOR": {
+   "name": "Salvaged Floor Panel",
+   "type": "Product"
+  },
+  "B_FLOOR_Q": {
+   "name": "Small Salvaged Panel",
+   "type": "Product"
+  },
+  "B_TRIFLOOR": {
+   "name": "Salvaged Triangle",
+   "type": "Product"
+  },
+  "B_TRIFLOOR_Q": {
+   "name": "Small Salvaged Triangle",
+   "type": "Product"
+  },
+  "B_GFLOOR": {
+   "name": "Salvaged-Framed Glass Panel",
+   "type": "Product"
+  },
+  "B_RAMP": {
+   "name": "Salvaged Ramp",
+   "type": "Product"
+  },
+  "B_RAMP_H": {
+   "name": "Salvaged Half Ramp",
+   "type": "Product"
+  },
+  "B_ROOF0": {
+   "name": "Salvaged Triple Tank Roof",
+   "type": "Product"
+  },
+  "B_ROOF1": {
+   "name": "Salvaged Gazebo Roof",
+   "type": "Product"
+  },
+  "B_ROOF2": {
+   "name": "Salvaged Antenna Roof",
+   "type": "Product"
+  },
+  "B_ROOF3": {
+   "name": "Salvaged Sphere Tank Roof",
+   "type": "Product"
+  },
+  "B_ROOF4": {
+   "name": "Salvaged Flat Roof",
+   "type": "Product"
+  },
+  "B_ROOF5": {
+   "name": "Salvaged Dome Roof",
+   "type": "Product"
+  },
+  "B_ROOF6": {
+   "name": "Salvaged Amplifier Roof",
+   "type": "Product"
+  },
+  "B_ROOF7": {
+   "name": "Salvaged Large Transmitter Roof",
+   "type": "Product"
+  },
+  "B_ROOF8": {
+   "name": "Salvaged Small Transmitter Roof",
+   "type": "Product"
+  },
+  "B_ROOF_M": {
+   "name": "Salvaged Roof Panel",
+   "type": "Product"
+  },
+  "B_ROOF_M_WIN": {
+   "name": "Salvaged Skylight Roof",
+   "type": "Product"
+  },
+  "B_ROOF_C": {
+   "name": "Salvaged Roof Corner",
+   "type": "Product"
+  },
+  "B_ROOF_IC": {
+   "name": "Salvaged Inner Roof Corner",
+   "type": "Product"
+  },
+  "B_CHEV_WALL": {
+   "name": "Extruded Salvaged Wall",
+   "type": "Product"
+  },
+  "B_CHEV_DOOR": {
+   "name": "Extruded Salvaged Door",
+   "type": "Product"
+  },
+  "B_CHEV_WALL_H_C": {
+   "name": "Extruded Salvaged Wall Cap",
+   "type": "Product"
+  },
+  "B_CHEV_WIN0": {
+   "name": "Extruded Salvaged Window",
+   "type": "Product"
+  },
+  "B_CHEV_WIN1": {
+   "name": "Extruded Salvaged Horizontal Window",
+   "type": "Product"
+  },
+  "B_CHEV_WIN2": {
+   "name": "Extruded Salvaged Small Window",
+   "type": "Product"
+  },
+  "B_ROOF_M_Q": {
+   "name": "Sloping Salvaged Roof Panel",
+   "type": "Product"
+  },
+  "B_ROOF_E_Q": {
+   "name": "Sloping Salvaged Roof Gable",
+   "type": "Product"
+  },
+  "B_ROOF_M_CAP": {
+   "name": "Salvaged Roof Cap",
+   "type": "Product"
+  },
+  "B_ROOF_E_CAP": {
+   "name": "Salvaged Roof Gable",
+   "type": "Product"
+  },
+  "B_DOOR_H": {
+   "name": "Salvaged Doorway",
+   "type": "Product"
+  },
+  "B_DOORB0_H": {
+   "name": "Salvaged Doorway (Base)",
+   "type": "Product"
+  },
+  "B_DOORM0_H": {
+   "name": "Salvaged Doorway (Mid)",
+   "type": "Product"
+  },
+  "B_DOORT0_H": {
+   "name": "Salvaged Doorway (Top)",
+   "type": "Product"
+  },
+  "B_DOORWINDOW": {
+   "name": "Salvaged Frontage",
+   "type": "Product"
+  },
+  "B_DOORWINB0": {
+   "name": "Salvaged Frontage (Base)",
+   "type": "Product"
+  },
+  "B_DOORWINM0": {
+   "name": "Salvaged Frontage (Mid)",
+   "type": "Product"
+  },
+  "B_DOORWINT0": {
+   "name": "Salvaged Frontage (Top)",
+   "type": "Product"
+  },
+  "B_GDOOR": {
+   "name": "Salvaged Power Door",
+   "type": "Product"
+  },
+  "B_GDOORB0": {
+   "name": "Salvaged Power Door (Base)",
+   "type": "Product"
+  },
+  "B_GDOORM0": {
+   "name": "Salvaged Power Door (Mid)",
+   "type": "Product"
+  },
+  "B_GDOORT0": {
+   "name": "Salvaged Power Door (Top)",
+   "type": "Product"
+  },
+  "B_ARCH": {
+   "name": "Salvaged Arch",
+   "type": "Product"
+  },
+  "B_ARCHB": {
+   "name": "Salvaged Arch (Base)",
+   "type": "Product"
+  },
+  "B_ARCHM": {
+   "name": "Salvaged Arch (Mid)",
+   "type": "Product"
+  },
+  "B_ARCHT": {
+   "name": "Salvaged Arch (Top)",
+   "type": "Product"
+  },
+  "B_ARCH_H": {
+   "name": "Salvaged Half Arch",
+   "type": "Product"
+  },
+  "B_ARCHB_H": {
+   "name": "Salvaged Half Arch (Base)",
+   "type": "Product"
+  },
+  "B_ARCHM_H": {
+   "name": "Salvaged Half Arch (Mid)",
+   "type": "Product"
+  },
+  "B_ARCHT_H": {
+   "name": "Salvaged Half Arch (Top)",
+   "type": "Product"
+  },
+  "B_RAMP_Q_TOP": {
+   "name": "Salvaged Half Ramp Platform",
+   "type": "Product"
+  },
+  "U_EXTRACTOR_S": {
+   "name": "Mineral Extractor",
+   "type": "Product"
+  },
+  "U_GASEXTRACTOR": {
+   "name": "Gas Extractor",
+   "type": "Product"
+  },
+  "U_SILO_S": {
+   "name": "Supply Depot",
+   "type": "Product"
+  },
+  "U_SOLAR_S": {
+   "name": "Solar Panel",
+   "type": "Product"
+  },
+  "U_GENERATOR_S": {
+   "name": "Electromagnetic Generator",
+   "type": "Product"
+  },
+  "U_BIOGENERATOR": {
+   "name": "Biofuel Reactor",
+   "type": "Product"
+  },
+  "U_POWERLINE": {
+   "name": "Electrical Wiring",
+   "type": "Product"
+  },
+  "U_PORTALLINE": {
+   "name": "Teleport Cable",
+   "type": "Product"
+  },
+  "U_BYTEBEATLINE": {
+   "name": "ByteBeat Cable",
+   "type": "Product"
+  },
+  "U_SWITCHWALL": {
+   "name": "Wall Switch",
+   "type": "Product"
+  },
+  "U_SWITCHPRESS": {
+   "name": "Floor Switch",
+   "type": "Product"
+  },
+  "U_BATTERY_S": {
+   "name": "Battery",
+   "type": "Product"
+  },
+  "U_SWITCHBUTTON": {
+   "name": "Button",
+   "type": "Product"
+  },
+  "U_SWITCHPROX": {
+   "name": "Proximity Switch",
+   "type": "Product"
+  },
+  "U_PIPELINE": {
+   "name": "Supply Pipe",
+   "type": "Product"
+  },
+  "U_TRANSISTOR1": {
+   "name": "Power Inverter",
+   "type": "Product"
+  },
+  "U_TRANSISTOR2": {
+   "name": "Auto Switch",
+   "type": "Product"
+  },
+  "U_MINIPORTAL": {
+   "name": "Short-Range Teleporter",
+   "type": "Product"
+  },
+  "U_MINIPORTAL_CV": {
+   "name": "Short-Range Teleporter",
+   "type": "Product"
+  },
+  "BYTEBEATSWITCH": {
+   "name": "Bytebeat Switch",
+   "type": "Product"
+  },
+  "POWERLINE_HIDER": {
+   "name": "Electrical Cloaking Unit",
+   "type": "Product"
+  },
+  "FIGHT_COCKAA": {
+   "name": "Omega Fuselage",
+   "type": "Product"
+  },
+  "FIGHT_COCKAB": {
+   "name": "Radiant Cockpit",
+   "type": "Product"
+  },
+  "FIGHT_COCKAC": {
+   "name": "Hotrod Cockpit",
+   "type": "Product"
+  },
+  "FIGHT_COCKAD": {
+   "name": "Needle Fuselage",
+   "type": "Product"
+  },
+  "FIGHT_COCKAE": {
+   "name": "Alpha Cockpit",
+   "type": "Product"
+  },
+  "FIGHT_COCKB": {
+   "name": "Vector Fuselage",
+   "type": "Product"
+  },
+  "FIGHT_COCKD": {
+   "name": "Sleek Cockpit",
+   "type": "Product"
+  },
+  "FIGHT_COCKE": {
+   "name": "Speeder Fuselage",
+   "type": "Product"
+  },
+  "FIGHT_COCKF": {
+   "name": "Turbine Fuselage",
+   "type": "Product"
+  },
+  "FIGHT_WINGA": {
+   "name": "Vector Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGA_FI": {
+   "name": "Vector Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGB": {
+   "name": "Hardframe Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGB_FI": {
+   "name": "Hardframe Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGBA": {
+   "name": "Hardframe S-Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGBA_FI": {
+   "name": "Hardframe S-Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGBB": {
+   "name": "Hardframe E-Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGBB_FI": {
+   "name": "Hardframe E-Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGBC": {
+   "name": "Hardframe V-Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGBC_FI": {
+   "name": "Hardframe V-Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGBD": {
+   "name": "Hardframe C-Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGBD_FI": {
+   "name": "Hardframe C-Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGD": {
+   "name": "Halo Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGEA": {
+   "name": "Afterburner Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGEA_FI": {
+   "name": "Afterburner Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGEB": {
+   "name": "Afterburner E-Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGEB_FI": {
+   "name": "Afterburner E-Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGEC": {
+   "name": "Afterburner V-Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGEC_FI": {
+   "name": "Afterburner V-Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGED": {
+   "name": "Afterburner C-Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGED_FI": {
+   "name": "Afterburner C-Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGEE": {
+   "name": "Condor Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGEE_FI": {
+   "name": "Condor Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGEF": {
+   "name": "Vulture Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGEF_FI": {
+   "name": "Vulture Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGFC": {
+   "name": "Palisade Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGFC_FI": {
+   "name": "Palisade Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGFD": {
+   "name": "Stardancer Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGFD_FI": {
+   "name": "Stardancer Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGFE": {
+   "name": "Horizon Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGFE_FI": {
+   "name": "Horizon Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGG": {
+   "name": "Radiant Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGG_FI": {
+   "name": "Radiant Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGH": {
+   "name": "Droid Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGH_FI": {
+   "name": "Droid Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGHA": {
+   "name": "Droid S-Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGHA_FI": {
+   "name": "Droid S-Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGHB": {
+   "name": "Droid E-Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGHB_FI": {
+   "name": "Droid E-Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGHC": {
+   "name": "Droid V-Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGHC_FI": {
+   "name": "Droid V-Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGHD": {
+   "name": "Droid C-Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGHD_FI": {
+   "name": "Droid C-Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGI": {
+   "name": "Quasar Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGI_FI": {
+   "name": "Quasar Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGJLOW": {
+   "name": "Swept Wings (Low)",
+   "type": "Product"
+  },
+  "FIGHT_WINGJMID": {
+   "name": "Swept Wings (Mid)",
+   "type": "Product"
+  },
+  "FIGHT_WINGJFULL": {
+   "name": "Swept Wings (Full)",
+   "type": "Product"
+  },
+  "FIGHT_WINGKA": {
+   "name": "Vesper Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGKAA": {
+   "name": "Vesper Wings (Swept)",
+   "type": "Product"
+  },
+  "FIGHT_WINGKBA": {
+   "name": "Gull Wings",
+   "type": "Product"
+  },
+  "FIGHT_WINGKBB": {
+   "name": "Vesper Wings (Fin)",
+   "type": "Product"
+  },
+  "FIGHT_WINGKBC": {
+   "name": "Vigil Wings",
+   "type": "Product"
+  },
+  "FIGHT_ENGIB": {
+   "name": "Tri-Booster",
+   "type": "Product"
+  },
+  "FIGHT_ENGIC": {
+   "name": "Mono-Thruster",
+   "type": "Product"
+  },
+  "FIGHT_ENGID": {
+   "name": "Vector Thruster",
+   "type": "Product"
+  },
+  "DROPS_COCKA": {
+   "name": "Supercruise Cockpit",
+   "type": "Product"
+  },
+  "DROPS_COCKB": {
+   "name": "Type-11 Cockpit",
+   "type": "Product"
+  },
+  "DROPS_COCKC": {
+   "name": "Aviator Cockpit",
+   "type": "Product"
+  },
+  "DROPS_COCKD": {
+   "name": "Longshore Cockpit",
+   "type": "Product"
+  },
+  "DROPS_COCKE": {
+   "name": "Bulker Cockpit",
+   "type": "Product"
+  },
+  "DROPS_COCKF": {
+   "name": "Negotiator Cockpit",
+   "type": "Product"
+  },
+  "DROPS_COCKG": {
+   "name": "Strato-Haul Cockpit",
+   "type": "Product"
+  },
+  "DROPS_COCKH": {
+   "name": "Hydraulic Cockpit",
+   "type": "Product"
+  },
+  "DROPS_COCKS13": {
+   "name": "Iron Vulture Cockpit",
+   "type": "Product"
+  },
+  "DROPS_ENGIA": {
+   "name": "Megalith Engine",
+   "type": "Product"
+  },
+  "DROPS_ENGIAA": {
+   "name": "F-Wing Megalith Engine",
+   "type": "Product"
+  },
+  "DROPS_ENGIAB": {
+   "name": "S-Wing Megalith Engine",
+   "type": "Product"
+  },
+  "DROPS_ENGIB": {
+   "name": "Airlift Thruster",
+   "type": "Product"
+  },
+  "DROPS_ENGIBA": {
+   "name": "F-Wing Airlift Thruster",
+   "type": "Product"
+  },
+  "DROPS_ENGIBB": {
+   "name": "S-Wing Airlift Thruster",
+   "type": "Product"
+  },
+  "DROPS_ENGIC": {
+   "name": "Duo-Max Engine",
+   "type": "Product"
+  },
+  "DROPS_ENGIS13": {
+   "name": "Iron Vulture Engines",
+   "type": "Product"
+  },
+  "DROPS_WINGEMP": {
+   "name": "Empty Wing Panel",
+   "type": "Product"
+  },
+  "DROPS_WINGAA": {
+   "name": "Supercruise Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGAAA": {
+   "name": "Supercruise F-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGAAB": {
+   "name": "Supercruise S-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGAAC": {
+   "name": "Supercruise C-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGAAD": {
+   "name": "Supercruise D-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGAAE": {
+   "name": "Supercruise W-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGAAF": {
+   "name": "Supercruise Fan-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGAAG": {
+   "name": "Supercruise V-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGAAH": {
+   "name": "Supercruise Split-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGAAI": {
+   "name": "Supercruise A-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGAB": {
+   "name": "Firebox Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGABA": {
+   "name": "Firebox F-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGABB": {
+   "name": "Firebox S-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGABC": {
+   "name": "Firebox C-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGABD": {
+   "name": "Firebox D-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGABE": {
+   "name": "Firebox W-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGABF": {
+   "name": "Turbine Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGABG": {
+   "name": "Firebox V-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGABH": {
+   "name": "Firebox Split-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGABI": {
+   "name": "Firebox A-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGAC": {
+   "name": "Bulwark Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGACA": {
+   "name": "Bulwark F-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGACB": {
+   "name": "Bulwark S-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGACC": {
+   "name": "Bulwark C-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGACD": {
+   "name": "Bulwark D-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGACE": {
+   "name": "Bulwark W-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGACF": {
+   "name": "Bulwark Fan-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGACG": {
+   "name": "Bulwark V-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGACH": {
+   "name": "Bulwark Split-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGACI": {
+   "name": "Bulwark A-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBA": {
+   "name": "Longshore Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBAA": {
+   "name": "Longshore F-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBAB": {
+   "name": "Longshore S-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBAC": {
+   "name": "Longshore C-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBAD": {
+   "name": "Longshore D-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBAE": {
+   "name": "Longshore W-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBAF": {
+   "name": "Longshore Fan-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBAG": {
+   "name": "Longshore V-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBAH": {
+   "name": "Longshore Split-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBAI": {
+   "name": "Longshore A-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBB": {
+   "name": "Widebody Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBBA": {
+   "name": "Widebody F-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBBB": {
+   "name": "Widebody S-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBBC": {
+   "name": "Widebody C-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBBD": {
+   "name": "Widebody D-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBBE": {
+   "name": "Widebody W-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBBF": {
+   "name": "Widebody Fan-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBBG": {
+   "name": "Widebody V-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBBH": {
+   "name": "Widebody Split-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBBI": {
+   "name": "Widebody A-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBC": {
+   "name": "Ion Flare Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBCA": {
+   "name": "Ion Flare F-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBCB": {
+   "name": "Ion Flare S-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBCC": {
+   "name": "Ion Flare C-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBCD": {
+   "name": "Ion Flare D-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBCE": {
+   "name": "Ion Flare W-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBCF": {
+   "name": "Ion Blade Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBCG": {
+   "name": "Ion Flare V-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBCH": {
+   "name": "Ion Flare Split-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGBCI": {
+   "name": "Ion Flare A-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCA": {
+   "name": "Stratopulse Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCAA": {
+   "name": "Stratopulse F-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCAB": {
+   "name": "Stratopulse S-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCAC": {
+   "name": "Stratopulse C-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCAD": {
+   "name": "Stratopulse D-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCAE": {
+   "name": "Stratopulse W-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCAF": {
+   "name": "Stratopulse Fan-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCAG": {
+   "name": "Stratopulse V-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCAH": {
+   "name": "Stratopulse Split-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCAI": {
+   "name": "Stratopulse A-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCB": {
+   "name": "Ramjet Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCBA": {
+   "name": "Ramjet F-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCBB": {
+   "name": "Ramjet S-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCBC": {
+   "name": "Ramjet C-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCBD": {
+   "name": "Ramjet D-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCBE": {
+   "name": "Ramjet W-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCBF": {
+   "name": "Hi-Roc Launcher",
+   "type": "Product"
+  },
+  "DROPS_WINGCBG": {
+   "name": "Ramjet V-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCBH": {
+   "name": "Ramjet Split-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCBI": {
+   "name": "Ramjet A-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCC": {
+   "name": "Impulse Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCCA": {
+   "name": "Impulse F-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCCB": {
+   "name": "Impulse S-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCCC": {
+   "name": "Impulse C-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCCD": {
+   "name": "Impulse D-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCCE": {
+   "name": "Impulse W-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCCF": {
+   "name": "Impulse Launcher",
+   "type": "Product"
+  },
+  "DROPS_WINGCCG": {
+   "name": "Impulse V-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCCH": {
+   "name": "Impulse Split-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCCI": {
+   "name": "Impulse A-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCD": {
+   "name": "Heavy-22 Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCDA": {
+   "name": "Heavy-22 S-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCDB": {
+   "name": "Heavy-22 F-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCDE": {
+   "name": "Heavy-22 W-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCDF": {
+   "name": "SuperCondor Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCDG": {
+   "name": "Heavy-22 V-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCDH": {
+   "name": "Heavy-22 Split-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGCDI": {
+   "name": "Heavy-22 A-Wing",
+   "type": "Product"
+  },
+  "DROPS_WINGDA": {
+   "name": "Megalith Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDAX": {
+   "name": "Ultralith Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDAA": {
+   "name": "Megalith S-Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDAB": {
+   "name": "Megalith F-Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDAH": {
+   "name": "Megalith D-Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDAI": {
+   "name": "Megalith A-Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDB": {
+   "name": "Bulker Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDBA": {
+   "name": "Bulker S-Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDBB": {
+   "name": "Bulker F-Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDBH": {
+   "name": "Bulker D-Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDBI": {
+   "name": "Bulker A-Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDBX": {
+   "name": "Titan Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDBAX": {
+   "name": "Titan S-Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDBBX": {
+   "name": "Titan F-Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDBHX": {
+   "name": "Titan D-Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGDBIX": {
+   "name": "Titan A-Wings",
+   "type": "Product"
+  },
+  "DROPS_WINGS13": {
+   "name": "Iron Vulture Wings",
+   "type": "Product"
+  },
+  "DROPS_WING1": {
+   "name": "E-Wing Heavy",
+   "type": "Product"
+  },
+  "DROPS_WING2": {
+   "name": "Fuselage Armour",
+   "type": "Product"
+  },
+  "SCIEN_COCKAA": {
+   "name": "Firefly Hull",
+   "type": "Product"
+  },
+  "SCIEN_COCKAAA": {
+   "name": "Firefly F-Hull",
+   "type": "Product"
+  },
+  "SCIEN_COCKABA": {
+   "name": "Firefly S-Hull",
+   "type": "Product"
+  },
+  "SCIEN_COCKACA": {
+   "name": "Firefly D-Hull",
+   "type": "Product"
+  },
+  "SCIEN_COCKAB": {
+   "name": "Dragonfly Hull",
+   "type": "Product"
+  },
+  "SCIEN_COCKAAB": {
+   "name": "Dragonfly F-Hull",
+   "type": "Product"
+  },
+  "SCIEN_COCKABB": {
+   "name": "Dragonfly S-Hull",
+   "type": "Product"
+  },
+  "SCIEN_COCKACB": {
+   "name": "Dragonfly D-Hull",
+   "type": "Product"
+  },
+  "SCIEN_COCKDA": {
+   "name": "Euclid Hull",
+   "type": "Product"
+  },
+  "SCIEN_COCKDB": {
+   "name": "Hesperius Hull",
+   "type": "Product"
+  },
+  "SCIEN_WINGEMP": {
+   "name": "Wing Stub (Empty)",
+   "type": "Product"
+  },
+  "SCIEN_WINGA": {
+   "name": "Glider Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGBA": {
+   "name": "Pulsar Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGBB": {
+   "name": "Solar Pulse Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGBC": {
+   "name": "Pulsar Split-Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGBD": {
+   "name": "Pulsar Stub-Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGC": {
+   "name": "Obelisk Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGDA": {
+   "name": "Skywave Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGDB": {
+   "name": "Prismatic Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGDC": {
+   "name": "Planar Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGDD": {
+   "name": "Vortex Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGE": {
+   "name": "Solar Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGF": {
+   "name": "Wing Cap",
+   "type": "Product"
+  },
+  "SCIEN_WINGFA": {
+   "name": "Wing Cap",
+   "type": "Product"
+  },
+  "SCIEN_WINGG": {
+   "name": "Overseer Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGGA": {
+   "name": "Skylance Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGHA": {
+   "name": "Superfoil Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGHB": {
+   "name": "Dragonfly Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGHC": {
+   "name": "Firefly Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGHD": {
+   "name": "Axial Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGI": {
+   "name": "Shortwave Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGKA": {
+   "name": "Sunspot Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGKB": {
+   "name": "Solar Flare Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGKC": {
+   "name": "Sunspot Split-Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGKD": {
+   "name": "Sunspot Stub-Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGL": {
+   "name": "Arcfoil Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGT_A": {
+   "name": "Longwave Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGT_C": {
+   "name": "Drum Wing (Obelisk)",
+   "type": "Product"
+  },
+  "SCIEN_WINGT_F": {
+   "name": "Drum Wing",
+   "type": "Product"
+  },
+  "SCIEN_WINGT_G": {
+   "name": "Drum Wing (Overseer)",
+   "type": "Product"
+  },
+  "SCIEN_WINGT_I": {
+   "name": "Drum Wing (Shortwave)",
+   "type": "Product"
+  },
+  "SHIP_CORE_C": {
+   "name": "C-Class Reactor",
+   "type": "Product"
+  },
+  "SHIP_CORE_B": {
+   "name": "B-Class Reactor",
+   "type": "Product"
+  },
+  "SHIP_CORE_A": {
+   "name": "A-Class Reactor",
+   "type": "Product"
+  },
+  "SHIP_CORE_S": {
+   "name": "S-Class Reactor",
+   "type": "Product"
+  },
+  "SAIL_BODYA": {
+   "name": "Raven Cockpit",
+   "type": "Product"
+  },
+  "SAIL_BODYB": {
+   "name": "Falcon Cockpit",
+   "type": "Product"
+  },
+  "SAIL_BODYC": {
+   "name": "Starwolf Fuselage",
+   "type": "Product"
+  },
+  "SAIL_BODYD": {
+   "name": "Exocet Fuselage",
+   "type": "Product"
+  },
+  "SAIL_BODYE": {
+   "name": "Arachnid Cockpit",
+   "type": "Product"
+  },
+  "SAIL_BODYF": {
+   "name": "Turbofan Fuselage",
+   "type": "Product"
+  },
+  "SAIL_WINGAA": {
+   "name": "Razor Wing (Sleek)",
+   "type": "Product"
+  },
+  "SAIL_WINGAB": {
+   "name": "Razor Wing (Drill)",
+   "type": "Product"
+  },
+  "SAIL_WINGAC": {
+   "name": "Razor Wing (Tristar)",
+   "type": "Product"
+  },
+  "SAIL_WINGAD": {
+   "name": "Razor Wing (V-Blade)",
+   "type": "Product"
+  },
+  "SAIL_WINGAE": {
+   "name": "Razor Wing (H-Blade)",
+   "type": "Product"
+  },
+  "SAIL_WINGBA": {
+   "name": "Cutlass Wing (Sleek)",
+   "type": "Product"
+  },
+  "SAIL_WINGBB": {
+   "name": "Cutlass Wing (Drill)",
+   "type": "Product"
+  },
+  "SAIL_WINGBC": {
+   "name": "Cutlass Wing (Tristar)",
+   "type": "Product"
+  },
+  "SAIL_WINGBD": {
+   "name": "Cutlass Wing (V-Blade)",
+   "type": "Product"
+  },
+  "SAIL_WINGBE": {
+   "name": "Cutlass Wing (H-Blade)",
+   "type": "Product"
+  },
+  "SAIL_WINGCA": {
+   "name": "Shielded Wing (Sleek)",
+   "type": "Product"
+  },
+  "SAIL_WINGCB": {
+   "name": "Shielded Wing (Drill)",
+   "type": "Product"
+  },
+  "SAIL_WINGCC": {
+   "name": "Shielded Wing (Tristar)",
+   "type": "Product"
+  },
+  "SAIL_WINGCD": {
+   "name": "Shielded Wing (V-Blade)",
+   "type": "Product"
+  },
+  "SAIL_WINGCE": {
+   "name": "Shielded Wing (H-Blade)",
+   "type": "Product"
+  },
+  "SAIL_WINGDA": {
+   "name": "Talon Wing (Sleek)",
+   "type": "Product"
+  },
+  "SAIL_WINGDB": {
+   "name": "Talon Wing (Drill)",
+   "type": "Product"
+  },
+  "SAIL_WINGDC": {
+   "name": "Talon Wing (Tristar)",
+   "type": "Product"
+  },
+  "SAIL_WINGDD": {
+   "name": "Talon Wing (V-Blade)",
+   "type": "Product"
+  },
+  "SAIL_WINGDE": {
+   "name": "Talon Wing (H-Blade)",
+   "type": "Product"
+  },
+  "SAIL_WINGEA": {
+   "name": "Sabre Wing (Sleek)",
+   "type": "Product"
+  },
+  "SAIL_WINGEB": {
+   "name": "Sabre Wing (Drill)",
+   "type": "Product"
+  },
+  "SAIL_WINGEC": {
+   "name": "Sabre Wing (Tristar)",
+   "type": "Product"
+  },
+  "SAIL_WINGED": {
+   "name": "Sabre Wing (V-Blade)",
+   "type": "Product"
+  },
+  "SAIL_WINGEE": {
+   "name": "Sabre Wing (H-Blade)",
+   "type": "Product"
+  },
+  "SAIL_WINGFA": {
+   "name": "Scimitar Wing (Sleek)",
+   "type": "Product"
+  },
+  "SAIL_WINGFB": {
+   "name": "Scimitar Wing (Drill)",
+   "type": "Product"
+  },
+  "SAIL_WINGFC": {
+   "name": "Scimitar Wing (Tristar)",
+   "type": "Product"
+  },
+  "SAIL_WINGFD": {
+   "name": "Scimitar Wing (V-Blade)",
+   "type": "Product"
+  },
+  "SAIL_WINGFE": {
+   "name": "Scimitar Wing (H-Blade)",
+   "type": "Product"
+  },
+  "SAIL_SAILA": {
+   "name": "Crescent Solar Sail",
+   "type": "Product"
+  },
+  "SAIL_SAILB": {
+   "name": "Hex Solar Sail",
+   "type": "Product"
+  },
+  "SAIL_SAILC": {
+   "name": "Square-Rig Solar Sail",
+   "type": "Product"
+  },
+  "FOS_HEAD_AN": {
+   "name": "Predator Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_AA": {
+   "name": "Mono-Horn Predator Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_AB": {
+   "name": "Horned Predator Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_AC": {
+   "name": "Diabolic Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_AD": {
+   "name": "Vicious Predator Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_BN": {
+   "name": "Herbivore Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_BA": {
+   "name": "Forest Warrior Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_BB": {
+   "name": "Skull of the Cursed Doe",
+   "type": "Product"
+  },
+  "FOS_HEAD_BC": {
+   "name": "Pachyovine Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_BD": {
+   "name": "Armoured Ovine Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_BE": {
+   "name": "Ovine Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_BF": {
+   "name": "Skull of the Golden Hart",
+   "type": "Product"
+  },
+  "FOS_HEAD_BG": {
+   "name": "Crown of Bones",
+   "type": "Product"
+  },
+  "FOS_HEAD_BH": {
+   "name": "Longhorn Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_BI": {
+   "name": "Grazer Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_BJ": {
+   "name": "Skull of the Watcher",
+   "type": "Product"
+  },
+  "FOS_HEAD_CN": {
+   "name": "Rodent Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_CA": {
+   "name": "Spiked Rodent Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_CB": {
+   "name": "Gnarled Rodent Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_CC": {
+   "name": "Flared Rodent Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_CD": {
+   "name": "Armoured Rodent Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_CE": {
+   "name": "Magnificent Rodent Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_CF": {
+   "name": "Statuesque Rodent Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_CG": {
+   "name": "Midnight Nibbler Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_CH": {
+   "name": "Skull of the Forest King",
+   "type": "Product"
+  },
+  "FOS_HEAD_CI": {
+   "name": "Longhorn Rodent Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_CJ": {
+   "name": "Glorious Rodent Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_DN": {
+   "name": "Boar Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_DA": {
+   "name": "Wattlehog Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_DB": {
+   "name": "Saddleback Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_DC": {
+   "name": "Bullhog Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_DD": {
+   "name": "Warthog Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_DE": {
+   "name": "Swinehorn Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_DF": {
+   "name": "Hornboare Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_DG": {
+   "name": "Hammerhead Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_DH": {
+   "name": "Charger Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_DI": {
+   "name": "Flathead Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_DJ": {
+   "name": "Moustachioed Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_EN": {
+   "name": "Canine Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_EA": {
+   "name": "Warhound Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_EB": {
+   "name": "Fearsome Canine Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_EC": {
+   "name": "Armoured Canine Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_ED": {
+   "name": "Scavenger Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_EE": {
+   "name": "Skull of the Bone Thief",
+   "type": "Product"
+  },
+  "FOS_HEAD_EF": {
+   "name": "Carbuncle Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_EG": {
+   "name": "Infernal Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_EH": {
+   "name": "Malevolent Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_EI": {
+   "name": "Skull of the Wild Hunter",
+   "type": "Product"
+  },
+  "FOS_HEAD_EJ": {
+   "name": "Haunted Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_FN": {
+   "name": "Megafauna Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_FA": {
+   "name": "Skull of the Goring Wall",
+   "type": "Product"
+  },
+  "FOS_HEAD_FB": {
+   "name": "Colossal Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_FC": {
+   "name": "Mammoth Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_FD": {
+   "name": "Behemoth Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_FE": {
+   "name": "Styrax Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_FF": {
+   "name": "\"Dragon\" Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_FG": {
+   "name": "Monstrous Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_FH": {
+   "name": "Oceanid Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_FI": {
+   "name": "Vy'keen Spirit Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_FJ": {
+   "name": "Giganto-Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_FK": {
+   "name": "Elephantine Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_FL": {
+   "name": "Cyclopean Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_FM": {
+   "name": "Gargantuan Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_GN": {
+   "name": "Protoform Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_GA": {
+   "name": "Masked Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_GB": {
+   "name": "Warrior Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_GC": {
+   "name": "Bonehair Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_GD": {
+   "name": "Unnameable Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_GE": {
+   "name": "Nightmare Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_GF": {
+   "name": "Skull of the Midnight Visitor",
+   "type": "Product"
+  },
+  "FOS_HEAD_HN": {
+   "name": "Skull of the Ocean King",
+   "type": "Product"
+  },
+  "FOS_HEAD_HA": {
+   "name": "Leviathan Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_HB": {
+   "name": "Worm Lord Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_HC": {
+   "name": "Titanworm Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_HD": {
+   "name": "Skull of the Consumer",
+   "type": "Product"
+  },
+  "FOS_HEAD_HE": {
+   "name": "Feasting Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_HF": {
+   "name": "Cetenid Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_HG": {
+   "name": "Skull of the Master",
+   "type": "Product"
+  },
+  "FOS_HEAD_IN": {
+   "name": "Blunted Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_IA": {
+   "name": "Fleshripper Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_IB": {
+   "name": "Avian Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_IC": {
+   "name": "Divewing Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_ID": {
+   "name": "Pterosaur Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_IE": {
+   "name": "Hookbeak Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_IF": {
+   "name": "Proto-Parrot Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_IG": {
+   "name": "Snapbeak Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_JN": {
+   "name": "Crocodilian Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_JA": {
+   "name": "Swamp Dweller Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_JB": {
+   "name": "Mega-Newt Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_JC": {
+   "name": "Pond Beast Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_JD": {
+   "name": "Bogsnapper Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_JE": {
+   "name": "Marshdipper Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_JF": {
+   "name": "Mudskipper Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_JG": {
+   "name": "Sarco-Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_JH": {
+   "name": "Sawtooth Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_JI": {
+   "name": "Reptile Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_JJ": {
+   "name": "Skull of the Legsnapper",
+   "type": "Product"
+  },
+  "FOS_HEAD_KN": {
+   "name": "Equuleus Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_KA": {
+   "name": "Pincer Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_KB": {
+   "name": "Monoceros Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_KC": {
+   "name": "Direhorn Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_KD": {
+   "name": "Broadbore Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_KE": {
+   "name": "Skull of the Plains Menace",
+   "type": "Product"
+  },
+  "FOS_HEAD_KF": {
+   "name": "Skull of the Untameable",
+   "type": "Product"
+  },
+  "FOS_HEAD_KG": {
+   "name": "Skull of the Unbroken",
+   "type": "Product"
+  },
+  "FOS_HEAD_KH": {
+   "name": "Gnawing Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_KI": {
+   "name": "Pegasus Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_KJ": {
+   "name": "Longtooth Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_KK": {
+   "name": "Horned Bounder Skull",
+   "type": "Product"
+  },
+  "FOS_HEAD_KL": {
+   "name": "Drayflare Skull",
+   "type": "Product"
+  },
+  "FOS_LIMBS_A": {
+   "name": "Hunter's Forearms",
+   "type": "Product"
+  },
+  "FOS_LIMBS_B": {
+   "name": "Ungulate Fossil",
+   "type": "Product"
+  },
+  "FOS_LIMBS_C": {
+   "name": "Dangling Forearms",
+   "type": "Product"
+  },
+  "FOS_LIMBS_D": {
+   "name": "Grasping Forearms",
+   "type": "Product"
+  },
+  "FOS_LIMBS_E": {
+   "name": "Stalking Leg Bones",
+   "type": "Product"
+  },
+  "FOS_LIMBS_F": {
+   "name": "Fossilised Biped Legs",
+   "type": "Product"
+  },
+  "FOS_LIMBS_G": {
+   "name": "Swift Leg Bones",
+   "type": "Product"
+  },
+  "FOS_LIMBS_H": {
+   "name": "Fossilised Flippers",
+   "type": "Product"
+  },
+  "FOS_LIMBS_I": {
+   "name": "Fossilised Fins",
+   "type": "Product"
+  },
+  "FOS_LIMBS_J": {
+   "name": "Fossilised Wing Stubs",
+   "type": "Product"
+  },
+  "FOS_BI_BODY_AN": {
+   "name": "Lengthy Ribcage",
+   "type": "Product"
+  },
+  "FOS_BI_BODY_AA": {
+   "name": "Lengthy Plated Ribcage",
+   "type": "Product"
+  },
+  "FOS_BI_BODY_AB": {
+   "name": "Gargantuan Ribcage",
+   "type": "Product"
+  },
+  "FOS_BI_BODY_AC": {
+   "name": "Mighty Ribcage",
+   "type": "Product"
+  },
+  "FOS_BI_BODY_AD": {
+   "name": "Lengthy Flared Ribcage",
+   "type": "Product"
+  },
+  "FOS_BI_BODY_AE": {
+   "name": "Lengthy Finned Ribcage",
+   "type": "Product"
+  },
+  "FOS_BI_BODY_BN": {
+   "name": "Ancient Ribcage",
+   "type": "Product"
+  },
+  "FOS_BI_BODY_BA": {
+   "name": "Plated Ribcage",
+   "type": "Product"
+  },
+  "FOS_BI_BODY_BB": {
+   "name": "Spiked Ribcage",
+   "type": "Product"
+  },
+  "FOS_BI_BODY_BC": {
+   "name": "Armoured Ribcage",
+   "type": "Product"
+  },
+  "FOS_BI_BODY_BD": {
+   "name": "Flared Ribcage",
+   "type": "Product"
+  },
+  "FOS_BI_BODY_BE": {
+   "name": "Finned Ribcage",
+   "type": "Product"
+  },
+  "FOS_BI_TAIL_AN": {
+   "name": "Ancient Tailbone",
+   "type": "Product"
+  },
+  "FOS_BI_TAIL_AA": {
+   "name": "Fearsome Lashbone",
+   "type": "Product"
+  },
+  "FOS_BI_TAIL_BN": {
+   "name": "Mace-like Tailbone",
+   "type": "Product"
+  },
+  "FOS_BI_TAIL_BA": {
+   "name": "Flailing Tailbone",
+   "type": "Product"
+  },
+  "FOS_BI_TAIL_CN": {
+   "name": "Lengthy Tailbone",
+   "type": "Product"
+  },
+  "FOS_BI_TAIL_CA": {
+   "name": "Plated Tailbone",
+   "type": "Product"
+  },
+  "FOS_BI_TAIL_DN": {
+   "name": "Coiled Tailbone",
+   "type": "Product"
+  },
+  "FOS_BI_TAIL_DA": {
+   "name": "Slashing Springtail",
+   "type": "Product"
+  },
+  "FOS_BI_TAIL_E": {
+   "name": "Upturned Tailfan",
+   "type": "Product"
+  },
+  "FOS_BI_TAIL_F": {
+   "name": "Downturned Tailfan",
+   "type": "Product"
+  },
+  "FOS_BI_TAIL_G": {
+   "name": "Stubtail",
+   "type": "Product"
+  },
+  "PROC_LOOT": {
+   "name": "Unearthed Treasure",
+   "type": "Product"
+  },
+  "PROC_HIST": {
+   "name": "Historical Document",
+   "type": "Product"
+  },
+  "PROC_BIO": {
+   "name": "Biological Sample",
+   "type": "Product"
+  },
+  "PROC_FOSS": {
+   "name": "Fossil Sample",
+   "type": "Product"
+  },
+  "PROC_PLNT": {
+   "name": "Delicate Flora",
+   "type": "Product"
+  },
+  "PROC_TOOL": {
+   "name": "Lost Artifact",
+   "type": "Product"
+  },
+  "PROC_FARM": {
+   "name": "Delicate Flora",
+   "type": "Product"
+  },
+  "PROC_SEA": {
+   "name": "Aquatic Treasure",
+   "type": "Product"
+  },
+  "PROC_FEAR": {
+   "name": "Terrifying Sample",
+   "type": "Product"
+  },
+  "PROC_SALV": {
+   "name": "Salvaged Scrap",
+   "type": "Product"
+  },
+  "PROC_BONE": {
+   "name": "Excavated Bones",
+   "type": "Product"
+  },
+  "PROC_DARK": {
+   "name": "Terrifying Sample",
+   "type": "Product"
+  },
+  "PROC_STAR": {
+   "name": "Ancient Skeleton",
+   "type": "Product"
+  },
+  "PROC_PASS": {
+   "name": "Mainframe Access Card",
+   "type": "Product"
+  },
+  "PROC_CAPT": {
+   "name": "Official Record",
+   "type": "Product"
+  },
+  "PROC_CREW": {
+   "name": "Official Record",
+   "type": "Product"
+  },
+  "UP_FRHYP": {
+   "name": "",
+   "type": "Product"
+  },
+  "UP_FRSPE": {
+   "name": "",
+   "type": "Product"
+  },
+  "UP_FRFUE": {
+   "name": "",
+   "type": "Product"
+  },
+  "UP_FRTRA": {
+   "name": "",
+   "type": "Product"
+  },
+  "UP_FRCOM": {
+   "name": "",
+   "type": "Product"
+  },
+  "UP_FRMIN": {
+   "name": "",
+   "type": "Product"
+  },
+  "UP_FREXP": {
+   "name": "",
+   "type": "Product"
+  },
+  "PROC_LUMP": {
+   "name": "Recovered Item",
+   "type": "Product"
+  },
+  "PROC_COG": {
+   "name": "Recovered Item",
+   "type": "Product"
+  },
+  "PROC_DATA": {
+   "name": "Recovered Item",
+   "type": "Product"
+  },
+  "PROC_BOTT": {
+   "name": "Message in a Bottle",
+   "type": "Product"
+  },
+  "PROC_EXH": {
+   "name": "Fossil Sample",
    "type": "Product"
   },
   "PROTECT": {

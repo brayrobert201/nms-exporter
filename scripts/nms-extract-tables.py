@@ -24,7 +24,8 @@ DEFAULT_PCBANKS = os.path.join(STEAM, "common/No Man's Sky/GAMEDATA/PCBANKS")
 PAKS = ["NMSARC.MetadataEtc.pak", "NMSARC.globals.pak", "NMSARC.misc.pak", "NMSARC.Precache.pak"]
 FILTERS = ["*GCRECIPETABLE*", "*GCSUBSTANCETABLE*", "*GCPRODUCTTABLE*", "*GCTECHNOLOGYTABLE*",
            "LANGUAGE/NMS_*_ENGLISH.MBIN", "*GCGAMEPLAYGLOBALS*", "*GCENVIRONMENTGLOBALS*",
-           "*REGIONHOTSPOTSTABLE*", "*BASEBUILDINGOBJECTSTABLE*", "*GCFLEETGLOBALS*"]
+           "*REGIONHOTSPOTSTABLE*", "*BASEBUILDINGOBJECTSTABLE*", "*GCFLEETGLOBALS*",
+           "*NMS_BASEPARTPRODUCTS*", "*NMS_MODULARCUSTOMISATIONPRODUCTS*", "*PROCEDURALPRODUCTTABLE*"]
 MAPPING_URL = "https://github.com/monkeyman192/MBINCompiler/releases/latest/download/mapping.json"
 
 
@@ -93,14 +94,21 @@ def parse_loc(work):
 
 def parse_items(work, loc):
     items = {}
+    # base parts, corvette/modular parts and procedural items are GcProductData too, in their own tables
     for pat, tag, kind in [(r"gcsubstancetable\.mxml$", "GcRealitySubstanceData", "Substance"),
                            (r"gcproducttable\.mxml$", "GcProductData", "Product"),
+                           (r"^nms_basepartproducts\.mxml$", "GcProductData", "Product"),
+                           (r"^nms_modularcustomisationproducts\.mxml$", "GcProductData", "Product"),
+                           (r"^proceduralproducttable\.mxml$", "GcProductData", "Product"),
                            (r"gctechnologytable\.mxml$", "GcTechnology", "Technology")]:
         for e in load(work, pat).iter("Property"):
-            if e.get("name") == "Table" and e.get("value") == tag:
+            if e.get("value") == tag and val(e, "ID"):
                 iid = val(e, "ID")
                 key = val(e, "NameLower") or val(e, "Name")
-                rec = {"name": loc.get(key, key), "type": kind}
+                name = loc.get(key, key)
+                if not name or "%" in name or name == key:   # procedural name templates: fall back to the subtitle
+                    name = loc.get(val(e, "Subtitle"), name)
+                rec = {"name": name, "type": kind}
                 sym = val(e, "Symbol")
                 if sym and loc.get(sym):
                     rec["symbol"] = loc[sym]
