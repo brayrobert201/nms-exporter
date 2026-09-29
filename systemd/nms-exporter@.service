@@ -1,0 +1,34 @@
+# No Man's Sky save exporter. A template unit instantiated with the Steam user
+# (nms-exporter@bob) because it has to read that user's Proton save directory.
+[Unit]
+Description=No Man's Sky save exporter (%i's saves)
+Documentation=https://github.com/brayrobert201/nms-exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%i
+WorkingDirectory=/opt/nms-exporter
+ExecStart=/usr/bin/python3 /opt/nms-exporter/nms_exporter.py
+Environment=NMS_EXPORTER_HOST=0.0.0.0
+Environment=NMS_EXPORTER_PORT=9877
+Environment=PYTHONUNBUFFERED=1
+# fill-level history (for measured extraction rates) and the cached key mapping
+StateDirectory=nms-exporter
+CacheDirectory=nms-exporter
+Restart=on-failure
+RestartSec=5s
+
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target
