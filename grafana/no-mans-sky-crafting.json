@@ -410,7 +410,7 @@
             "uid": "prometheus"
           },
           "refId": "A",
-          "expr": "nms_recipe_need{item=\"$item\"} * on (id, route, recipe) group_left() ceil($qty / nms_recipe_yield{item=\"$item\"})",
+          "expr": "nms_recipe_need{item=\"$item\"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{item=\"$item\"})",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -422,7 +422,7 @@
             "uid": "prometheus"
           },
           "refId": "B",
-          "expr": "(nms_recipe_need{item=\"$item\"} * on (id, route, recipe) group_left() ceil($qty / nms_recipe_yield{item=\"$item\"})) * 0 + on (ingredient_id) group_left() (sum by (ingredient_id) (label_replace(nms_item_total, \"ingredient_id\", \"$1\", \"id\", \"(.*)\")))",
+          "expr": "(nms_recipe_need{item=\"$item\"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{item=\"$item\"})) * 0 + on (ingredient_id) group_left() (sum by (ingredient_id) (label_replace(nms_item_total, \"ingredient_id\", \"$1\", \"id\", \"(.*)\")))",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -434,7 +434,7 @@
             "uid": "prometheus"
           },
           "refId": "C",
-          "expr": "clamp_min((nms_recipe_need{item=\"$item\"} * on (id, route, recipe) group_left() ceil($qty / nms_recipe_yield{item=\"$item\"})) - on (ingredient_id) group_left() ((sum by (ingredient_id) (label_replace(nms_item_total, \"ingredient_id\", \"$1\", \"id\", \"(.*)\"))) or on (ingredient_id) (0 * sum by (ingredient_id) (nms_recipe_need{item=\"$item\"} * on (id, route, recipe) group_left() ceil($qty / nms_recipe_yield{item=\"$item\"})))), 0)",
+          "expr": "clamp_min((nms_recipe_need{item=\"$item\"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{item=\"$item\"})) - on (ingredient_id) group_left() ((sum by (ingredient_id) (label_replace(nms_item_total, \"ingredient_id\", \"$1\", \"id\", \"(.*)\"))) or on (ingredient_id) (0 * sum by (ingredient_id) (nms_recipe_need{item=\"$item\"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{item=\"$item\"})))), 0)",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -555,7 +555,8 @@
               "id": true,
               "item": true,
               "known": true,
-              "ingredient_id": true
+              "ingredient_id": true,
+              "recipe_id": true
             }
           }
         },
@@ -978,7 +979,8 @@
               "known": true,
               "ingredient": true,
               "ingredient_id": true,
-              "recipe_known": true
+              "recipe_known": true,
+              "recipe_id": true
             }
           }
         },
@@ -1134,7 +1136,7 @@
             "uid": "prometheus"
           },
           "refId": "B",
-          "expr": "nms_recipe_need{known=~\"$known\", route=~\"$route\"} * 0 + on (id, route, recipe) group_left() nms_recipe_yield{known=~\"$known\", route=~\"$route\"}",
+          "expr": "nms_recipe_need{known=~\"$known\", route=~\"$route\"} * 0 + on (id, route, recipe_id) group_left() nms_recipe_yield{known=~\"$known\", route=~\"$route\"}",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -1242,7 +1244,8 @@
             "excludeByName": {
               "id": true,
               "known": true,
-              "ingredient_id": true
+              "ingredient_id": true,
+              "recipe_id": true
             }
           }
         },

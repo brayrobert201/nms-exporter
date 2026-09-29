@@ -569,13 +569,13 @@ class Collector:
         m("nms_craftable", "Units makeable now from stock, crafting missing intermediates via known routes.", "gauge",
           [(dict(il(c), route=c["best_route"] or "none", recipe=c["best_recipe"] or "none"), c["makeable"]) for c in C.values()])
         m("nms_craftable_direct", "Units makeable now from stock alone, per route (one level).", "gauge",
-          [(dict(il(c), route=r["route"], recipe=r["recipe"], recipe_known="1" if r["known"] else "0"), r["direct"])
+          [(dict(il(c), route=r["route"], recipe=r["recipe"], recipe_id=r["recipe_id"], recipe_known="1" if r["known"] else "0"), r["direct"])
            for c in C.values() for r in c["routes"]])
         m("nms_recipe_yield", "Units produced per craft or refiner operation.", "gauge",
-          [(dict(il(c), route=r["route"], recipe=r["recipe"], recipe_known="1" if r["known"] else "0"), r["yield"])
+          [(dict(il(c), route=r["route"], recipe=r["recipe"], recipe_id=r["recipe_id"], recipe_known="1" if r["known"] else "0"), r["yield"])
            for c in C.values() for r in c["routes"]])
         m("nms_recipe_need", "Ingredient amount per craft or refiner operation.", "gauge",
-          [(dict(il(c), route=r["route"], recipe=r["recipe"], recipe_known="1" if r["known"] else "0",
+          [(dict(il(c), route=r["route"], recipe=r["recipe"], recipe_id=r["recipe_id"], recipe_known="1" if r["known"] else "0",
                  ingredient=nm(ing), ingredient_id=ing), amt)
            for c in C.values() for r in c["routes"] for ing, amt in r["needs"]])
         m("nms_craft_raw_need", "Raw materials per unit with every intermediate expanded through the best known route.", "gauge",

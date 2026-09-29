@@ -46,7 +46,7 @@ def build():
     y += 14
 
     P.append(row("Selected item: $item × $qty", y)); y += 1
-    need = 'nms_recipe_need{item="$item"} * on (id, route, recipe) group_left() ceil($qty / nms_recipe_yield{item="$item"})'
+    need = 'nms_recipe_need{item="$item"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{item="$item"})'
     P.append(table("Ingredients per route, for $qty", [
         target(need, instant=True, ref="A", fmt="table"),
         target(f'({need}) * 0 + on (ingredient_id) group_left() ({HAVE})', instant=True, ref="B", fmt="table"),
@@ -55,7 +55,7 @@ def build():
                       ("Value #B", "Have", "short"), ("Value #C", "Missing", "short"), ("recipe_known", "Known", None,
                        [{"id": "mappings", "value": [{"type": "value", "options": {"0": {"text": "no"}, "1": {"text": "yes"}}}]}])],
         sort=("Missing", True), description="One level: what each route needs directly. Have is the total across every container.",
-        extra_transforms=[{"id": "organize", "options": {"excludeByName": {"id": True, "item": True, "known": True, "ingredient_id": True}}}]))
+        extra_transforms=[{"id": "organize", "options": {"excludeByName": {"id": True, "item": True, "known": True, "ingredient_id": True, "recipe_id": True}}}]))
     y += 10
     raw = 'nms_craft_raw_need{item="$item"} * $qty'
     P.append(table("Raw materials for $qty, every intermediate expanded", [
@@ -74,7 +74,7 @@ def build():
     P.append(table("What uses $item", [
         target('nms_recipe_need{ingredient="$item"}', instant=True, ref="A", fmt="table"),
     ], 12, y, 12, 8, [("item", "Makes"), ("route", "Via"), ("recipe", "Recipe"), ("Value", "Per craft", "short")], sort=("Makes", False),
-        extra_transforms=[{"id": "organize", "options": {"excludeByName": {"id": True, "known": True, "ingredient": True, "ingredient_id": True, "recipe_known": True}}}]))
+        extra_transforms=[{"id": "organize", "options": {"excludeByName": {"id": True, "known": True, "ingredient": True, "ingredient_id": True, "recipe_known": True, "recipe_id": True}}}]))
     y += 8
     P.append(timeseries("Can make over time: $item", [target('nms_craftable{item="$item"}', "{{item}} via {{route}}")], 0, y, 24, 7))
     y += 7
@@ -82,12 +82,12 @@ def build():
     P.append(row("Everything", y)); y += 1
     P.append(table("Every recipe", [
         target('nms_recipe_need{known=~"$known", route=~"$route"}', instant=True, ref="A", fmt="table"),
-        target('nms_recipe_need{known=~"$known", route=~"$route"} * 0 + on (id, route, recipe) group_left() nms_recipe_yield{known=~"$known", route=~"$route"}', instant=True, ref="B", fmt="table"),
+        target('nms_recipe_need{known=~"$known", route=~"$route"} * 0 + on (id, route, recipe_id) group_left() nms_recipe_yield{known=~"$known", route=~"$route"}', instant=True, ref="B", fmt="table"),
     ], 0, y, 24, 16, [("item", "Makes"), ("route", "Via"), ("recipe", "Recipe"), ("ingredient", "Ingredient"), ("Value #A", "Per craft", "short"),
                       ("Value #B", "Yield", "short"), ("recipe_known", "Known", None,
                        [{"id": "mappings", "value": [{"type": "value", "options": {"0": {"text": "no"}, "1": {"text": "yes"}}}]}])],
         sort=("Makes", False), description="Every crafting blueprint, refiner recipe and cooking recipe in the game, from the installed build's data files",
-        extra_transforms=[{"id": "organize", "options": {"excludeByName": {"id": True, "known": True, "ingredient_id": True}}}]))
+        extra_transforms=[{"id": "organize", "options": {"excludeByName": {"id": True, "known": True, "ingredient_id": True, "recipe_id": True}}}]))
     y += 16
     return {
         "uid": "no-mans-sky-crafting", "title": "No Man's Sky · Crafting", "tags": ["games", "no-mans-sky"], "editable": True,
