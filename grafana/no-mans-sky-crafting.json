@@ -49,15 +49,16 @@
           "uid": "prometheus"
         },
         "query": {
-          "query": "label_values(nms_craftable, item)",
+          "query": "nms_craftable",
           "refId": "v"
         },
-        "definition": "label_values(nms_craftable, item)",
+        "definition": "nms_craftable",
+        "regex": "/id=\"(?<value>[^\"]+)\".*?,item=\"(?<text>.*?)\",job=/",
         "multi": false,
         "includeAll": false,
         "current": {
           "text": "Warp Cell",
-          "value": "Warp Cell"
+          "value": "HYPERFUEL1"
         },
         "refresh": 2,
         "sort": 1,
@@ -208,7 +209,7 @@
             "uid": "prometheus"
           },
           "refId": "D",
-          "expr": "max(nms_craftable{item=\"$item\"}) or vector(0)",
+          "expr": "max(nms_craftable{id=\"$item\"}) or vector(0)",
           "legendFormat": "Selected: can make",
           "instant": true,
           "range": false
@@ -379,7 +380,7 @@
     {
       "id": 4,
       "type": "row",
-      "title": "Selected item: $item \u00d7 $qty",
+      "title": "Selected item: ${item:text} \u00d7 $qty",
       "collapsed": false,
       "gridPos": {
         "x": 0,
@@ -410,7 +411,7 @@
             "uid": "prometheus"
           },
           "refId": "A",
-          "expr": "nms_recipe_need{item=\"$item\"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{item=\"$item\"})",
+          "expr": "nms_recipe_need{id=\"$item\"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{id=\"$item\"})",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -422,7 +423,7 @@
             "uid": "prometheus"
           },
           "refId": "B",
-          "expr": "(nms_recipe_need{item=\"$item\"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{item=\"$item\"})) * 0 + on (ingredient_id) group_left() (sum by (ingredient_id) (label_replace(nms_item_total, \"ingredient_id\", \"$1\", \"id\", \"(.*)\")))",
+          "expr": "(nms_recipe_need{id=\"$item\"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{id=\"$item\"})) * 0 + on (ingredient_id) group_left() (sum by (ingredient_id) (label_replace(nms_item_total, \"ingredient_id\", \"$1\", \"id\", \"(.*)\")))",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -434,7 +435,7 @@
             "uid": "prometheus"
           },
           "refId": "C",
-          "expr": "clamp_min((nms_recipe_need{item=\"$item\"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{item=\"$item\"})) - on (ingredient_id) group_left() ((sum by (ingredient_id) (label_replace(nms_item_total, \"ingredient_id\", \"$1\", \"id\", \"(.*)\"))) or on (ingredient_id) (0 * sum by (ingredient_id) (nms_recipe_need{item=\"$item\"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{item=\"$item\"})))), 0)",
+          "expr": "clamp_min((nms_recipe_need{id=\"$item\"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{id=\"$item\"})) - on (ingredient_id) group_left() ((sum by (ingredient_id) (label_replace(nms_item_total, \"ingredient_id\", \"$1\", \"id\", \"(.*)\"))) or on (ingredient_id) (0 * sum by (ingredient_id) (nms_recipe_need{id=\"$item\"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{id=\"$item\"})))), 0)",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -625,7 +626,7 @@
             "uid": "prometheus"
           },
           "refId": "A",
-          "expr": "nms_craft_raw_need{item=\"$item\"} * $qty",
+          "expr": "nms_craft_raw_need{id=\"$item\"} * $qty",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -637,7 +638,7 @@
             "uid": "prometheus"
           },
           "refId": "B",
-          "expr": "(nms_craft_raw_need{item=\"$item\"} * $qty) * 0 + on (ingredient_id) group_left() (sum by (ingredient_id) (label_replace(nms_item_total, \"ingredient_id\", \"$1\", \"id\", \"(.*)\")))",
+          "expr": "(nms_craft_raw_need{id=\"$item\"} * $qty) * 0 + on (ingredient_id) group_left() (sum by (ingredient_id) (label_replace(nms_item_total, \"ingredient_id\", \"$1\", \"id\", \"(.*)\")))",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -649,7 +650,7 @@
             "uid": "prometheus"
           },
           "refId": "C",
-          "expr": "clamp_min((nms_craft_raw_need{item=\"$item\"} * $qty) - on (ingredient_id) group_left() ((sum by (ingredient_id) (label_replace(nms_item_total, \"ingredient_id\", \"$1\", \"id\", \"(.*)\"))) or on (ingredient_id) (0 * sum by (ingredient_id) (nms_craft_raw_need{item=\"$item\"} * $qty))), 0)",
+          "expr": "clamp_min((nms_craft_raw_need{id=\"$item\"} * $qty) - on (ingredient_id) group_left() ((sum by (ingredient_id) (label_replace(nms_item_total, \"ingredient_id\", \"$1\", \"id\", \"(.*)\"))) or on (ingredient_id) (0 * sum by (ingredient_id) (nms_craft_raw_need{id=\"$item\"} * $qty))), 0)",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -809,7 +810,7 @@
             "uid": "prometheus"
           },
           "refId": "A",
-          "expr": "nms_craft_shortfall{item=\"$item\"}",
+          "expr": "nms_craft_shortfall{id=\"$item\"}",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -901,7 +902,7 @@
     {
       "id": 8,
       "type": "table",
-      "title": "What uses $item",
+      "title": "What uses ${item:text}",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -919,7 +920,7 @@
             "uid": "prometheus"
           },
           "refId": "A",
-          "expr": "nms_recipe_need{ingredient=\"$item\"}",
+          "expr": "nms_recipe_need{ingredient_id=\"$item\"}",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -1026,7 +1027,7 @@
     {
       "id": 9,
       "type": "timeseries",
-      "title": "Can make over time: $item",
+      "title": "Can make over time: ${item:text}",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -1044,7 +1045,7 @@
             "uid": "prometheus"
           },
           "refId": "A",
-          "expr": "nms_craftable{item=\"$item\"}",
+          "expr": "nms_craftable{id=\"$item\"}",
           "legendFormat": "{{item}} via {{route}}"
         }
       ],

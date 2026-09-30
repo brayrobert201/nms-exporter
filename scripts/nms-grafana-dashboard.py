@@ -280,16 +280,16 @@ def build():
                                     {"id": "sortBy", "options": {"sort": [{"field": "Value", "desc": True}]}}],
                    description="Every container summed: exosuit, ships, freighter, storage, exocraft. Supply depots are on the farms row."))
     y += 13
-    P.append(table("Where is it?", [target("nms_item_amount{item=~\"$item\", type=~\"$type\"}", instant=True, ref="A", fmt="table")],
+    P.append(table("Where is it?", [target("nms_item_amount{id=~\"$item\", type=~\"$type\"}", instant=True, ref="A", fmt="table")],
                    0, y, 24, 11, [("item", "Item"), ("location", "Where"), ("Value", "Amount", "short"), ("type", "Type")],
                    sort=("Amount", True), description="Pick items in the Item selector above, or type in the column filter"))
     y += 11
-    P.append(table("Totals", [target("nms_item_total{item=~\"$item\", type=~\"$type\"}", instant=True, ref="A", fmt="table"),
-                              target("nms_item_stacks{item=~\"$item\", type=~\"$type\"}", instant=True, ref="B", fmt="table")],
+    P.append(table("Totals", [target("nms_item_total{id=~\"$item\", type=~\"$type\"}", instant=True, ref="A", fmt="table"),
+                              target("nms_item_stacks{id=~\"$item\", type=~\"$type\"}", instant=True, ref="B", fmt="table")],
                    0, y, 24, 11, [("item", "Item"), ("Value #A", "Total", "short"), ("Value #B", "Stacks"), ("type", "Type")],
                    sort=("Total", True)))
     y += 11
-    P.append(timeseries("Totals over time", [target("topk(8, nms_item_total{item=~\"$item\", type=~\"$type\"})", "{{item}}")],
+    P.append(timeseries("Totals over time", [target("topk(8, nms_item_total{id=~\"$item\", type=~\"$type\"})", "{{item}}")],
                         0, y, 24, 8, description="Top eight of the selected items"))
     y += 8
     # ---------------------------------------------------------------- plants
@@ -343,8 +343,10 @@ def build():
         "links": [{"title": "Crafting", "type": "link", "url": "/d/no-mans-sky-crafting", "icon": "dashboard", "keepTime": True}], "annotations": {"list": []},
         "description": "Read from the newest save file by nms-exporter. Anything marked projected is extrapolated from the save's own timestamps at the game's rates.",
         "templating": {"list": [
-            {"name": "item", "label": "Item", "type": "query", "datasource": DS, "query": {"query": "label_values(nms_item_total, item)", "refId": "v"},
-             "definition": "label_values(nms_item_total, item)", "multi": True, "includeAll": True, "allValue": ".*",
+            # value = item id, text = item name: names can contain quotes, which break label matchers
+            {"name": "item", "label": "Item", "type": "query", "datasource": DS, "query": {"query": "nms_item_total", "refId": "v"},
+             "definition": "nms_item_total", "regex": '/id="(?<value>[^"]+)".*?,item="(?<text>.*?)",job=/',
+             "multi": True, "includeAll": True, "allValue": ".*",
              "current": {"text": "All", "value": "$__all"}, "refresh": 2, "sort": 1, "options": []},
             {"name": "type", "label": "Type", "type": "custom", "query": "Substance,Product", "multi": True, "includeAll": True, "allValue": ".*",
              "current": {"text": "All", "value": "$__all"}, "options": [{"text": "All", "value": "$__all", "selected": True},

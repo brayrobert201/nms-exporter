@@ -49,10 +49,11 @@
           "uid": "prometheus"
         },
         "query": {
-          "query": "label_values(nms_item_total, item)",
+          "query": "nms_item_total",
           "refId": "v"
         },
-        "definition": "label_values(nms_item_total, item)",
+        "definition": "nms_item_total",
+        "regex": "/id=\"(?<value>[^\"]+)\".*?,item=\"(?<text>.*?)\",job=/",
         "multi": true,
         "includeAll": true,
         "allValue": ".*",
@@ -2276,7 +2277,7 @@
             "uid": "prometheus"
           },
           "refId": "A",
-          "expr": "nms_item_amount{item=~\"$item\", type=~\"$type\"}",
+          "expr": "nms_item_amount{id=~\"$item\", type=~\"$type\"}",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -2389,7 +2390,7 @@
             "uid": "prometheus"
           },
           "refId": "A",
-          "expr": "nms_item_total{item=~\"$item\", type=~\"$type\"}",
+          "expr": "nms_item_total{id=~\"$item\", type=~\"$type\"}",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -2401,7 +2402,7 @@
             "uid": "prometheus"
           },
           "refId": "B",
-          "expr": "nms_item_stacks{item=~\"$item\", type=~\"$type\"}",
+          "expr": "nms_item_stacks{id=~\"$item\", type=~\"$type\"}",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -2525,7 +2526,7 @@
             "uid": "prometheus"
           },
           "refId": "A",
-          "expr": "topk(8, nms_item_total{item=~\"$item\", type=~\"$type\"})",
+          "expr": "topk(8, nms_item_total{id=~\"$item\", type=~\"$type\"})",
           "legendFormat": "{{item}}"
         }
       ],

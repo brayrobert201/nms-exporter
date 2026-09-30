@@ -35,7 +35,7 @@ def build():
         dict(name="Known", expr='count(nms_craftable{known="1"})'),
         dict(name="Makeable now", expr='count(nms_craftable{known=~"$known"} > 0) or vector(0)'),
         dict(name="Blocked", expr='count(nms_craftable{known=~"$known"} == 0) or vector(0)'),
-        dict(name="Selected: can make", expr='max(nms_craftable{item="$item"}) or vector(0)'),
+        dict(name="Selected: can make", expr='max(nms_craftable{id="$item"}) or vector(0)'),
     ], 0, y, 24, 4, description="Makeable counts intermediates you could craft from stock through routes you know"))
     y += 4
     P.append(table("What can I make now?", [
@@ -45,8 +45,8 @@ def build():
         description="All levels: missing intermediates are crafted or refined from stock. Filter any column."))
     y += 14
 
-    P.append(row("Selected item: $item × $qty", y)); y += 1
-    need = 'nms_recipe_need{item="$item"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{item="$item"})'
+    P.append(row("Selected item: ${item:text} × $qty", y)); y += 1
+    need = 'nms_recipe_need{id="$item"} * on (id, route, recipe_id) group_left() ceil($qty / nms_recipe_yield{id="$item"})'
     P.append(table("Ingredients per route, for $qty", [
         target(need, instant=True, ref="A", fmt="table"),
         target(f'({need}) * 0 + on (ingredient_id) group_left() ({HAVE})', instant=True, ref="B", fmt="table"),
@@ -57,7 +57,7 @@ def build():
         sort=("Missing", True), description="One level: what each route needs directly. Have is the total across every container.",
         extra_transforms=[{"id": "organize", "options": {"excludeByName": {"id": True, "item": True, "known": True, "ingredient_id": True, "recipe_id": True}}}]))
     y += 10
-    raw = 'nms_craft_raw_need{item="$item"} * $qty'
+    raw = 'nms_craft_raw_need{id="$item"} * $qty'
     P.append(table("Raw materials for $qty, every intermediate expanded", [
         target(raw, instant=True, ref="A", fmt="table"),
         target(f'({raw}) * 0 + on (ingredient_id) group_left() ({HAVE})', instant=True, ref="B", fmt="table"),
@@ -68,17 +68,17 @@ def build():
         extra_transforms=[{"id": "organize", "options": {"excludeByName": {"id": True, "item": True, "known": True, "ingredient_id": True}}}]))
     y += 9
     short = table("Shortfall for one unit, using intermediates in stock", [
-        target('nms_craft_shortfall{item="$item"}', instant=True, ref="A", fmt="table"),
+        target('nms_craft_shortfall{id="$item"}', instant=True, ref="A", fmt="table"),
     ], 0, y, 12, 8, [("ingredient", "Missing"), ("Value", "Amount", "short")], sort=("Amount", True),
         description="Exact for one unit: stock is drawn down level by level. Empty means you can make at least one now.")
     short["fieldConfig"]["defaults"]["noValue"] = "Nothing missing"
     P.append(short)
-    P.append(table("What uses $item", [
-        target('nms_recipe_need{ingredient="$item"}', instant=True, ref="A", fmt="table"),
+    P.append(table("What uses ${item:text}", [
+        target('nms_recipe_need{ingredient_id="$item"}', instant=True, ref="A", fmt="table"),
     ], 12, y, 12, 8, [("item", "Makes"), ("route", "Via"), ("recipe", "Recipe"), ("Value", "Per craft", "short")], sort=("Makes", False),
         extra_transforms=[{"id": "organize", "options": {"excludeByName": {"id": True, "known": True, "ingredient": True, "ingredient_id": True, "recipe_known": True, "recipe_id": True}}}]))
     y += 8
-    P.append(timeseries("Can make over time: $item", [target('nms_craftable{item="$item"}', "{{item}} via {{route}}")], 0, y, 24, 7))
+    P.append(timeseries("Can make over time: ${item:text}", [target('nms_craftable{id="$item"}', "{{item}} via {{route}}")], 0, y, 24, 7))
     y += 7
 
     P.append(row("Everything", y)); y += 1
@@ -100,9 +100,10 @@ def build():
         "annotations": {"list": []},
         "description": "What can be made from stock, and what is missing. Computed by nms-exporter from the newest save and the game's own recipe tables.",
         "templating": {"list": [
-            {"name": "item", "label": "Item", "type": "query", "datasource": DS, "query": {"query": "label_values(nms_craftable, item)", "refId": "v"},
-             "definition": "label_values(nms_craftable, item)", "multi": False, "includeAll": False,
-             "current": {"text": "Warp Cell", "value": "Warp Cell"}, "refresh": 2, "sort": 1, "options": []},
+            # value = item id, text = item name: names can contain quotes, which break label matchers
+            {"name": "item", "label": "Item", "type": "query", "datasource": DS, "query": {"query": "nms_craftable", "refId": "v"},
+             "definition": "nms_craftable", "regex": '/id="(?<value>[^"]+)".*?,item="(?<text>.*?)",job=/',
+             "multi": False, "includeAll": False, "current": {"text": "Warp Cell", "value": "HYPERFUEL1"}, "refresh": 2, "sort": 1, "options": []},
             {"name": "qty", "label": "Quantity", "type": "textbox", "query": "1", "current": {"text": "1", "value": "1"}, "options": [{"text": "1", "value": "1", "selected": True}]},
             {"name": "known", "label": "Blueprints", "type": "custom", "query": "known : 1, all : .*", "multi": False, "includeAll": False,
              "current": {"text": "known", "value": "1"}, "options": [{"text": "known", "value": "1", "selected": True}, {"text": "all", "value": ".*", "selected": False}]},
