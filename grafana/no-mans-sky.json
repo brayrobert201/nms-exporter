@@ -53,7 +53,7 @@
           "refId": "v"
         },
         "definition": "nms_item_total",
-        "regex": "/id=\"(?<value>[^\"]+)\".*?,item=\"(?<text>.*?)\",job=/",
+        "regex": "/id=\"(?<value>[^\"]+)\".*?item=\"(?<text>.*?)\"(?:,|})/",
         "multi": true,
         "includeAll": true,
         "allValue": ".*",

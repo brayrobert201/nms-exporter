@@ -53,7 +53,7 @@
           "refId": "v"
         },
         "definition": "nms_craftable",
-        "regex": "/id=\"(?<value>[^\"]+)\".*?,item=\"(?<text>.*?)\",job=/",
+        "regex": "/id=\"(?<value>[^\"]+)\".*?item=\"(?<text>.*?)\"(?:,|})/",
         "multi": false,
         "includeAll": false,
         "current": {

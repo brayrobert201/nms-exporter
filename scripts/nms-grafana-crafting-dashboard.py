@@ -102,7 +102,7 @@ def build():
         "templating": {"list": [
             # value = item id, text = item name: names can contain quotes, which break label matchers
             {"name": "item", "label": "Item", "type": "query", "datasource": DS, "query": {"query": "nms_craftable", "refId": "v"},
-             "definition": "nms_craftable", "regex": '/id="(?<value>[^"]+)".*?,item="(?<text>.*?)",job=/',
+             "definition": "nms_craftable", "regex": '/id="(?<value>[^"]+)".*?item="(?<text>.*?)"(?:,|})/',
              "multi": False, "includeAll": False, "current": {"text": "Warp Cell", "value": "HYPERFUEL1"}, "refresh": 2, "sort": 1, "options": []},
             {"name": "qty", "label": "Quantity", "type": "textbox", "query": "1", "current": {"text": "1", "value": "1"}, "options": [{"text": "1", "value": "1", "selected": True}]},
             {"name": "known", "label": "Blueprints", "type": "custom", "query": "known : 1, all : .*", "multi": False, "includeAll": False,
