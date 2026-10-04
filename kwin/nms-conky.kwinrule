@@ -1,0 +1,68 @@
+# KWin window rules for the two conky screens (conky/left.conf, right.conf).
+#
+# KWin ignores the position an X11 window asks for, so the rules force one,
+# in KWin's logical coordinates, then force fullscreen, which fills whichever
+# output the window sits on. Fullscreen also stops the window being clipped to
+# _NET_WORKAREA, a single rectangle for the whole X screen that a panel on any
+# monitor shortens.
+#
+# The positions are holly's side monitors: DP-2 at 0,0 (left) and DP-1 at
+# 5502,0 (right). Any point inside the monitor works; read yours from
+# `kscreen-doctor -o` (Geometry). Not screen= indices: KWin renumbers outputs
+# between boots, while layout positions stay put.
+#
+# Rule values: 2 = Force. Apply with scripts/apply-kwin-rules.sh.
+
+[nms-conky-left]
+Description=No Man's Sky - traveller, conky (left screen)
+wmclass=nms-conky-left
+wmclassmatch=1
+wmclasscomplete=false
+types=1
+position=0,0
+positionrule=2
+fullscreen=true
+fullscreenrule=2
+above=false
+aboverule=2
+below=true
+belowrule=2
+noborder=true
+noborderrule=2
+skiptaskbar=true
+skiptaskbarrule=2
+skippager=true
+skippagerrule=2
+skipswitcher=true
+skipswitcherrule=2
+desktops=\0
+desktopsrule=2
+
+[nms-conky-right]
+Description=No Man's Sky - bases, conky (right screen)
+wmclass=nms-conky-right
+wmclassmatch=1
+wmclasscomplete=false
+types=1
+position=5502,0
+positionrule=2
+fullscreen=true
+fullscreenrule=2
+above=false
+aboverule=2
+below=true
+belowrule=2
+noborder=true
+noborderrule=2
+skiptaskbar=true
+skiptaskbarrule=2
+skippager=true
+skippagerrule=2
+skipswitcher=true
+skipswitcherrule=2
+desktops=\0
+desktopsrule=2
+
+[General]
+count=2
+rules=nms-conky-left,nms-conky-right

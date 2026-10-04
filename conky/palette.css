@@ -1,0 +1,25 @@
+/* Colour tokens for the conky screens. The dark palette the holly-dashboards
+   wall displays use (the data-viz skill's validated dark steps), kept as CSS
+   custom properties so both the Lua configs and the Python renderer read one
+   file. Status hues are reserved for state; magnitude bars stay series-1. */
+:root {
+  --page:        #0d0d0d;
+  --surface-1:   #1a1a19;
+  --surface-2:   #232321;
+  --ink-1:       #ffffff;
+  --ink-2:       #c3c2b7;
+  --ink-muted:   #898781;
+  --grid:        #2c2c2a;
+  --axis:        #383835;
+
+  --series-1:    #3987e5;  /* blue   */
+  --series-2:    #d95926;  /* orange */
+  --series-3:    #199e70;  /* aqua   */
+  --series-4:    #c98500;  /* yellow */
+  --series-7:    #9085e9;  /* violet */
+
+  --good:        #0ca30c;
+  --warning:     #fab219;
+  --serious:     #ec835a;
+  --critical:    #d03b3b;
+}

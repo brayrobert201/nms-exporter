@@ -64,6 +64,45 @@ uid `prometheus`, both generated (edit the generator, not the JSON):
   can make right now. Toggle known blueprints only, and filter by craft /
   refine / cook.
 
+## Wall screens (conky)
+
+Two portrait conky screens for monitors either side of the one the game runs
+on, reading `/json` on loopback (`apt install conky-all`):
+
+- `conky/left.conf` - the traveller: where the save says you are, currency,
+  vitals, travel, the frigate fleet with each expedition's progress, the
+  collection and lifetime counters.
+- `conky/right.conf` - the bases: refiners (running first, soonest done at the
+  top), extraction farms with fill and time to full, plants, and the largest
+  inventory stacks.
+
+Both carry the save's age, because every timer on them is projected from it.
+
+**Inventory search.** Click the bases screen to search: a KDE box asks for
+part of an item name, and the inventory panel shows every match with how much
+is in each container. Right-click clears it (it also reverts after 15 minutes).
+From a terminal: `conky/nms_search.py copper`, `conky/nms_search.py --clear`.
+conky 1.22's own mouse hook never receives clicks under XInput2, so
+`right.conf` starts `nms_search.py --watch`, which reads raw clicks from X
+through ctypes and exits with conky. Needs `kdialog` for the search box.
+
+```bash
+sudo ./install.sh                         # also installs nms-conky@.service
+./scripts/apply-kwin-rules.sh             # KDE: pin each window to its monitor
+systemctl --user enable --now nms-conky@left nms-conky@right
+```
+
+Or just `conky -c conky/left.conf`. The leftmost and rightmost monitors are
+used unless `NMS_CONKY_OUTPUT` names an output. The layout is 2160 x 3840
+pixels, a rotated 4K panel as an X11 client sees it; `conky/palette.css` holds
+the colours for both the configs and `conky/nms_conky.py`, the renderer.
+
+On KDE the rules are needed, not decoration: KWin ignores an X11 window's
+requested position, and clips X11 windows to `_NET_WORKAREA`, which a panel
+on any monitor shortens. `kwin/nms-conky.kwinrule` forces position and
+fullscreen by window class; its positions are holly's monitor layout, so check
+yours as its header describes.
+
 ## Game data
 
 `data/nms_tables.json` holds every refiner and cooking recipe with its time,

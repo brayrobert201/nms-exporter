@@ -10,10 +10,14 @@ NMS_USER="${NMS_USER:-${SUDO_USER:-}}"
 
 DEST=/opt/nms-exporter
 install -d "$DEST"
-cp -r nms_exporter.py nmsexporter data "$DEST/"
+cp -r nms_exporter.py nmsexporter data conky "$DEST/"
 chmod 755 "$DEST/nms_exporter.py"
 install -m 644 systemd/nms-exporter@.service /etc/systemd/system/nms-exporter@.service
+install -m 644 systemd/nms-conky@.service /etc/systemd/user/nms-conky@.service
 systemctl daemon-reload
 systemctl enable --now "nms-exporter@${NMS_USER}.service"
 systemctl restart "nms-exporter@${NMS_USER}.service"
 echo "nms-exporter@${NMS_USER} running: http://127.0.0.1:9877/metrics"
+echo "Optional wall screens (apt install conky-all), as ${NMS_USER} in the desktop session:"
+echo "  ./scripts/apply-kwin-rules.sh"
+echo "  systemctl --user enable --now nms-conky@left nms-conky@right"

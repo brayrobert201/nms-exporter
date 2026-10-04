@@ -1,0 +1,19 @@
+# One No Man's Sky conky screen per side monitor. Instance is the side:
+#   systemctl --user enable --now nms-conky@left     # traveller
+#   systemctl --user enable --now nms-conky@right    # bases
+#
+# Needs conky (apt install conky-all) and the KWin rules in
+# kwin/nms-conky.kwinrule (scripts/apply-kwin-rules.sh) on a KDE desktop.
+[Unit]
+Description=No Man's Sky conky - %i screen
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/conky -c /opt/nms-exporter/conky/%i.conf
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=graphical-session.target
