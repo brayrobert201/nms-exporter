@@ -2,8 +2,9 @@
 """Build data/nms_tables.json from the installed No Man's Sky game files.
 
 Pulls the refiner/cooking recipe table, item names, extractor and hotspot
-constants, and the power/plant rates straight out of the game's .pak archives,
-so the numbers always match the installed build rather than a wiki.
+constants, the power/plant rates, and the mission tables (titles, stage
+objectives, rewards) straight out of the game's .pak archives, so the numbers
+always match the installed build rather than a wiki.
 
 Needs two community tools (both single binaries, nothing to install):
   hgpaktool     https://github.com/monkeyman192/HGPAKtool/releases   (unpacks .pak)
@@ -25,7 +26,9 @@ PAKS = ["NMSARC.MetadataEtc.pak", "NMSARC.globals.pak", "NMSARC.misc.pak", "NMSA
 FILTERS = ["*GCRECIPETABLE*", "*GCSUBSTANCETABLE*", "*GCPRODUCTTABLE*", "*GCTECHNOLOGYTABLE*",
            "LANGUAGE/NMS_*_ENGLISH.MBIN", "*GCGAMEPLAYGLOBALS*", "*GCENVIRONMENTGLOBALS*",
            "*REGIONHOTSPOTSTABLE*", "*BASEBUILDINGOBJECTSTABLE*", "*GCFLEETGLOBALS*",
-           "*NMS_BASEPARTPRODUCTS*", "*NMS_MODULARCUSTOMISATIONPRODUCTS*", "*PROCEDURALPRODUCTTABLE*"]
+           "*NMS_BASEPARTPRODUCTS*", "*NMS_MODULARCUSTOMISATIONPRODUCTS*", "*PROCEDURALPRODUCTTABLE*",
+           "*MISSIONS/TABLES*", "*REALITY/TABLES/REWARDTABLE*", "*PROCEDURALTECHNOLOGYTABLE*",
+           "*FRIGATETRAITTABLE*"]
 MAPPING_URL = "https://github.com/monkeyman192/MBINCompiler/releases/latest/download/mapping.json"
 
 
@@ -109,6 +112,12 @@ def parse_items(work, loc):
                 if not name or "%" in name or name == key:   # procedural name templates: fall back to the subtitle
                     name = loc.get(val(e, "Subtitle"), name)
                 rec = {"name": name, "type": kind}
+                # The game's own grouping: substances have a Category (Fuel, Earth, Metal,
+                # Stellar, Catalyst, Flora, Exotic, Special), products a Type (Component,
+                # Consumable, Tradeable, Curiosity, ...). The storage plan sorts by these.
+                cat = props(e).get("Category" if kind == "Substance" else "Type")
+                if kind != "Technology" and cat is not None:
+                    rec["category"] = cat[0].get("value") if len(cat) else cat.get("value")
                 req = props(e).get("Requirements")
                 if kind == "Product" and req is not None and val(e, "IsCraftable") == "true":
                     ings = [{"id": val(r, "ID"), "type": val(props(r)["Type"], "InventoryType"), "amount": int(val(r, "Amount"))}
@@ -118,7 +127,29 @@ def parse_items(work, loc):
                 sym = val(e, "Symbol")
                 if sym and loc.get(sym):
                     rec["symbol"] = loc[sym]
+                if kind == "Technology":
+                    # Adjacency bonuses group technologies by the stat they drive.
+                    bs = props(e).get("BaseStat")
+                    rec["stat"] = (bs[0].get("value") if len(bs) else bs.get("value")) if bs is not None else None
+                    cat = props(e).get("Category")
+                    rec["category"] = (cat[0].get("value") if len(cat) else cat.get("value")) if cat is not None else None
+                    rec["core"] = val(e, "Core") == "true"
+                    rec["upgrade"] = val(e, "Upgrade") == "true"
                 items[iid] = rec
+    # Procedural upgrade modules (UP_JET4, CV_LAUN2, ...). Their Template is a
+    # technology entry above, which carries the stat family.
+    quality = {"Normal": "C", "Rare": "B", "Epic": "A", "Legendary": "S", "Illegal": "X", "Sentinel": "S", "SeaTrash": "C"}
+    for e in load(work, r"gcproceduraltechnologytable\.mxml$").iter("Property"):
+        if e.get("value") != "GcProceduralTechnologyData" or not val(e, "ID"):
+            continue
+        tmpl = val(e, "Template")
+        q = props(e).get("Quality")
+        q = (q[0].get("value") if len(q) else q.get("value")) if q is not None else None
+        base = loc.get(val(e, "NameLower")) or loc.get(val(e, "Name")) or items.get(tmpl, {}).get("name") or tmpl
+        items[val(e, "ID")] = {"name": base if base == "Upgrade Module" else f"{base} module", "type": "Technology", "procedural": True,
+                               "template": tmpl, "class": quality.get(q, q), "quality": q,
+                               "sentinel": q == "Sentinel", "stat": items.get(tmpl, {}).get("stat"),
+                               "category": items.get(tmpl, {}).get("category"), "core": False, "upgrade": True}
     return items
 
 
@@ -166,15 +197,39 @@ def parse_globals(work):
     }
 
 
-def parse_fleet(work):
+def parse_fleet(work, loc):
     g = load(work, r"gcfleetglobals\.global\.mxml$")
     durations = {d.get("name"): num(d.get("value"))
                  for d in props(props(g)["ExpeditionDurations"])["Duration"].findall("Property")}
+    # Trait points per stat type and strength, for scoring a frigate's base roll.
+    strengths = {}
+    by_type = props(g).get("FrigateTraitStrengths")
+    types = props(by_type).get("FrigateStatType") if by_type is not None else None
+    for st in (types.findall("Property") if types is not None else []):
+        alt = props(st).get("StatAlteration")
+        if alt is None:
+            continue
+        strengths[st.get("name")] = {p.get("name"): num(p.get("value")) for p in alt.findall("Property")}
+    traits = {}
+    for e in load(work, r"frigatetraittable\.mxml$").iter("Property"):
+        if e.get("value") != "GcFrigateTraitData":
+            continue
+        pp = props(e)
+        stat = val(pp["FrigateStatType"], "FrigateStatType")
+        strength = val(pp["Strength"], "FrigateTraitStrength")
+        traits[val(e, "ID")] = {"name": loc.get(val(e, "DisplayName"), val(e, "DisplayName")), "stat": stat,
+                                "strength": strength, "points": strengths.get(stat, {}).get(strength, 0)}
     return {
         "event_seconds": num(val(g, "TimeTakenForExpeditionEvent")),
         "event_seconds_easy": num(val(g, "TimeTakenForExpeditionEvent_Easy")),
         "events_by_duration": durations,
         "passive_income_tick_seconds": num(val(g, "TimeBetweenPassiveIncomeTicks")),
+        "stat_points_per_level": num(val(g, "StatPointsAwardedForLevelUp")),
+        # Expeditions needed for each rank-up. Not in the globals; the community's
+        # frigate calculators (NMSCD/frigate-calculator) use these.
+        "level_thresholds_community": [4, 8, 15, 25, 30, 35, 40, 45, 50, 55],
+        "trait_points": strengths,
+        "traits": traits,
     }
 
 
@@ -222,6 +277,170 @@ def parse_buildings(work):
     return parts
 
 
+# --- missions ------------------------------------------------------------------
+# A mission ID can be defined in more than one table; the first table in this
+# order wins (stat-story and wiki variants come last).
+MISSION_TABLE_ORDER = [
+    "coremissiontable", "missiontable", "atlaspathtable", "npcmissiontable", "sentinelsettlementmissiontable",
+    "watermissiontable", "tutorialmissiontable", "recurringmissiontable", "communitymissiontable",
+    "npcbuildersmissiontable", "spacepoimissiontable", "basecomputermissiontable", "piratemissiontable",
+    "fleetmissiontable", "corvettemissiontable", "swarmmissiontable", "planetprocmissiontable",
+    "spaceoutpostmissiontable", "startedonusemissiontable", "wikimissiontable", "statstoriesmissiontable"]
+# Reward kinds that are bookkeeping, not something the player receives.
+REWARD_SKIP = {
+    "MissionMessage", "ScanEvent", "ModifyStat", "IncrementStat", "InterventionResponse", "SetInteractionMissionState",
+    "OpenPage", "WikiTopic", "RefreshHazProt", "Health", "Shield", "OpenUnlockTree", "RecycleSpecificObject",
+    "CommunityContribution", "SettlementParty", "SettlementStat", "WantedLevel", "SettlementCustomJudgement",
+    "AtlasPathProgress", "MissionSeeded", "Trigger", "SetMissionStat", "ActivateFiends", "DamageTech",
+    "AdvancePortalState", "SendChatMessage", "TriggerMaintenance", "FrigateFlyby", "Worker", "Mission",
+    "ExchangeProduct", "UnlockSeasonReward", "TeachSpecificWords"}
+
+
+PLACEHOLDERS = {"SETTLEMENT": "your settlement"}     # the rest read fine when simply dropped
+
+
+def clean_text(text):
+    """First line of a localised string without markup; %PLACEHOLDERS% the game
+    fills at runtime become plain words, or go."""
+    text = re.sub(r"<[A-Z_]+>|<>", "", text or "").split("\n")[0]
+    text = re.sub(r"%([A-Z_0-9]+)%", lambda m: PLACEHOLDERS.get(m[1], ""), text)
+    return re.sub(r"\s+", " ", text).strip().rstrip(":").strip()
+
+
+def reward_descs(entry, loc, items):
+    """Short descriptions of what one reward table entry hands out."""
+    def name(i):
+        return items.get(i, {}).get("name") or loc.get(i + "_NAME_L") or loc.get(i + "_NAME") or i
+
+    descs = []
+    for it in entry.iter("Property"):
+        if it.get("value") != "GcRewardTableItem":
+            continue
+        r = props(it).get("Reward")
+        if r is None or not len(r):
+            continue
+        kind = (r[0].get("name") or "").replace("GcReward", "")
+        if kind in REWARD_SKIP:
+            continue
+        ids, f = [], {}
+        for c in r[0].iter("Property"):
+            n, v = c.get("name"), c.get("value")
+            if not v:
+                continue
+            if n in ("ID", "TechId", "ProductIds", "TechIds"):
+                ids.append(v)
+            elif n not in f:
+                f[n] = v
+        names = ", ".join(dict.fromkeys(name(i) for i in ids[:12]))   # unique, in order
+        lo, hi = f.get("AmountMin"), f.get("AmountMax")
+        amt = lo if lo == hi else f"{lo}-{hi}" if lo and hi else (lo or f.get("Amount") or "")
+        if kind in ("SpecificProduct", "SpecificSubstance", "Product"):
+            d = f"{amt} x {names}" if amt and amt != "1" else names
+        elif kind in ("MultiSpecificItems", "MultiSpecificProducts"):
+            d = names
+        elif kind == "SpecificTech":
+            d = f"{names} (tech)"
+        elif kind in ("SpecificProductRecipe", "MultiSpecificProductRecipes", "SpecificProductRecipeFromList"):
+            d = f"blueprint: {names}"
+        elif kind == "MultiSpecificTechRecipes":
+            d = f"tech blueprint: {names}"
+        elif kind == "Money":
+            d = f"{amt} units"
+        elif kind == "SpecificSpecial":
+            d = names
+        elif kind == "ProcTechProduct":
+            d = f"{clean_text(loc.get(f.get('Group', ''), '')) or 'upgrade'} module"
+        elif kind == "TeachWord":
+            d = f"{amt or 1} words"
+        elif kind == "DiscoverRune":
+            d = "portal glyph"
+        elif kind == "SpecificShip":
+            d = "a starship"
+        elif kind == "SpecificFrigate":
+            d = "a frigate"
+        elif kind == "SpecificWeapon":
+            d = "a multi-tool"
+        elif kind == "SpecificPetEgg":
+            d = "companion egg"
+        elif kind == "UnlockTitle":
+            d = "a title"
+        elif kind in ("Standing", "FactionStanding"):
+            d = "standing"
+        else:
+            d = kind
+        if d and d not in descs:
+            descs.append(d)
+    return descs
+
+
+def parse_missions(work, loc, items):
+    """Titled missions: terminal progress value, stage objectives by progress number, rewards."""
+    seqs = {}
+    for tbl in MISSION_TABLE_ORDER:
+        path = find(work, rf"^{tbl}\.mxml$")
+        if not path:
+            continue
+        for e in ET.parse(path[0]).getroot().iter("Property"):
+            if e.get("value") != "GcGenericMissionSequence":
+                continue
+            mid = val(e, "MissionID")
+            if mid and mid not in seqs:
+                seqs[mid] = e
+
+    def version_progress(versions):
+        vp = {int(val(x, "Version")): int(val(x, "Progress")) for x in versions}
+        return vp[max(vp)] if vp else None
+
+    out = {}
+    for mid, e in seqs.items():
+        pp = props(e)
+        tkey = val(pp["MissionTitles"], "Format") if pp.get("MissionTitles") is not None else None
+        title = clean_text(loc.get(tkey, "")) if tkey else ""
+        if not title:
+            continue
+        fsv = pp.get("FinalStageVersions")
+        final = version_progress(fsv) if fsv is not None and len(fsv) else None
+        stages = []
+
+        def walk(stage_list, objective):
+            for s in stage_list:
+                sp = props(s)
+                st = sp.get("Stage")
+                inner = st[0] if st is not None and len(st) else None
+                if inner is None:
+                    continue
+                obj = val(inner, "ObjectiveID")
+                objective2 = (clean_text(loc.get(obj, "")) if obj else "") or objective
+                sub = props(inner).get("Stages")
+                if sub is not None and len(sub):
+                    walk(sub, objective2)
+                    continue
+                vers = sp.get("Versions")
+                if vers is None or not len(vers):
+                    continue
+                msg = val(inner, "Message")
+                text = objective2 or (clean_text(loc.get(msg, "")) if msg else "")
+                if text:
+                    stages.append((version_progress(vers), text))
+
+        walk(pp["Stages"], "")
+        compact = []
+        for num, text in sorted(stages):
+            if not compact or compact[-1][1] != text:
+                compact.append([num, text])
+        rewards, leads = [], []
+        for r in (pp.get("Rewards") if pp.get("Rewards") is not None else []):
+            for c in r.iter("Property"):
+                if c.get("name") == "Mission" and c.get("value"):
+                    leads.append(c.get("value"))
+            descs = reward_descs(r, loc, items)
+            if descs:
+                rewards.append([val(r, "Id"), descs])
+        out[mid] = {"title": title, "class": val(e, "MissionClass"), "final": final, "stages": compact,
+                    "rewards": rewards, "leads_to": sorted(set(leads)), "recurring": val(e, "IsRecurring") == "true"}
+    return out
+
+
 def game_build():
     try:
         acf = open(os.path.join(STEAM, "appmanifest_275850.acf")).read()
@@ -246,7 +465,8 @@ def main():
     recipes = parse_recipes(args.work, loc, items, made)
     classes, biome_gases, substances = parse_hotspots(args.work)
     parts = parse_buildings(args.work)
-    fleet = parse_fleet(args.work)
+    fleet = parse_fleet(args.work, loc)
+    missions = parse_missions(args.work, loc, items)
 
     units_per_item = substances[0]["amount_cost"] // substances[0]["yield"]  # 360000 / 250 = 1440
     ext = parts["U_EXTRACTOR_S"]
@@ -270,8 +490,12 @@ def main():
             "extraction.items_per_hour_at_strength_1": "extractor rate_per_s * 3600 / resource_units_per_item, at a class-C hotspot with the extractor on the hotspot centre; multiply by class_strength and the survey-device percentage",
             "buildings.rate_per_s": "link-grid units per second; negative = consumes. Power network units are kP.",
             "buildings.storage": "link-grid units; for Resources networks divide by resource_units_per_item to get items (extractor 250, supply depot 1000); for Power it is kPs (battery 45000); for PlantGrowth it is seconds to mature",
+            "fleet.traits": "frigate trait id -> display name, the stat it raises and the points it adds (from FrigateTraitStrengths); subtract trait points and level-ups to recover a frigate's base roll",
             "fleet.events_by_duration": "number of expedition events per duration class; an expedition lasts events * event_seconds from StartTime",
             "items.<id>.craft": "crafting blueprint: ingredients per craft and units made per craft (CraftAmountMultiplier)",
+            "items.<id>.category": "substance Category or product Type from the game tables, the grouping data/nms_storage_plan.json sorts by",
+            "items.<id>.stat": "technology only: the stat family (BaseStat) adjacency bonuses group by; procedural modules take it from their template",
+            "missions.<id>": "final = the save's MissionProgress.Progress value once the mission is complete (-1 = never started); stages = [progress number, objective] for the latest mission version, so the current objective is the last stage whose number <= Progress; rewards = [reward id, descriptions]; leads_to = missions this one starts",
             "save.base_object.UserData": "for U_EXTRACTOR_S / U_SILO_S the upper 32 bits hold the current fill in resource units (divide by resource_units_per_item); the base's LastUpdateTimestamp says when",
         },
         "refiner": {"made_in_time": made},
@@ -293,12 +517,14 @@ def main():
         "buildings": parts,
         "items": items,
         "recipes": recipes,
+        "missions": missions,
     }
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     with open(args.out, "w") as fh:
         json.dump(out, fh, indent=1, sort_keys=False)
     print(f"wrote {args.out}: {len(recipes)} recipes ({sum(not r['cooking'] for r in recipes)} refiner, "
-          f"{sum(r['cooking'] for r in recipes)} cooking), {len(items)} items, {len(parts)} rated parts")
+          f"{sum(r['cooking'] for r in recipes)} cooking), {len(items)} items, {len(parts)} rated parts, "
+          f"{len(missions)} missions")
 
 
 if __name__ == "__main__":
