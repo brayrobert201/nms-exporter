@@ -241,7 +241,7 @@
     {
       "id": 4,
       "type": "stat",
-      "title": "Currency",
+      "title": "Portal glyphs",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -249,6 +249,136 @@
       "gridPos": {
         "x": 0,
         "y": 4,
+        "w": 12,
+        "h": 3
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "nms_universe_info",
+          "legendFormat": "{{glyphs}}",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#c3c2b7"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#c3c2b7",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "text": {
+          "valueSize": 26
+        }
+      },
+      "description": "The current system's portal code: 0-9 A-F stand for the sixteen glyphs"
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Galactic address",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 3
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "nms_universe_info",
+          "legendFormat": "{{address}}",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#c3c2b7"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#c3c2b7",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "text": {
+          "valueSize": 26
+        }
+      },
+      "description": "Signal-booster form of the same location"
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Currency",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 7,
         "w": 12,
         "h": 4
       },
@@ -340,7 +470,7 @@
       }
     },
     {
-      "id": 5,
+      "id": 7,
       "type": "stat",
       "title": "Time",
       "datasource": {
@@ -349,7 +479,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 4,
+        "y": 7,
         "w": 12,
         "h": 4
       },
@@ -453,7 +583,7 @@
       }
     },
     {
-      "id": 6,
+      "id": 8,
       "type": "bargauge",
       "title": "Vitals",
       "datasource": {
@@ -462,7 +592,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 8,
+        "y": 11,
         "w": 16,
         "h": 4
       },
@@ -541,7 +671,7 @@
       }
     },
     {
-      "id": 7,
+      "id": 9,
       "type": "stat",
       "title": "Ship",
       "datasource": {
@@ -550,7 +680,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 8,
+        "y": 11,
         "w": 8,
         "h": 4
       },
@@ -607,20 +737,20 @@
       }
     },
     {
-      "id": 8,
+      "id": 10,
       "type": "row",
       "title": "Refiners (projected from the save's timestamps)",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 12,
+        "y": 15,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "id": 9,
+      "id": 11,
       "type": "stat",
       "title": "Refiners",
       "datasource": {
@@ -629,7 +759,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 13,
+        "y": 16,
         "w": 24,
         "h": 4
       },
@@ -735,7 +865,7 @@
       "description": "Ready to collect = finished refiners that still hold output"
     },
     {
-      "id": 10,
+      "id": 12,
       "type": "table",
       "title": "Refiners",
       "datasource": {
@@ -744,7 +874,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 17,
+        "y": 20,
         "w": 24,
         "h": 11
       },
@@ -767,7 +897,7 @@
             "uid": "prometheus"
           },
           "refId": "B",
-          "expr": "sum by (refiner, recipe, output) (nms_refiner_input_amount)",
+          "expr": "sum by (refiner, base, recipe, output) (nms_refiner_input_amount)",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -953,6 +1083,7 @@
             },
             "renameByName": {
               "output": "Makes",
+              "base": "Where",
               "Value #A": "Output",
               "Value #C": "Progress",
               "Value #D": "Remaining",
@@ -963,13 +1094,14 @@
             },
             "indexByName": {
               "output": 0,
-              "Value #A": 1,
-              "Value #C": 2,
-              "Value #D": 3,
-              "Value #E": 4,
-              "Value #B": 5,
-              "recipe": 6,
-              "refiner": 7
+              "base": 1,
+              "Value #A": 2,
+              "Value #C": 3,
+              "Value #D": 4,
+              "Value #E": 5,
+              "Value #B": 6,
+              "recipe": 7,
+              "refiner": 8
             }
           }
         },
@@ -987,7 +1119,7 @@
       ]
     },
     {
-      "id": 11,
+      "id": 13,
       "type": "timeseries",
       "title": "Running refiners: input left, projected",
       "datasource": {
@@ -996,7 +1128,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 28,
+        "y": 31,
         "w": 24,
         "h": 8
       },
@@ -1057,20 +1189,20 @@
       "description": "Only refiners with work left; empty means nothing is running"
     },
     {
-      "id": 12,
+      "id": 14,
       "type": "row",
       "title": "Extraction farms (projected)",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 36,
+        "y": 39,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "id": 13,
+      "id": 15,
       "type": "bargauge",
       "title": "Storage used",
       "datasource": {
@@ -1079,7 +1211,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 37,
+        "y": 40,
         "w": 16,
         "h": 6
       },
@@ -1137,7 +1269,7 @@
       "description": "Extractors plus supply depots, projected from the last save at the measured rate"
     },
     {
-      "id": 14,
+      "id": 16,
       "type": "stat",
       "title": "Farms",
       "datasource": {
@@ -1146,7 +1278,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 37,
+        "y": 40,
         "w": 8,
         "h": 6
       },
@@ -1252,7 +1384,7 @@
       }
     },
     {
-      "id": 15,
+      "id": 17,
       "type": "table",
       "title": "Farms",
       "datasource": {
@@ -1261,7 +1393,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 43,
+        "y": 46,
         "w": 24,
         "h": 6
       },
@@ -1519,7 +1651,7 @@
       ]
     },
     {
-      "id": 16,
+      "id": 18,
       "type": "timeseries",
       "title": "Storage used over time",
       "datasource": {
@@ -1528,7 +1660,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 49,
+        "y": 52,
         "w": 24,
         "h": 8
       },
@@ -1589,20 +1721,20 @@
       }
     },
     {
-      "id": 17,
+      "id": 19,
       "type": "row",
       "title": "Fleet",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 57,
+        "y": 60,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "id": 18,
+      "id": 20,
       "type": "stat",
       "title": "Fleet",
       "datasource": {
@@ -1611,7 +1743,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 58,
+        "y": 61,
         "w": 24,
         "h": 4
       },
@@ -1716,7 +1848,7 @@
       }
     },
     {
-      "id": 19,
+      "id": 21,
       "type": "bargauge",
       "title": "Voyage progress",
       "datasource": {
@@ -1725,7 +1857,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 62,
+        "y": 65,
         "w": 24,
         "h": 5
       },
@@ -1782,7 +1914,7 @@
       }
     },
     {
-      "id": 20,
+      "id": 22,
       "type": "table",
       "title": "Expeditions",
       "datasource": {
@@ -1791,7 +1923,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 67,
+        "y": 70,
         "w": 24,
         "h": 6
       },
@@ -2058,20 +2190,290 @@
       ]
     },
     {
-      "id": 21,
+      "id": 23,
+      "type": "table",
+      "title": "Frigates",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 76,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "nms_frigate_score",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "B",
+          "expr": "nms_frigate_stat{stat=\"combat\"}",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "C",
+          "expr": "nms_frigate_stat{stat=\"exploration\"}",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "D",
+          "expr": "nms_frigate_stat{stat=\"industrial\"}",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "E",
+          "expr": "nms_frigate_stat{stat=\"trade\"}",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "F",
+          "expr": "nms_frigate_level",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "G",
+          "expr": "nms_frigate_expeditions",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "H",
+          "expr": "nms_frigate_info",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#3987e5",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Roll"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "mappings",
+                "value": []
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#fab219",
+                      "value": null
+                    },
+                    {
+                      "color": "#c3c2b7",
+                      "value": 5
+                    },
+                    {
+                      "color": "#0ca30c",
+                      "value": 10
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "description": "Roll = stats less what traits and rank-ups added, clamped to the community's -5..14 scale (NMSCD frigate calculator). 14 is the best roll the game makes.",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "__name__": true
+            }
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "stat": true,
+              "Value #H": true
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "host": true,
+              "id": true
+            },
+            "renameByName": {
+              "frigate": "Frigate",
+              "type": "Type",
+              "class": "Class",
+              "Value #A": "Roll",
+              "Value #B": "Combat",
+              "Value #C": "Exploration",
+              "Value #D": "Industrial",
+              "Value #E": "Trade",
+              "Value #F": "Rank",
+              "Value #G": "Trips",
+              "race": "Race",
+              "traits": "Traits"
+            },
+            "indexByName": {
+              "frigate": 0,
+              "type": 1,
+              "class": 2,
+              "Value #A": 3,
+              "Value #B": 4,
+              "Value #C": 5,
+              "Value #D": 6,
+              "Value #E": 7,
+              "Value #F": 8,
+              "Value #G": 9,
+              "race": 10,
+              "traits": 11
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Roll",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 24,
       "type": "row",
       "title": "Inventory",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 73,
+        "y": 85,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "id": 22,
+      "id": 25,
       "type": "stat",
       "title": "Inventory",
       "datasource": {
@@ -2080,7 +2482,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 74,
+        "y": 86,
         "w": 24,
         "h": 4
       },
@@ -2159,7 +2561,7 @@
       }
     },
     {
-      "id": 23,
+      "id": 26,
       "type": "barchart",
       "title": "Top 20 by amount",
       "datasource": {
@@ -2168,7 +2570,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 78,
+        "y": 90,
         "w": 24,
         "h": 13
       },
@@ -2257,7 +2659,7 @@
       ]
     },
     {
-      "id": 24,
+      "id": 27,
       "type": "table",
       "title": "Where is it?",
       "datasource": {
@@ -2266,7 +2668,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 91,
+        "y": 103,
         "w": 24,
         "h": 11
       },
@@ -2370,7 +2772,7 @@
       ]
     },
     {
-      "id": 25,
+      "id": 28,
       "type": "table",
       "title": "Totals",
       "datasource": {
@@ -2379,7 +2781,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 102,
+        "y": 114,
         "w": 24,
         "h": 11
       },
@@ -2506,7 +2908,7 @@
       ]
     },
     {
-      "id": 26,
+      "id": 29,
       "type": "timeseries",
       "title": "Totals over time",
       "datasource": {
@@ -2515,7 +2917,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 113,
+        "y": 125,
         "w": 24,
         "h": 8
       },
@@ -2575,20 +2977,20 @@
       "description": "Top eight of the selected items"
     },
     {
-      "id": 27,
+      "id": 30,
       "type": "row",
       "title": "Plants",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 121,
+        "y": 133,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "id": 28,
+      "id": 31,
       "type": "stat",
       "title": "Plants",
       "datasource": {
@@ -2597,7 +2999,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 122,
+        "y": 134,
         "w": 24,
         "h": 4
       },
@@ -2665,18 +3067,18 @@
       }
     },
     {
-      "id": 29,
+      "id": 32,
       "type": "table",
-      "title": "Plants",
+      "title": "Plants by kind",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
       "gridPos": {
         "x": 0,
-        "y": 126,
+        "y": 138,
         "w": 24,
-        "h": 5
+        "h": 8
       },
       "targets": [
         {
@@ -2685,7 +3087,43 @@
             "uid": "prometheus"
           },
           "refId": "A",
-          "expr": "nms_plant_ready_in_seconds",
+          "expr": "nms_plant_kind_total",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "B",
+          "expr": "nms_plant_kind_mature",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "C",
+          "expr": "nms_plant_kind_stock",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "D",
+          "expr": "nms_plant_kind_next_ready_seconds",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -2719,16 +3157,776 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Ready in"
+              "options": "In stock"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Next ready"
             },
             "properties": [
               {
                 "id": "unit",
                 "value": "dtdurations"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "all ready"
+                      }
+                    }
+                  }
+                ]
               }
             ]
           }
         ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "description": "In stock = how much of what the plant yields you hold across every container",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "__name__": true
+            }
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "host": true,
+              "id": true
+            },
+            "renameByName": {
+              "plant": "Plant",
+              "yields": "Gives",
+              "Value #A": "Planted",
+              "Value #B": "Ready",
+              "Value #C": "In stock",
+              "Value #D": "Next ready",
+              "base": "Base"
+            },
+            "indexByName": {
+              "plant": 0,
+              "yields": 1,
+              "Value #A": 2,
+              "Value #B": 3,
+              "Value #C": 4,
+              "Value #D": 5,
+              "base": 6
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Ready",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "type": "row",
+      "title": "Missions",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 146,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 34,
+      "type": "stat",
+      "title": "Missions",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 147,
+        "w": 24,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "nms_missions{status=\"in_progress\"}",
+          "legendFormat": "In progress",
+          "instant": true,
+          "range": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "B",
+          "expr": "nms_missions{status=\"complete\"}",
+          "legendFormat": "Complete",
+          "instant": true,
+          "range": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "C",
+          "expr": "nms_missions{status=\"not_started\"}",
+          "legendFormat": "Not started",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#c3c2b7"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#c3c2b7",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": false,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 22
+        }
+      },
+      "description": "Hints, wiki pages and lore flags are left out"
+    },
+    {
+      "id": 35,
+      "type": "table",
+      "title": "In progress, closest to done first",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 151,
+        "w": 24,
+        "h": 10
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "nms_mission_info",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "B",
+          "expr": "nms_mission_stages",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "C",
+          "expr": "nms_mission_remaining_steps",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#3987e5",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Selected"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": ""
+                      },
+                      "1": {
+                        "text": "\u2713"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "description": "From the game's mission tables: the current objective and the mission's own reward entries",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "__name__": true
+            }
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "host": true,
+              "id": true
+            },
+            "renameByName": {
+              "title": "Mission",
+              "Value #A": "Stage",
+              "Value #B": "of",
+              "Value #C": "Left",
+              "objective": "Now",
+              "rewards": "Finishing pays",
+              "selected": "Selected",
+              "mission": "Id"
+            },
+            "indexByName": {
+              "title": 0,
+              "Value #A": 1,
+              "Value #B": 2,
+              "Value #C": 3,
+              "objective": 4,
+              "rewards": 5,
+              "selected": 6,
+              "mission": 7
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Left",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "type": "row",
+      "title": "Technology",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 161,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 37,
+      "type": "table",
+      "title": "Placement by inventory",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 162,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "nms_tech_installed",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "B",
+          "expr": "nms_tech_supercharged",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "C",
+          "expr": "nms_tech_supercharged_good",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "D",
+          "expr": "nms_tech_supercharged_wasted",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "E",
+          "expr": "nms_tech_isolated",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "F",
+          "expr": "nms_tech_broken",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "G",
+          "expr": "nms_tech_info",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#3987e5",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Primary"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": ""
+                      },
+                      "1": {
+                        "text": "\u2713"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "description": "Wasted = a supercharged slot that is empty or holds a fixed technology instead of an upgrade module",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "__name__": true
+            }
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Value #G": true
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "host": true,
+              "id": true
+            },
+            "renameByName": {
+              "inventory": "Inventory",
+              "class": "Class",
+              "Value #A": "Installed",
+              "Value #B": "Supercharged",
+              "Value #C": "with a module",
+              "Value #D": "Wasted",
+              "Value #E": "Not touching family",
+              "Value #F": "Broken",
+              "primary": "Primary"
+            },
+            "indexByName": {
+              "inventory": 0,
+              "class": 1,
+              "Value #A": 2,
+              "Value #B": 3,
+              "Value #C": 4,
+              "Value #D": 5,
+              "Value #E": 6,
+              "Value #F": 7,
+              "primary": 8
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Wasted",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "type": "table",
+      "title": "Moves worth making",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 170,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "nms_tech_move",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#3987e5",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Value": true,
+              "primary": true
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "host": true,
+              "id": true
+            },
+            "renameByName": {
+              "inventory": "Inventory",
+              "module": "Supercharge",
+              "instead_of": "Instead of"
+            },
+            "indexByName": {
+              "inventory": 0,
+              "module": 1,
+              "instead_of": 2
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Inventory",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "type": "table",
+      "title": "Families not touching",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 170,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "nms_tech_isolated_family",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#3987e5",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
       },
       "options": {
         "showHeader": true,
@@ -2750,16 +3948,14 @@
               "id": true
             },
             "renameByName": {
-              "plant": "Plant",
-              "Value": "Ready in",
-              "base": "Base",
-              "index": "#"
+              "inventory": "Inventory",
+              "family": "Family",
+              "Value": "Members apart"
             },
             "indexByName": {
-              "plant": 0,
-              "Value": 1,
-              "base": 2,
-              "index": 3
+              "inventory": 0,
+              "family": 1,
+              "Value": 2
             }
           }
         },
@@ -2768,7 +3964,262 @@
           "options": {
             "sort": [
               {
-                "field": "Ready in",
+                "field": "Members apart",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "type": "row",
+      "title": "Tidy storage (data/nms_storage_plan.json)",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 177,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 41,
+      "type": "stat",
+      "title": "Tidy",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 178,
+        "w": 24,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "nms_tidy_moves",
+          "legendFormat": "Stacks to move",
+          "instant": true,
+          "range": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "B",
+          "expr": "nms_tidy_merges",
+          "legendFormat": "Stacks to merge",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#c3c2b7"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#c3c2b7",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": false,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 22
+        }
+      }
+    },
+    {
+      "id": 42,
+      "type": "table",
+      "title": "Containers",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 182,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "nms_tidy_stacks_now",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "B",
+          "expr": "nms_tidy_stacks_after",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "C",
+          "expr": "nms_tidy_capacity",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "D",
+          "expr": "nms_tidy_incoming",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "E",
+          "expr": "nms_tidy_outgoing",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#3987e5",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "__name__": true
+            }
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "host": true,
+              "id": true
+            },
+            "renameByName": {
+              "container": "Container",
+              "label": "Holds",
+              "Value #A": "Stacks now",
+              "Value #B": "After",
+              "Value #C": "Slots",
+              "Value #D": "In",
+              "Value #E": "Out"
+            },
+            "indexByName": {
+              "container": 0,
+              "label": 1,
+              "Value #A": 2,
+              "Value #B": 3,
+              "Value #C": 4,
+              "Value #D": 5,
+              "Value #E": 6
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Container",
                 "desc": false
               }
             ]
@@ -2777,20 +4228,331 @@
       ]
     },
     {
-      "id": 30,
+      "id": 43,
+      "type": "table",
+      "title": "Moves",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 190,
+        "w": 24,
+        "h": 12
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "nms_tidy_move",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#3987e5",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Amount"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "description": "Every stack sitting outside its planned container. Move things in game and the list shrinks on the next save.",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "host": true,
+              "id": true
+            },
+            "renameByName": {
+              "to": "To",
+              "label": "Holds",
+              "item": "Item",
+              "Value": "Amount",
+              "from": "From"
+            },
+            "indexByName": {
+              "to": 0,
+              "label": 1,
+              "item": 2,
+              "Value": 3,
+              "from": 4
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "To",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 44,
       "type": "row",
-      "title": "Lifetime",
+      "title": "Almost craftable",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 131,
+        "y": 202,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "id": 31,
+      "id": 45,
+      "type": "table",
+      "title": "Known blueprints short of stock, by the ingredient in the way",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 203,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "nms_craft_blocked_by",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "B",
+          "expr": "nms_craft_blocked_only_by",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "C",
+          "expr": "nms_craft_blocked_have",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "D",
+          "expr": "nms_craft_blocked_short",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#3987e5",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Have"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Smallest shortfall"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "description": "The Crafting dashboard has the per-item detail",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "__name__": true
+            }
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "ingredient_id": true
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "host": true,
+              "id": true
+            },
+            "renameByName": {
+              "ingredient": "Ingredient",
+              "Value #A": "Blueprints blocked",
+              "Value #B": "Need only this",
+              "Value #C": "Have",
+              "Value #D": "Smallest shortfall"
+            },
+            "indexByName": {
+              "ingredient": 0,
+              "Value #A": 1,
+              "Value #B": 2,
+              "Value #C": 3,
+              "Value #D": 4
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Blueprints blocked",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "type": "row",
+      "title": "Lifetime",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 212,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 47,
       "type": "stat",
       "title": "Discovery",
       "datasource": {
@@ -2799,7 +4561,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 132,
+        "y": 213,
         "w": 24,
         "h": 5
       },
@@ -2911,7 +4673,7 @@
       }
     },
     {
-      "id": 32,
+      "id": 48,
       "type": "stat",
       "title": "Combat",
       "datasource": {
@@ -2920,7 +4682,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 137,
+        "y": 218,
         "w": 12,
         "h": 5
       },
@@ -3010,7 +4772,7 @@
       }
     },
     {
-      "id": 33,
+      "id": 49,
       "type": "stat",
       "title": "Distance",
       "datasource": {
@@ -3019,7 +4781,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 137,
+        "y": 218,
         "w": 12,
         "h": 5
       },
@@ -3174,7 +4936,7 @@
       }
     },
     {
-      "id": 34,
+      "id": 50,
       "type": "stat",
       "title": "Earned ever",
       "datasource": {
@@ -3183,7 +4945,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 142,
+        "y": 223,
         "w": 24,
         "h": 4
       },
@@ -3264,7 +5026,7 @@
       }
     },
     {
-      "id": 35,
+      "id": 51,
       "type": "timeseries",
       "title": "Units",
       "datasource": {
@@ -3273,7 +5035,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 146,
+        "y": 227,
         "w": 24,
         "h": 7
       },
@@ -3332,7 +5094,7 @@
       }
     },
     {
-      "id": 36,
+      "id": 52,
       "type": "timeseries",
       "title": "Nanites",
       "datasource": {
@@ -3341,7 +5103,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 153,
+        "y": 234,
         "w": 24,
         "h": 7
       },
@@ -3400,7 +5162,7 @@
       }
     },
     {
-      "id": 37,
+      "id": 53,
       "type": "timeseries",
       "title": "Collections",
       "datasource": {
@@ -3409,7 +5171,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 160,
+        "y": 241,
         "w": 24,
         "h": 8
       },
@@ -3470,20 +5232,20 @@
       }
     },
     {
-      "id": 38,
+      "id": 54,
       "type": "row",
       "title": "Exporter",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 168,
+        "y": 249,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "id": 39,
+      "id": 55,
       "type": "stat",
       "title": "Status",
       "datasource": {
@@ -3492,7 +5254,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 169,
+        "y": 250,
         "w": 8,
         "h": 4
       },
@@ -3654,7 +5416,7 @@
       "description": "Collector = save decoded and metrics current; Scrape = VictoriaMetrics reaching the exporter"
     },
     {
-      "id": 40,
+      "id": 56,
       "type": "stat",
       "title": "Decoder",
       "datasource": {
@@ -3663,7 +5425,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 169,
+        "y": 250,
         "w": 16,
         "h": 4
       },
@@ -3759,7 +5521,7 @@
       }
     },
     {
-      "id": 41,
+      "id": 57,
       "type": "timeseries",
       "title": "Save age",
       "datasource": {
@@ -3768,7 +5530,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 173,
+        "y": 254,
         "w": 24,
         "h": 6
       },

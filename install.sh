@@ -14,6 +14,9 @@ cp -r nms_exporter.py nmsexporter data conky "$DEST/"
 chmod 755 "$DEST/nms_exporter.py"
 install -m 644 systemd/nms-exporter@.service /etc/systemd/system/nms-exporter@.service
 install -m 644 systemd/nms-conky@.service /etc/systemd/user/nms-conky@.service
+# portal glyph font for the traveller screen (see conky/fonts/NOTICE.md)
+install -D -m 644 conky/fonts/NMS-Glyphs-Mono.ttf /usr/local/share/fonts/nms/NMS-Glyphs-Mono.ttf
+fc-cache -f /usr/local/share/fonts/nms >/dev/null 2>&1 || true
 systemctl daemon-reload
 systemctl enable --now "nms-exporter@${NMS_USER}.service"
 systemctl restart "nms-exporter@${NMS_USER}.service"

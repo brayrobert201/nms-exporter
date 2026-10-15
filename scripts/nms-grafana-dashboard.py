@@ -185,6 +185,15 @@ def build():
     P.append(stat("Save age", "nms_save_age_seconds", 16, y, 8, 3, unit=DUR,
                   description="How long ago the game last wrote a save. Everything marked projected is extrapolated from that point."))
     y += 3
+    glyphs = stat("Portal glyphs", "nms_universe_info", 0, y, 12, 3, legend="{{glyphs}}", text_mode="name",
+                  description="The current system's portal code: 0-9 A-F stand for the sixteen glyphs")
+    glyphs["options"]["text"] = {"valueSize": 26}
+    P.append(glyphs)
+    addr = stat("Galactic address", "nms_universe_info", 12, y, 12, 3, legend="{{address}}", text_mode="name",
+                description="Signal-booster form of the same location")
+    addr["options"]["text"] = {"valueSize": 26}
+    P.append(addr)
+    y += 3
     P.append(stats("Currency", [dict(name="Units", expr="nms_units", decimals=1), dict(name="Nanites", expr="nms_nanites"),
                                 dict(name="Quicksilver", expr="nms_quicksilver")], 0, y, 12, 4))
     P.append(stats("Time", [dict(name="Play time", expr="nms_play_time_seconds", unit=DUR), dict(name="This life", expr="nms_time_alive_seconds", unit=DUR),
@@ -204,11 +213,11 @@ def build():
     y += 4
     P.append(table("Refiners", [
         target("nms_refiner_output_amount", instant=True, ref="A", fmt="table"),
-        target("sum by (refiner, recipe, output) (nms_refiner_input_amount)", instant=True, ref="B", fmt="table"),
+        target("sum by (refiner, base, recipe, output) (nms_refiner_input_amount)", instant=True, ref="B", fmt="table"),
         target("nms_refiner_progress_ratio", instant=True, ref="C", fmt="table"),
         target("nms_refiner_remaining_seconds", instant=True, ref="D", fmt="table"),
         target("nms_refiner_finish_timestamp_seconds * 1000", instant=True, ref="E", fmt="table"),
-    ], 0, y, 24, 11, [("output", "Makes"), ("Value #A", "Output", "short"), ("Value #C", "Progress", "percentunit", GAUGE_CELL),
+    ], 0, y, 24, 11, [("output", "Makes"), ("base", "Where"), ("Value #A", "Output", "short"), ("Value #C", "Progress", "percentunit", GAUGE_CELL),
                       ("Value #D", "Remaining", DUR), ("Value #E", "Done at", WHEN), ("Value #B", "Input left", "short"),
                       ("recipe", "Recipe"), ("refiner", "Refiner")],
         sort=("Remaining", True), description="Newest state per refiner. Output and input are projected forward using the recipe's rate."))
@@ -265,6 +274,24 @@ def build():
         sort=("Back in", False), description="Event results only update while the game runs; the timing is projected from departure.",
         extra_transforms=[{"id": "organize", "options": {"excludeByName": {"expedition": True}}}]))
     y += 6
+    ROLL = [{"id": "mappings", "value": []}, {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": WARN, "value": None}, {"color": INK2, "value": 5}, {"color": GOOD, "value": 10}]}},
+            {"id": "color", "value": {"mode": "thresholds"}}, {"id": "custom.cellOptions", "value": {"type": "color-text"}}]
+    P.append(table("Frigates", [
+        target("nms_frigate_score", instant=True, ref="A", fmt="table"),
+        target('nms_frigate_stat{stat="combat"}', instant=True, ref="B", fmt="table"),
+        target('nms_frigate_stat{stat="exploration"}', instant=True, ref="C", fmt="table"),
+        target('nms_frigate_stat{stat="industrial"}', instant=True, ref="D", fmt="table"),
+        target('nms_frigate_stat{stat="trade"}', instant=True, ref="E", fmt="table"),
+        target("nms_frigate_level", instant=True, ref="F", fmt="table"),
+        target("nms_frigate_expeditions", instant=True, ref="G", fmt="table"),
+        target("nms_frigate_info", instant=True, ref="H", fmt="table"),
+    ], 0, y, 24, 9, [("frigate", "Frigate"), ("type", "Type"), ("class", "Class"), ("Value #A", "Roll", "short", ROLL),
+                     ("Value #B", "Combat"), ("Value #C", "Exploration"), ("Value #D", "Industrial"), ("Value #E", "Trade"),
+                     ("Value #F", "Rank"), ("Value #G", "Trips"), ("race", "Race"), ("traits", "Traits")],
+        sort=("Roll", True),
+        description="Roll = stats less what traits and rank-ups added, clamped to the community's -5..14 scale (NMSCD frigate calculator). 14 is the best roll the game makes.",
+        extra_transforms=[{"id": "organize", "options": {"excludeByName": {"stat": True, "Value #H": True}}}]))
+    y += 9
     # ---------------------------------------------------------------- inventory
     P.append(row("Inventory", y)); y += 1
     P.append(stats("Inventory", [dict(name="Distinct items", expr="count(nms_item_total)"), dict(name="Stacks", expr="sum(nms_item_stacks)"),
@@ -297,9 +324,81 @@ def build():
     P.append(stats("Plants", [dict(name="Ready to harvest", expr="sum(nms_plants_mature) or vector(0)"),
                               dict(name="Planted", expr="sum(nms_plants_total) or vector(0)")], 0, y, 24, 4))
     y += 4
-    P.append(table("Plants", [target("nms_plant_ready_in_seconds", instant=True, ref="A", fmt="table")], 0, y, 24, 5,
-                   [("plant", "Plant"), ("Value", "Ready in", DUR), ("base", "Base"), ("index", "#")], sort=("Ready in", False)))
-    y += 5
+    P.append(table("Plants by kind", [
+        target("nms_plant_kind_total", instant=True, ref="A", fmt="table"),
+        target("nms_plant_kind_mature", instant=True, ref="B", fmt="table"),
+        target("nms_plant_kind_stock", instant=True, ref="C", fmt="table"),
+        target("nms_plant_kind_next_ready_seconds", instant=True, ref="D", fmt="table"),
+    ], 0, y, 24, 8, [("plant", "Plant"), ("yields", "Gives"), ("Value #A", "Planted"), ("Value #B", "Ready"), ("Value #C", "In stock", "short"),
+                     ("Value #D", "Next ready", DUR, [{"id": "mappings", "value": [{"type": "value", "options": {"0": {"text": "all ready"}}}]}]), ("base", "Base")],
+        sort=("Ready", True), description="In stock = how much of what the plant yields you hold across every container"))
+    y += 8
+    # ---------------------------------------------------------------- missions
+    P.append(row("Missions", y)); y += 1
+    P.append(stats("Missions", [dict(name="In progress", expr='nms_missions{status="in_progress"}'),
+                                dict(name="Complete", expr='nms_missions{status="complete"}'),
+                                dict(name="Not started", expr='nms_missions{status="not_started"}')], 0, y, 24, 4,
+                   description="Hints, wiki pages and lore flags are left out"))
+    y += 4
+    P.append(table("In progress, closest to done first", [
+        target("nms_mission_info", instant=True, ref="A", fmt="table"),
+        target("nms_mission_stages", instant=True, ref="B", fmt="table"),
+        target("nms_mission_remaining_steps", instant=True, ref="C", fmt="table"),
+    ], 0, y, 24, 10, [("title", "Mission"), ("Value #A", "Stage"), ("Value #B", "of"), ("Value #C", "Left"), ("objective", "Now"),
+                      ("rewards", "Finishing pays"), ("selected", "Selected", None,
+                       [{"id": "mappings", "value": [{"type": "value", "options": {"0": {"text": ""}, "1": {"text": "✓"}}}]}]), ("mission", "Id")],
+        sort=("Left", False), description="From the game's mission tables: the current objective and the mission's own reward entries"))
+    y += 10
+    # ---------------------------------------------------------------- technology
+    P.append(row("Technology", y)); y += 1
+    P.append(table("Placement by inventory", [
+        target("nms_tech_installed", instant=True, ref="A", fmt="table"),
+        target("nms_tech_supercharged", instant=True, ref="B", fmt="table"),
+        target("nms_tech_supercharged_good", instant=True, ref="C", fmt="table"),
+        target("nms_tech_supercharged_wasted", instant=True, ref="D", fmt="table"),
+        target("nms_tech_isolated", instant=True, ref="E", fmt="table"),
+        target("nms_tech_broken", instant=True, ref="F", fmt="table"),
+        target("nms_tech_info", instant=True, ref="G", fmt="table"),
+    ], 0, y, 24, 8, [("inventory", "Inventory"), ("class", "Class"), ("Value #A", "Installed"), ("Value #B", "Supercharged"),
+                     ("Value #C", "with a module"), ("Value #D", "Wasted"), ("Value #E", "Not touching family"), ("Value #F", "Broken"),
+                     ("primary", "Primary", None, [{"id": "mappings", "value": [{"type": "value", "options": {"0": {"text": ""}, "1": {"text": "✓"}}}]}])],
+        sort=("Wasted", True), description="Wasted = a supercharged slot that is empty or holds a fixed technology instead of an upgrade module",
+        extra_transforms=[{"id": "organize", "options": {"excludeByName": {"Value #G": True}}}]))
+    y += 8
+    P.append(table("Moves worth making", [target("nms_tech_move", instant=True, ref="A", fmt="table")], 0, y, 12, 7,
+                   [("inventory", "Inventory"), ("module", "Supercharge"), ("instead_of", "Instead of")], sort=("Inventory", False),
+                   extra_transforms=[{"id": "organize", "options": {"excludeByName": {"Value": True, "primary": True}}}]))
+    P.append(table("Families not touching", [target("nms_tech_isolated_family", instant=True, ref="A", fmt="table")], 12, y, 12, 7,
+                   [("inventory", "Inventory"), ("family", "Family"), ("Value", "Members apart")], sort=("Members apart", True)))
+    y += 7
+    # ---------------------------------------------------------------- tidy
+    P.append(row("Tidy storage (data/nms_storage_plan.json)", y)); y += 1
+    P.append(stats("Tidy", [dict(name="Stacks to move", expr="nms_tidy_moves"), dict(name="Stacks to merge", expr="nms_tidy_merges")], 0, y, 24, 4))
+    y += 4
+    P.append(table("Containers", [
+        target("nms_tidy_stacks_now", instant=True, ref="A", fmt="table"),
+        target("nms_tidy_stacks_after", instant=True, ref="B", fmt="table"),
+        target("nms_tidy_capacity", instant=True, ref="C", fmt="table"),
+        target("nms_tidy_incoming", instant=True, ref="D", fmt="table"),
+        target("nms_tidy_outgoing", instant=True, ref="E", fmt="table"),
+    ], 0, y, 24, 8, [("container", "Container"), ("label", "Holds"), ("Value #A", "Stacks now"), ("Value #B", "After"), ("Value #C", "Slots"),
+                     ("Value #D", "In"), ("Value #E", "Out")], sort=("Container", False)))
+    y += 8
+    P.append(table("Moves", [target("nms_tidy_move", instant=True, ref="A", fmt="table")], 0, y, 24, 12,
+                   [("to", "To"), ("label", "Holds"), ("item", "Item"), ("Value", "Amount", "short"), ("from", "From")], sort=("To", False),
+                   description="Every stack sitting outside its planned container. Move things in game and the list shrinks on the next save."))
+    y += 12
+    # ---------------------------------------------------------------- almost craftable
+    P.append(row("Almost craftable", y)); y += 1
+    P.append(table("Known blueprints short of stock, by the ingredient in the way", [
+        target("nms_craft_blocked_by", instant=True, ref="A", fmt="table"),
+        target("nms_craft_blocked_only_by", instant=True, ref="B", fmt="table"),
+        target("nms_craft_blocked_have", instant=True, ref="C", fmt="table"),
+        target("nms_craft_blocked_short", instant=True, ref="D", fmt="table"),
+    ], 0, y, 24, 9, [("ingredient", "Ingredient"), ("Value #A", "Blueprints blocked"), ("Value #B", "Need only this"), ("Value #C", "Have", "short"),
+                     ("Value #D", "Smallest shortfall", "short")], sort=("Blueprints blocked", True),
+        description="The Crafting dashboard has the per-item detail", extra_transforms=[{"id": "organize", "options": {"excludeByName": {"ingredient_id": True}}}]))
+    y += 9
     # ---------------------------------------------------------------- lifetime
     P.append(row("Lifetime", y)); y += 1
     P.append(stats("Discovery", [dict(name="Planets found", expr='nms_stat{stat="DISC_PLANETS"}'), dict(name="Systems found", expr='nms_stat{stat="DISC_SYSTEMS"}'),

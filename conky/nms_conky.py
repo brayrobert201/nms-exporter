@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Conky renderer for two portrait No Man's Sky screens.
 
-    nms_conky.py left  <section>    # the traveller: money, vitals, fleet, lifetime
-    nms_conky.py right <section>    # the bases: refiners, farms, plants, inventory
+    nms_conky.py left  <section>    # the traveller: money, vitals, fleet, missions, technology, lifetime
+    nms_conky.py right <section>    # the bases: refiners, farms, plants, crafting, tidy, inventory
 
 Each call prints one section as conky markup; left.conf and right.conf stitch
 the sections together with ${execpi}. Data is the exporter's own /json on
@@ -36,7 +36,11 @@ WIDTH = 2160 - 2 * MARGIN
 SANS = "Noto Sans"
 MONO = "DejaVu Sans Mono"
 GLYPHS = "DejaVu Sans"         # Xft does no fallback, and Noto Sans lacks ● ▲ ✖
+PORTAL_FONT = "NMS Glyphs:style=Glyphs-Mono"   # conky/fonts/NMS-Glyphs-Mono.ttf, 0-9 A-F are the portal symbols
 MONO_ADVANCE = 0.602           # DejaVu Sans Mono advance width, in ems
+# Every font size below is a design size at 1.0; the screens carry more rows
+# than that leaves room for, so text is scaled down. NMS_CONKY_TEXT_SCALE overrides.
+TEXT_SCALE = float(os.environ.get("NMS_CONKY_TEXT_SCALE") or 0.8)
 
 
 # ------------------------------------------------------------------ markup --
@@ -56,12 +60,16 @@ def c(token: str) -> str:
     return "${color %s}" % P.get(token, "ffffff")
 
 
+def _px(px: int) -> int:
+    return max(10, round(px * TEXT_SCALE))
+
+
 def font(px: int, bold: bool = False, mono: bool = False) -> str:
-    return "${font %s:%spixelsize=%d}" % (MONO if mono else SANS, "bold:" if bold else "", px)
+    return "${font %s:%spixelsize=%d}" % (MONO if mono else SANS, "bold:" if bold else "", _px(px))
 
 
 def glyph(ch: str, px: int = 28) -> str:
-    return "${font %s:pixelsize=%d}%s%s" % (GLYPHS, px, ch, font(px))
+    return "${font %s:pixelsize=%d}%s%s" % (GLYPHS, _px(px), ch, font(px))
 
 
 def esc(s) -> str:
@@ -133,7 +141,7 @@ def mag(frac, warn=0.75, serious=0.88, critical=0.95) -> str:
 
 
 def bar(frac, colour: str, width: int = WIDTH, px: int = 18, x: int | None = None) -> str:
-    cells = max(1, int(width / round(px * MONO_ADVANCE)))   # hinting snaps advances to whole px
+    cells = max(1, int(width / round(_px(px) * MONO_ADVANCE)))   # hinting snaps advances to whole px
     f = min(1.0, max(0.0, frac)) if _ok(frac) else 0.0
     n = round(f * cells)
     lead = "${goto %d}" % x if x is not None else ""
@@ -292,12 +300,21 @@ def left_where_in(d) -> str:
     u = d.get("universe") or {}
     p = d.get("player") or {}
     st = d.get("stats") or {}
+    glyphs = u.get("glyphs") or ""
+    # The portal code as the game draws it: the glyph font maps 0-9 A-F to the
+    # sixteen symbols. The hex form sits under it for typing or sharing.
+    glyph_row = (f"${{font {PORTAL_FONT}:pixelsize={_px(84)}}}{esc(glyphs)}{font(26)}" if glyphs
+                 else f"{font(44, bold=True)}--")
     return header("Travel") + "\n" + stats([
-        ("Galaxy", fnum(u.get("galaxy")), f"system {fnum(u.get('system'))}  ·  planet {fnum(u.get('planet'))}"),
-        ("Coordinates", f"{fnum(u.get('x'))}, {fnum(u.get('y'))}, {fnum(u.get('z'))}"),
+        ("Portal glyphs", glyph_row,
+         f"{font(28, mono=True)}{c('ink-2')}{esc(glyphs or '--')}{font(26)}{c('ink-muted')}  ·  galaxy {fnum(u.get('galaxy'))}  ·  system {fnum(u.get('system'))}  ·  planet {fnum(u.get('planet'))}"),
+        ("Galactic address", f"{font(60, bold=True, mono=True)}{esc(u.get('address') or '--')}",
+         f"voxel {fnum(u.get('x'))}, {fnum(u.get('y'))}, {fnum(u.get('z'))}"),
+    ], 2, value_px=84) + "\n${voffset 6}" + stats([
         ("Play time", fdur(p.get("total_play_time")), f"{fnum(st.get('PLAY_SESSIONS'))} sessions"),
         ("This life", fdur(p.get("time_alive")), f"{fnum(st.get('DEATHS'))} deaths"),
-    ], value_px=44)
+        ("Warps", fnum(st.get("DIST_WARP"))), ("Systems visited", fnum((d.get("collections") or {}).get("visited_systems"))),
+    ], 4, value_px=44)
 
 
 def left_fleet(d) -> str:
@@ -329,6 +346,96 @@ def left_fleet(d) -> str:
                    f"${{alignr}}{font(28)}{state}")
         out.append(bar(e.get("progress"), "series-1", px=14))
         out.append(f"{font(26)}{c('ink-muted')}{'  ·  '.join(detail)}{tail}")
+    roster = f.get("roster") or []
+    if roster:
+        # Base roll per frigate, NMSCD's frigate-calculator formula: stats less
+        # traits and rank-ups. 14 is the best roll the game makes, -5 the worst.
+        rows = []
+        for r in roster:
+            sc = r.get("score")
+            tone = "good" if _ok(sc) and sc >= 10 else "idle" if _ok(sc) and sc >= 5 else "warning"
+            st = r.get("stats") or {}
+            rows.append([f"{esc(r.get('name', '?'))}{font(24)}{c('ink-muted')}  {esc(r.get('race', ''))}",
+                         esc(r.get("type", "?")), esc(r.get("inventory_class", "?")),
+                         f"{fnum(st.get('combat'))}/{fnum(st.get('exploration'))}/{fnum(st.get('industrial'))}/{fnum(st.get('trade'))}",
+                         fnum(r.get("level")), fnum(r.get("expeditions")),
+                         pill(tone, f"{sc:+d}" if _ok(sc) else "--", 24)])
+        out.append("${voffset 6}" + table(["Frigate", "Type", "Class", "Cbt/Exp/Ind/Trd", "Rank", "Trips", "Roll"], rows,
+                                            [MARGIN, MARGIN + 560, MARGIN + 860, MARGIN + 1000, MARGIN + 1340, MARGIN + 1500, MARGIN + 1680], {4, 5}))
+    return "\n".join(out)
+
+
+def left_missions(d, show: int = 6) -> str:
+    """Missions in progress, the one closest to finishing first: current objective
+    and what completing it hands out, from the game's mission tables."""
+    m = d.get("missions") or {}
+    rows = m.get("in_progress") or []
+    k = m.get("counts") or {}
+    out = [header("Missions", f"{c('ink-muted')}{fnum(k.get('in_progress'))} in progress  ·  "
+                              f"{fnum(k.get('complete'))} done  ·  closest to done first")]
+    if not m.get("tables"):
+        out.append(empty("no mission tables in data/nms_tables.json - run scripts/nms-extract-tables.py"))
+        return "\n".join(out)
+    if not rows:
+        out.append(empty("no missions in progress"))
+        return "\n".join(out)
+    for r in rows[:show]:
+        tag = f"  {pill('idle', 'selected', 24)}" if r.get("selected") else ""
+        prog, final = r.get("progress"), r.get("final")
+        step = f"stage {fnum(prog + 1)} of {fnum(final)}" if _ok(prog) and _ok(final) else ""
+        out.append(f"${{voffset 6}}{font(32, bold=True)}{c('ink-1')}{esc(r.get('title', '?'))}{tag}"
+                   f"${{alignr}}{font(28, mono=True)}{c('ink-2')}{step}")
+        objective = r.get("objective") or "in progress"
+        line = f"{font(26)}{c('ink-2')}{esc(objective[:90])}"
+        if r.get("rewards"):
+            reward = ", ".join(r["rewards"][:3])
+            room = 150 - len(objective[:90])
+            if len(reward) > room:
+                reward = reward[:max(0, room - 1)] + "…"
+            line += f"{c('ink-muted')}  ·  for {esc(reward)}"
+        out.append(line)
+    if len(rows) > show:
+        out.append(empty(f"+ {len(rows) - show} more in progress"))
+    return "\n".join(out)
+
+
+def left_tech(d, show: int = 4) -> str:
+    """Installed technology, placement first: the inventories with the most to
+    gain from moving a module onto a supercharged slot or next to its family."""
+    rows = [t for t in (d.get("tech") or []) if t.get("installed")]
+    out = [header("Technology", f"{c('ink-muted')}supercharged slots and stat families  ·  from the save")]
+    if not rows:
+        out.append(empty("no technology in the save"))
+        return "\n".join(out)
+
+    def gain(t):
+        return (len(t.get("move_in") or []) + len(t.get("upgrade") or []) + min(3, len(t.get("isolated") or []))
+                + (3 if t.get("primary") else 0) + (2 if t.get("broken") else 0))
+    rows.sort(key=lambda t: (-gain(t), t.get("inventory", "")))
+    for t in rows[:show]:
+        sc, good = t.get("supercharged") or 0, t.get("supercharged_good") or 0
+        sc_text = (f"{good} of {sc} supercharged slots carry a module" if sc else "no supercharged slots")
+        state = pill("good", "well placed", 26) if not (t.get("move_in") or t.get("upgrade") or t.get("isolated")) \
+            else pill("warning", f"{len(t.get('move_in') or []) + len(t.get('upgrade') or [])} to move", 26) if (t.get("move_in") or t.get("upgrade")) \
+            else pill("idle", "families split", 26)
+        out.append(f"${{voffset 6}}{font(32, bold=True)}{c('ink-1')}{esc(t.get('inventory', '?'))}"
+                   f"{font(26)}{c('ink-muted')}  ·  {esc(t.get('class') or '?')}-class  ·  {fnum(t.get('installed'))} installed"
+                   f"  ·  {sc_text}" + (f"  ·  {pill('serious', str(t['broken']) + ' broken', 26)}" if t.get("broken") else "")
+                   + f"${{alignr}}{font(28)}{state}")
+        lines = []
+        if t.get("move_in"):
+            swap = f" instead of {', '.join(t['move_out'])}" if t.get("move_out") else ""
+            lines.append(f"supercharge {', '.join(t['move_in'][:3])}{swap}")
+        if t.get("upgrade"):
+            lines.append(f"better than what is supercharged: {', '.join(t['upgrade'][:2])}")
+        iso = t.get("isolated") or []
+        if iso:
+            fams: dict[str, int] = {}
+            for i in iso:
+                fams[i.get("family_name", "?")] = fams.get(i.get("family_name", "?"), 0) + 1
+            lines.append("not touching their family: " + ", ".join(f"{n} {fam}" for fam, n in list(fams.items())[:3]))
+        for line in lines[:2]:
+            out.append(f"{font(26)}{c('ink-2')}{esc(line[:150])}")
     return "\n".join(out)
 
 
@@ -373,7 +480,7 @@ def right_summary(d) -> str:
     ])
 
 
-def right_refiners(d, show: int = 20) -> str:
+def right_refiners(d, show: int = 10) -> str:
     refs = d.get("refiners") or []
     out = [header("Refiners", f"{c('ink-muted')}projected")]
     if not refs:
@@ -393,9 +500,9 @@ def right_refiners(d, show: int = 20) -> str:
         else:
             state = pill("idle", "empty")
         rows.append([f"{esc(r.get('output', '?'))}{font(24)}{c('ink-muted')}  from {esc(ins)}",
-                     fnum(r.get("projected_output")), fnum(left_in), state])
-    out.append(table(["Makes", "Output", "Input left", "State"], rows,
-                     [MARGIN, MARGIN + 1000, MARGIN + 1300, MARGIN + 1620], {1, 2}))
+                     esc(r.get("base") or "?"), fnum(r.get("projected_output")), fnum(left_in), state])
+    out.append(table(["Makes", "Where", "Output", "Input left", "State"], rows,
+                     [MARGIN, MARGIN + 720, MARGIN + 1160, MARGIN + 1400, MARGIN + 1660], {2, 3}))
     if len(refs) > show:
         out.append(empty(f"+ {len(refs) - show} more"))
     return "\n".join(out)
@@ -426,21 +533,131 @@ def right_farms(d) -> str:
 
 
 def right_plants(d) -> str:
+    """One row per kind of plant: what it gives, how many are planted and ready,
+    how much of the harvest is already in stock, and when the rest is due."""
     bases = list((d.get("plants") or {}).values())
-    out = [header("Plants")]
+    items = d.get("items") or {}
+    total = sum(b.get("total") or 0 for b in bases)
+    mature = sum(b.get("mature") or 0 for b in bases)
+    out = [header("Plants", f"{c('ink-muted')}{mature} of {total} ready  ·  projected")]
     if not bases:
         out.append(empty("nothing planted"))
         return "\n".join(out)
-    rows = []
     for b in bases:
-        waits = [p.get("ready_in_seconds") for p in b.get("plants") or []
-                 if _ok(p.get("ready_in_seconds")) and p["ready_in_seconds"] > 0]
-        kinds = sorted({p.get("plant", "?") for p in b.get("plants") or []})
-        all_ready = (b.get("mature") or 0) >= (b.get("total") or 0) > 0
-        rows.append([esc(b.get("base", "?")), esc(", ".join(kinds)), f"{b.get('mature', 0)} / {b.get('total', 0)}",
-                     pill("good", "harvest") if all_ready else f"{c('ink-2')}next in {fdur(min(waits)) if waits else '--'}"])
-    out.append(table(["Base", "Growing", "Ready", "State"], rows,
-                     [MARGIN, MARGIN + 700, MARGIN + 1300, MARGIN + 1620], {2}))
+        kinds: dict[str, dict] = {}
+        for p in b.get("plants") or []:
+            k = kinds.setdefault(p.get("plant", "?"), {"n": 0, "ready": 0, "waits": [],
+                                                       "yield_id": p.get("yield_id"), "yields": p.get("yields")})
+            k["n"] += 1
+            w = p.get("ready_in_seconds")
+            if _ok(w) and w > 0:
+                k["waits"].append(w)
+            else:
+                k["ready"] += 1
+        rows = []
+        order = sorted(kinds.items(), key=lambda kv: (-kv[1]["ready"], min(kv[1]["waits"]) if kv[1]["waits"] else 0, kv[0]))
+        for plant, k in order:
+            have = (items.get(k["yield_id"]) or {}).get("total") if k["yield_id"] else None
+            nxt = fdur(min(k["waits"])) if k["waits"] else "--"
+            if k["ready"] == k["n"]:
+                state = pill("good", "harvest")
+            elif k["ready"]:
+                part = pill("good", f"{k['ready']} ready", 26)
+                state = f"{part}{c('ink-2')}  ·  rest in {nxt}"
+            else:
+                state = f"{c('ink-2')}in {nxt}"
+            rows.append([esc(plant), esc(k.get("yields") or "--"), fnum(k["n"]), f"{k['ready']} / {k['n']}",
+                         fnum(have) if have is not None else "--", state])
+        if len(bases) > 1:
+            out.append(f"${{voffset 4}}{font(32, bold=True)}{c('ink-1')}{esc(b.get('base', '?'))}")
+        out.append(table(["Plant", "Gives", "Planted", "Ready", "In stock", "State"], rows,
+                         [MARGIN, MARGIN + 460, MARGIN + 880, MARGIN + 1060, MARGIN + 1280, MARGIN + 1560], {2, 3, 4}))
+    return "\n".join(out)
+
+
+def right_crafting(d, show: int = 6) -> str:
+    """Known blueprints that stock cannot cover yet, grouped by the ingredient in
+    the way, so the screen says what one trip or harvest would unlock."""
+    cr = d.get("crafting") or {}
+    groups = cr.get("by_ingredient") or []
+    blocked = cr.get("blocked") or []
+    out = [header("Almost craftable", f"{c('ink-muted')}{len(blocked)} known blueprints short of stock"
+                                       if cr.get("computed_at") else "")]
+    if not cr.get("computed_at"):
+        out.append(empty("crafting not evaluated yet - a few seconds after the exporter reads a save"))
+        return "\n".join(out)
+    if not groups:
+        out.append(empty("every known blueprint can be made from stock"))
+        return "\n".join(out)
+    for g in groups[:show]:
+        its = g.get("items") or []
+        shorts = [i.get("short") or 0 for i in its] or [0]
+        alone = sum(1 for i in its if i.get("only"))
+        span = fnum(min(shorts)) + (f" to {fnum(max(shorts))}" if max(shorts) != min(shorts) else "")
+        out.append(f"${{voffset 4}}{font(34, bold=True)}{c('ink-1')}{esc(g.get('ingredient', '?'))}"
+                   f"{font(26)}{c('ink-muted')}  ·  have {fnum(g.get('have'))}  ·  short by {span}"
+                   f"${{alignr}}{font(28)}{c('ink-2')}{_n(len(its), 'blueprint')}  ·  {alone} need only this")
+        names = ", ".join(f"{i.get('item', '?')} {fnum(i.get('short'))}" for i in its[:6])
+        if len(its) > 6:
+            names += f", +{len(its) - 6} more"
+        out.append(f"{font(26)}{c('ink-2')}{esc(names)}")
+    return "\n".join(out)
+
+
+def right_tidy(d, show: int = 6) -> str:
+    """Storage against data/nms_storage_plan.json: per destination container, the
+    stacks that belong there but sit elsewhere, and whether it has the slots."""
+    td = d.get("tidy") or {}
+    moves = td.get("moves") or []
+    conts = td.get("containers") or []
+    out = [header("Tidy storage", f"{c('ink-muted')}{_n(len(moves), 'stack')} to move  ·  "
+                                  f"{fnum(td.get('merges'))} to merge  ·  per the storage plan" if td.get("enabled") else "")]
+    if not td.get("enabled"):
+        out.append(note(f"no storage plan: {td.get('error', 'data/nms_storage_plan.json missing')}"))
+        return "\n".join(out)
+    if not moves and not td.get("merges"):
+        out.append(f"{pill('good', 'everything is where the plan puts it')}")
+        return "\n".join(out)
+    by_to: dict[str, list] = {}
+    for m in moves:
+        by_to.setdefault(m["to"], []).append(m)
+    shown = 0
+    for cnt in conts:
+        ms = by_to.get(cnt["container"])
+        if not ms and not cnt.get("merges"):
+            continue
+        if shown >= show:
+            break
+        shown += 1
+        over = cnt.get("over_capacity") or 0
+        slots = (pill("serious", f"{cnt['stacks_after']} of {cnt['capacity']} slots - {over} too many", 24) if over
+                 else f"{c('ink-2')}{cnt['stacks_after']} of {cnt['capacity']} slots after")
+        tail = f"  ·  {_n(cnt['merges'], 'stack')} to merge" if cnt.get("merges") else ""
+        out.append(f"${{voffset 4}}{font(32, bold=True)}{c('ink-1')}{esc(cnt['container'])}"
+                   f"{font(26)}{c('ink-muted')}  ·  {esc(cnt.get('label', ''))}  ·  {_n(len(ms or []), 'stack')} in{tail}"
+                   f"${{alignr}}{font(26)}{slots}")
+        if ms:
+            # several stacks of one item from one container read as one entry
+            grouped: dict[tuple, list] = {}
+            for m in ms:
+                grouped.setdefault((m["item"], m["from"]), []).append(m["amount"])
+            parts = []
+            for (item, frm), amts in sorted(grouped.items(), key=lambda kv: -sum(kv[1])):
+                n = f" ({len(amts)} stacks)" if len(amts) > 1 else ""
+                parts.append(f"{item} {fnum(sum(amts))} from {frm}{n}")
+            shown_parts, used = [], 0
+            for part in parts:
+                if used + len(part) + 2 > 160 or len(shown_parts) == 5:
+                    break
+                shown_parts.append(part)
+                used += len(part) + 2
+            text = ", ".join(shown_parts)
+            if len(parts) > len(shown_parts):
+                text += f", +{len(parts) - len(shown_parts)} more"
+            out.append(f"{font(26)}{c('ink-2')}{esc(text)}")
+    left = len(by_to) - shown
+    if left > 0:
+        out.append(empty(f"+ {left} more containers with stacks to take in"))
     return "\n".join(out)
 
 
@@ -462,15 +679,33 @@ def right_search(d, query: str, show: int = 10) -> str:
     items = sorted(((k, v) for k, v in (d.get("items") or {}).items()
                     if q in (v.get("item") or "").lower() or q in k.lower()),
                    key=lambda kv: -(kv[1].get("total") or 0))
-    out = [header(f"Inventory  ·  “{query}”",
-                  f"{c('ink-muted')}{len(items)} found  ·  right-click to clear")]
-    if not items:
-        out.append(empty(f"nothing in the inventory matches “{query}”"))
-        return "\n".join(out)
     where: dict[str, dict[str, int]] = {}
     for loc in d.get("locations") or []:
         per = where.setdefault(loc.get("id"), {})
         per[loc.get("location", "?")] = per.get(loc.get("location", "?"), 0) + (loc.get("amount") or 0)
+    # A blueprint whose name matches: every ingredient, how much is held, and where.
+    recipes = sorted(((k, v) for k, v in (d.get("blueprints") or {}).items() if q in (v.get("item") or "").lower()),
+                     key=lambda kv: (len(kv[1].get("item") or ""), kv[1].get("item")))
+    out = [header(f"Inventory  ·  “{query}”",
+                  f"{c('ink-muted')}{len(items)} found  ·  {len(recipes)} blueprints  ·  right-click to clear")]
+    totals = d.get("items") or {}
+    for key, bp in recipes[:2]:
+        makes = f"makes {bp['yield']}" if (bp.get("yield") or 1) > 1 else "makes 1"
+        out.append(f"${{voffset 6}}{font(34, bold=True)}{c('ink-1')}Craft {esc(bp.get('item', key))}"
+                   f"{font(26)}{c('ink-muted')}  ·  {makes}")
+        for ing in bp.get("ingredients") or []:
+            have = (totals.get(ing["id"]) or {}).get("total") or 0
+            need = ing.get("amount") or 0
+            ok = have >= need
+            places = sorted(where.get(ing["id"], {}).items(), key=lambda kv: -kv[1])
+            at = ", ".join(f"{p} {fnum(n)}" for p, n in places[:4]) if places else "none anywhere"
+            state = pill("good", "ok", 24) if ok else pill("warning", f"short {fnum(need - have)}", 24)
+            out.append(f"{font(28)}{c('ink-1')}{esc(ing.get('item', ing['id']))}{font(26)}{c('ink-2')}  x{fnum(need)}"
+                       f"  ·  have {fnum(have)}  {state}{c('ink-muted')}  ·  {esc(at)}")
+    if not items:
+        if not recipes:
+            out.append(empty(f"nothing in the inventory matches “{query}”"))
+        return "\n".join(out)
     xs = columns(3)
     for key, it in items[:show]:
         out.append(f"${{voffset 6}}{font(34, bold=True)}{c('ink-1')}{esc(it.get('item', key))}"
@@ -487,7 +722,7 @@ def right_search(d, query: str, show: int = 10) -> str:
     return "\n".join(out)
 
 
-def right_inventory(d, show: int = 24) -> str:
+def right_inventory(d, show: int = 16) -> str:
     query = _search()
     if query:
         return right_search(d, query)
@@ -531,9 +766,10 @@ def unscale(text: str) -> str:
 
 SECTIONS = {
     "left": {"where": left_where, "money": left_money, "vitals": left_vitals, "travel": left_where_in,
-             "fleet": left_fleet, "collection": left_collections, "lifetime": left_lifetime},
+             "fleet": left_fleet, "missions": left_missions, "tech": left_tech, "collection": left_collections,
+             "lifetime": left_lifetime},
     "right": {"summary": right_summary, "refiners": right_refiners, "farms": right_farms,
-              "plants": right_plants, "inventory": right_inventory},
+              "plants": right_plants, "crafting": right_crafting, "tidy": right_tidy, "inventory": right_inventory},
 }
 SUBTITLE = {"left": "traveller", "right": "bases"}
 
