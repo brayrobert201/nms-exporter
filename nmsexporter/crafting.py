@@ -6,7 +6,8 @@ totals this answers, per item:
 
   direct     one level: units makeable now from stock alone, per route
   makeable   all levels: units makeable now, crafting missing intermediates
-             from stock through the routes the player knows
+             from stock through the blueprints the player knows (refiner and
+             cooking recipes need no discovery, so they always count)
   raw_need   raw materials per unit with every intermediate expanded
   shortfall  raw materials missing to make one unit, using intermediates in stock
 
@@ -52,7 +53,10 @@ class Crafting:
         routes = {}
         for iid, rs in self.routes.items():
             routes[iid] = [dict(r, known=is_known(iid, r)) for r in rs]
-        usable = {iid: [r for r in rs if r["known"] or not known_only] for iid, rs in routes.items()}
+        # Crafting needs the blueprint; a refiner or nutrient processor runs any recipe
+        # whether or not the player has "discovered" it, so those are always usable.
+        usable = {iid: [r for r in rs if r["known"] or not known_only or r["route"] != "craft"]
+                  for iid, rs in routes.items()}
 
         def direct(r, inv):
             n = None

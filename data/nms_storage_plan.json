@@ -1,0 +1,225 @@
+{
+ "_doc": [
+  "Where each kind of item should live. The exporter compares every stack in the",
+  "containers listed under 'tidy' with this plan and reports the moves; the bases",
+  "screen shows them. Matching: a container's 'ids' and 'patterns' (regex on the item",
+  "id) win first, in list order; then 'categories' (the game's substance Category or",
+  "product Type, see items.<id>.category in nms_tables.json); anything left goes to",
+  "'default'. Containers not under 'tidy' (exosuit, ships, freighter) are never asked",
+  "to give anything up. Edit freely; the exporter re-reads this file on every save."
+ ],
+ "tidy": [
+  "Storage 1",
+  "Storage 2",
+  "Storage 3",
+  "Storage 4",
+  "Storage 5",
+  "Storage 6",
+  "Storage 7",
+  "Storage 8",
+  "Storage 9",
+  "Storage 10"
+ ],
+ "default": "Storage 10",
+ "containers": [
+  {
+   "container": "Storage 1",
+   "label": "Fuel & warp",
+   "ids": [
+    "FUEL1",
+    "FUEL2",
+    "LAUNCHSUB",
+    "LAUNCHSUB2",
+    "ROCKETSUB",
+    "STELLAR2",
+    "ANTIMATTER",
+    "AM_HOUSING",
+    "HYPERFUEL1",
+    "HYPERFUEL2",
+    "LAUNCHFUEL",
+    "JELLY",
+    "SHIPCHARGE",
+    "PRODFUEL2",
+    "RADIO1"
+   ],
+   "patterns": [
+    "^FRIGATE_FUEL"
+   ]
+  },
+  {
+   "container": "Storage 2",
+   "label": "Stellar metals",
+   "ids": [
+    "YELLOW2",
+    "RED2",
+    "GREEN2",
+    "BLUE2"
+   ],
+   "patterns": [
+    "^EX_"
+   ],
+   "categories": [
+    "Stellar"
+   ]
+  },
+  {
+   "container": "Storage 3",
+   "label": "Gases & catalysts",
+   "ids": [
+    "OXYGEN",
+    "GAS1",
+    "GAS2",
+    "GAS3",
+    "GAS4",
+    "CATALYST1",
+    "CATALYST2",
+    "WATER1",
+    "WATER2",
+    "TOXIC1",
+    "SNOW1",
+    "WATERPLANT",
+    "ASTBELT1"
+   ],
+   "categories": [
+    "Catalyst"
+   ]
+  },
+  {
+   "container": "Storage 4",
+   "label": "Harvest, food & bait",
+   "ids": [
+    "SACVENOM",
+    "ALBUMENPEARL",
+    "GRAVBALL",
+    "NIPNIPBUDS",
+    "CREATURE1",
+    "TREAT_FREELEVEL"
+   ],
+   "patterns": [
+    "^PLANT_",
+    "^FOOD_",
+    "^BAIT_"
+   ],
+   "categories": [
+    "Flora",
+    "Fish",
+    "CreatureEgg"
+   ]
+  },
+  {
+   "container": "Storage 5",
+   "label": "Components",
+   "ids": [
+    "NANOTUBES",
+    "CARBON_SEAL",
+    "GRENFUEL1",
+    "AMMO",
+    "TECH_COMP",
+    "ACCESS1",
+    "ACCESS2",
+    "ACCESS3"
+   ],
+   "patterns": [
+    "^FARMPROD",
+    "^MEGAPROD",
+    "^ULTRAPROD",
+    "^COMPOUND"
+   ],
+   "categories": [
+    "Component"
+   ]
+  },
+  {
+   "container": "Storage 6",
+   "label": "Trade goods",
+   "patterns": [
+    "^TRA_",
+    "^ALLOY",
+    "_CURIO"
+   ],
+   "categories": [
+    "Tradeable",
+    "SpaceSalvage"
+   ]
+  },
+  {
+   "container": "Storage 7",
+   "label": "Minerals & earth metals",
+   "ids": [
+    "ASTEROID1",
+    "ASTEROID2",
+    "ASTEROID3",
+    "DUSTY1",
+    "HOT1",
+    "CAVE1",
+    "CAVE2",
+    "LUSH1",
+    "COLD1",
+    "ROBOT1",
+    "ROBOT2",
+    "SAND1"
+   ],
+   "categories": [
+    "Metal",
+    "Exotic",
+    "Earth"
+   ]
+  },
+  {
+   "container": "Storage 8",
+   "label": "Scrap & refiner feed",
+   "ids": [
+    "HULK1",
+    "AF_METAL",
+    "SPACEGUNK1",
+    "SPACEGUNK2",
+    "SPACEGUNK3",
+    "SPACEGUNK4",
+    "SPACEGUNK5",
+    "SLIMEPOST1",
+    "WORMCORE",
+    "FIENDCORE"
+   ],
+   "categories": [
+    "Special"
+   ]
+  },
+  {
+   "container": "Storage 9",
+   "label": "Curiosities & charts",
+   "ids": [
+    "NAV_DATA",
+    "NAV_DATA_DROP",
+    "BP_SALVAGE",
+    "SENTINEL_LOOT",
+    "STORM_CRYSTAL",
+    "FRIG_TOKEN"
+   ],
+   "patterns": [
+    "^GEODE_",
+    "^STARCHART",
+    "^CHART_"
+   ],
+   "categories": [
+    "Curiosity"
+   ]
+  },
+  {
+   "container": "Storage 10",
+   "label": "Parts, modules & the rest",
+   "ids": [
+    "SHIP_CORE_S",
+    "SHIP_INV_TOKEN",
+    "FREI_INV_TOKEN",
+    "WEAP_INV_TOKEN"
+   ],
+   "patterns": [
+    "^SHIP_",
+    "^FREI_"
+   ],
+   "categories": [
+    "CustomisationPart"
+   ]
+  }
+ ]
+}
