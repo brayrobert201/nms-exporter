@@ -19,12 +19,14 @@ from __future__ import annotations
 import math
 from collections import defaultdict
 
-MAX_DEPTH = 8
+MAX_DEPTH = 6
 MAX_UNITS = 1_000_000
 
-# Substances are gathered, not made, so the tree stops at them - except the
-# handful that only exist by refining, which expand through their refiner recipe.
-REFINED_SUBSTANCES = {"STELLAR2", "FUEL2", "LAND2", "LAND3", "CATALYST2", "ROCKETSUB", "WATER2"}
+# Substances expand through refiner recipes like anything else when one exists
+# (Star Bulb from Paraffinium and Nitrogen, Cactus Flesh from Pyrite and
+# Sulphurine ...); only substances with no recipe at all are leaves. Recipes
+# that need the substance itself as a seed are skipped by the loop guard.
+REFINED_SUBSTANCES = {"STELLAR2", "FUEL2", "LAND2", "LAND3", "CATALYST2", "ROCKETSUB", "WATER2"}   # kept for reference
 
 
 class Crafting:
@@ -78,7 +80,7 @@ class Crafting:
             return best
 
         def is_leaf(iid):
-            return self.items.get(iid, {}).get("type") == "Substance" and iid not in REFINED_SUBSTANCES
+            return not usable.get(iid)
 
         def expand(iid, qty, inv, shortfall, depth, stack, pref=None):
             take = min(inv.get(iid, 0), qty)
