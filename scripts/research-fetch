@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import gzip
 import hashlib
 import html
 import os
@@ -79,6 +80,8 @@ def main():
             ctype = r.headers.get("Content-Type", "")
     except urllib.error.URLError as e:
         sys.exit(f"not stored: {a.url}: {e}")
+    if body[:2] == b"\x1f\x8b":            # gzip sent regardless of Accept-Encoding
+        body = gzip.decompress(body)
     charset = (re.search(r"charset=([\w-]+)", ctype) or [None, "utf-8"])[1]
     raw = body.decode(charset, errors="replace")
     if "html" in ctype:

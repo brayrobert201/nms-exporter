@@ -12,6 +12,7 @@ sources:
   - research/sources/web/2026-10-21-libnom-io-readme.md
   - research/sources/web/2026-10-21-assistantnms-webapp-readme.md
   - research/runs/2026-10-21-tooling-survey/raw/survey.md
+  - research/runs/2026-10-21-pymhf-proton/raw/notes.md
 tags: [tooling]
 generated: {by: "machine:session", at: 2026-10-21}
 verified: []
@@ -39,7 +40,7 @@ careful measurement, and nothing public documents them.**
 | Tool | What it gives the compendium | Caveat |
 |---|---|---|
 | HGPAKtool, MBINCompiler (monkeyman192) | Pak unpacking and MBIN<->MXML; already in `/opt/nmstools`. | One MBINCompiler release per game version. |
-| pyMHF + NMS.py (monkeyman192) | Hook game functions at runtime and log inputs and outputs: the route to hardcoded formulas. NMS.py's function patterns and struct types are the nearest public reverse-engineering notes. | Windows-targeted; untested under Proton. Breaks on game updates until offsets are updated. |
+| pyMHF + NMS.py (monkeyman192) | Hook game functions at runtime and log inputs and outputs: the route to hardcoded formulas. NMS.py's function patterns and struct types are the nearest public reverse-engineering notes. | Windows-only, but installs and imports inside the game's Proton prefix (trial 2026-10-21: Python 3.12.10, nmspy 181442.1 = NMS.exe FileVersion 181442; 427/452 signatures match on disk). `scripts/nms-hook` attaches to the running game; first live injection not yet tried. Breaks on game updates until NMS.py is updated. |
 | libNOM.io / NomNom (zencq) | Save read/write library and editor; libNOM.map is a maintained key de-obfuscation map; NomNom's source may encode field limits (wallet cap). | .NET; source not yet read. |
 | NMSE, goatfungus NMSSaveEditor | Independent save decoders to cross-check field meaning. | |
 | Assistant for NMS (AssistantNMS) | Recipe and price data extracted from game files - a cross-check, not new evidence. | Same source data as ours. |
@@ -54,5 +55,5 @@ automated fetches (HTTP 402).
 
 - Commit a per-build MXML dump of the tables we read (or all of METADATA) to a
   separate repo so game updates diff with `git diff`.
-- Try pyMHF/NMS.py under Proton for the sale and extraction functions.
+- First live attach with `scripts/nms-hook`, then hooks on the sale and extraction functions.
 - Read NomNom/libNOM source for the wallet cap.

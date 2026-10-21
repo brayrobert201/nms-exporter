@@ -2,6 +2,14 @@
 
 Newest first. One entry per change to the bundle: what landed, from where.
 
+## 2026-10-21 - pyMHF under Proton, map, farm check
+
+- pyMHF + NMS.py install and import inside the game's Proton prefix; version
+  matches the installed NMS.exe; launcher `scripts/nms-hook` (attach only).
+  Notes: `research/runs/2026-10-21-pymhf-proton/raw/notes.md`.
+- New concept: coordinate frames of save positions; `/map` page and
+  `scripts/nms-farm-check` use it.
+
 ## 2026-10-21 - measurement plans
 
 - Measurement plans added to six questions (sale price drop, Gold yield,

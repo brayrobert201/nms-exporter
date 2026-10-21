@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+# Attach NMS.py (pyMHF) to an already running No Man's Sky under Proton.
+#
+#   scripts/nms-hook --check   # run every pre-flight check, inject nothing
+#   scripts/nms-hook           # pre-flight, ask "saved?", then inject
+#   scripts/nms-hook --yes     # same without the question
+#
+# WHAT IT DOES: runs `python -m pymhf run nmspy` with the Windows Python that
+# lives in the game's own Wine prefix (C:\pymhf\python), using the same Proton
+# wine as the game so it talks to the game's wineserver. pyMHF then INJECTS a
+# Python interpreter into the running NMS.exe and hooks game functions.
+#
+# RISK: this modifies the live game process. It can crash the game, and a crash
+# mid-save can damage a save. SAVE FIRST (and keep a copy of the save folder).
+# pyMHF also terminates NMS.exe itself if the injected side errors out. Never
+# use it online / in multiplayer sessions.
+#
+# PREREQUISITES (set up by the 2026-10-21 pymhf-proton trial, see
+# research/runs/2026-10-21-pymhf-proton/raw/notes.md):
+#   - Python 3.12.10 at C:\pymhf\python in compatdata/275850/pfx, with
+#     `pip install nmspy==181442.1` (pymhf 0.2.5). NMS.py 181442.x matches
+#     NMS.exe FileVersion 181442 (Cosmos 7.06, Steam build 25800958).
+#   - %APPDATA%\pymhf\nmspy\pymhf.local.toml with start_exe = false, so pyMHF
+#     attaches instead of launching the game through steam://.
+#   - Start NMS from Steam first and wait for the main menu (or load a save).
+#   - Run this from a real terminal: pyMHF's prompts need a console (a tty).
+#     Two extra windows appear: the pyMHF log console and the DearPyGui GUI.
+#     Ctrl+C here detaches pyMHF (attach mode leaves the game running).
+#
+# Overrides: NMS_HOOK_PROTON (Proton dir), WINEDEBUG.
+set -u
+
+STEAM=${STEAM_ROOT:-$HOME/.local/share/Steam}
+PREFIX=$STEAM/steamapps/compatdata/275850/pfx
+PROTON=${NMS_HOOK_PROTON:-$STEAM/steamapps/common/Proton - Experimental}
+WINE=$PROTON/files/bin/wine
+PY_HOST=$PREFIX/drive_c/pymhf/python/python.exe
+PY_WIN='C:\pymhf\python\python.exe'
+LOCAL_CFG=$PREFIX/drive_c/users/steamuser/AppData/Roaming/pymhf/nmspy/pymhf.local.toml
+
+CHECK=0; YES=0
+for a in "$@"; do
+  case "$a" in
+    --check) CHECK=1 ;;
+    --yes|-y) YES=1 ;;
+    -h|--help) sed -n '2,33p' "$0"; exit 0 ;;
+    *) echo "nms-hook: unknown argument: $a" >&2; exit 2 ;;
+  esac
+done
+
+die() { echo "nms-hook: $*" >&2; exit 1; }
+warn() { echo "nms-hook: warning: $*" >&2; }
+
+# --- the Python side is installed --------------------------------------------
+[ -x "$WINE" ] || die "Proton wine not found at $WINE (set NMS_HOOK_PROTON)"
+[ -d "$PREFIX" ] || die "game prefix not found: $PREFIX"
+[ -f "$PY_HOST" ] || die "Windows Python not installed in the prefix ($PY_HOST). See the trial notes for the install steps."
+[ -d "$PREFIX/drive_c/pymhf/python/Lib/site-packages/nmspy" ] || die "nmspy is not installed in the prefix Python (pip install nmspy)"
+[ -d "$PREFIX/drive_c/pymhf/python/Lib/site-packages/pymhf" ] || die "pymhf is not installed in the prefix Python"
+[ -f "$LOCAL_CFG" ] || die "missing $LOCAL_CFG; without it pyMHF prompts for a mod folder and would try to start the game itself"
+grep -Eq '^start_exe *= *false' "$LOCAL_CFG" || die "$LOCAL_CFG must set start_exe = false (attach, never launch)"
+
+# --- the game is running, in this prefix -------------------------------------
+GAME_PID=; ANY_PID=
+for d in /proc/[0-9]*; do
+  [ "$(cat "$d/comm" 2>/dev/null)" = "NMS.exe" ] || continue
+  ANY_PID=${d#/proc/}
+  if tr '\0' '\n' < "$d/environ" 2>/dev/null | grep -Fxq -e "WINEPREFIX=$PREFIX" -e "WINEPREFIX=$PREFIX/"; then
+    GAME_PID=$ANY_PID; break
+  fi
+done
+if [ -z "$GAME_PID" ] && [ -n "$ANY_PID" ]; then
+  warn "NMS.exe (pid $ANY_PID) found but its WINEPREFIX is not $PREFIX; trying it anyway"
+  GAME_PID=$ANY_PID
+fi
+[ -n "$GAME_PID" ] || die "No Man's Sky is not running (no NMS.exe using $PREFIX). Start it from Steam, wait for the menu, then rerun."
+echo "game: NMS.exe unix pid $GAME_PID"
+
+GAME_ENV=$(tr '\0' '\n' < "/proc/$GAME_PID/environ")
+
+# Same Proton as the game, or the wineserver protocol will not match.
+if ! grep -Fq "$PROTON" <<<"$GAME_ENV"; then
+  warn "the game's environment never mentions $PROTON; it may be running a different Proton."
+  warn "game's compat tool paths: $(grep -E '^STEAM_COMPAT_TOOL_PATHS=' <<<"$GAME_ENV" | cut -d= -f2-)"
+  warn "set NMS_HOOK_PROTON to that Proton directory if attaching fails."
+fi
+
+# The client must share a pid namespace with the game's wineserver.
+if [ "$(readlink "/proc/$GAME_PID/ns/pid")" != "$(readlink /proc/self/ns/pid)" ]; then
+  warn "the game runs in a different pid namespace (Steam Linux Runtime container)."
+  warn "a host-side wine client may then fail to talk to its wineserver; see the trial notes for the in-container fallback."
+fi
+
+# Mirror the game's sync mode (esync/fsync/ntsync) so client and server agree.
+SYNC_ENV=()
+while IFS= read -r kv; do SYNC_ENV+=("$kv"); done < <(grep -E '^(WINE[A-Z_]*SYNC[A-Z_]*|PROTON_NO_[A-Z]*SYNC)=' <<<"$GAME_ENV")
+echo "sync env copied from game: ${SYNC_ENV[*]:-(none)}"
+
+[ -t 0 ] && [ -t 1 ] || die "run this from an interactive terminal: pyMHF's prompts need a console"
+
+export WINEPREFIX=$PREFIX
+export WINEDEBUG=${WINEDEBUG:--all}
+# pyMHF starts its log window with `cmd /c start python ...`, so python must be on the Wine PATH.
+export WINEPATH='C:\pymhf\python;C:\pymhf\python\Scripts'
+export WINEDLLOVERRIDES="winemenubuilder.exe=d"
+
+# Can our wine client see the game? If not we started a second wineserver and
+# pyMHF would never find NMS.exe. This only lists processes; nothing is injected.
+SEEN=$(env "${SYNC_ENV[@]}" "$WINE" "$PY_WIN" -c '
+import importlib.metadata as m, psutil
+n = [p.pid for p in psutil.process_iter(["name"]) if (p.info["name"] or "").lower() == "nms.exe"]
+print("pymhf", m.version("pymhf"), "nmspy", m.version("nmspy"), "NMS.exe windows pid", n[0] if n else "NOT VISIBLE")
+' 2>/dev/null | tr -d '\r')
+echo "wine side: ${SEEN:-(python did not run)}"
+case "$SEEN" in
+  *"windows pid "[0-9]*) ;;
+  *) die "the prefix Python cannot see NMS.exe: this wine client is not on the game's wineserver (Proton mismatch or container isolation). Not injecting." ;;
+esac
+if [ "$CHECK" = 1 ]; then
+  echo "--check: not injecting."
+  exit 0
+fi
+
+if [ "$YES" != 1 ]; then
+  printf 'This injects Python into the running game and may crash it. Have you saved? [y/N] '
+  read -r ans
+  case "$ans" in y|Y|yes) ;; *) echo "not injecting."; exit 1 ;; esac
+fi
+
+cd "$PREFIX/drive_c/pymhf" || exit 1
+exec env "${SYNC_ENV[@]}" "$WINE" "$PY_WIN" -m pymhf run nmspy
