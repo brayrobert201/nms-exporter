@@ -10,6 +10,7 @@ Conventions: [meta/conventions.md](meta/conventions.md). Changes: [log.md](log.m
 |---|---|---|---|
 | [Extraction hotspots - classes, rates, ranges, gases and substances](mechanics/extraction-hotspots.md) | game-data | 25800958 | draft |
 | [Harvest All Plants radius](mechanics/harvest-all-radius.md) | game-data | 25800958 | draft |
+| [Positions in the save - planet-centred bases, base-local objects](mechanics/save-coordinates.md) | measured | 25800958 | draft |
 | [Units are a 32-bit value; saves write them signed](mechanics/units-wallet.md) | measured | 25800958 | draft |
 
 ## Data locations
