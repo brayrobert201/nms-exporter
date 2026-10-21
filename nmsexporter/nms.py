@@ -370,7 +370,13 @@ class Collector:
                  save_name=common.get("SaveName") or "")
 
         p = snap["player"]
-        p.update(units=ps.get("Units"), nanites=ps.get("Nanites"), quicksilver=ps.get("Specials"),
+        # Wallet values are uint32 in game but written as signed JSON ints, so
+        # anything past 2^31 (2.1B units) reads negative.
+        def wallet(v):
+            return v + 2 ** 32 if isinstance(v, int) and v < 0 else v
+
+        p.update(units=wallet(ps.get("Units")), nanites=wallet(ps.get("Nanites")),
+                 quicksilver=wallet(ps.get("Specials")),
                  health=ps.get("Health"), shield=ps.get("Shield"), energy=ps.get("Energy"),
                  ship_health=ps.get("ShipHealth"), time_alive=ps.get("TimeAlive"),
                  total_play_time=common.get("TotalPlayTime"),
