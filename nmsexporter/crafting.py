@@ -47,8 +47,11 @@ class Crafting:
         return self.items.get(iid, {}).get("name") or iid
 
     # -- per save --------------------------------------------------------------
-    def evaluate(self, stock: dict, known_products: set, known_recipes: set, known_only: bool = True) -> dict:
-        """stock: {item_id: amount}. Returns per-item results plus the route list."""
+    def evaluate(self, stock: dict, known_products: set, known_recipes: set, known_only: bool = True,
+                 consume: tuple | None = None) -> dict:
+        """stock: {item_id: amount}. Returns per-item results plus the route list.
+        With consume=(item_id, n) it instead returns the stock left after making n
+        of that item through the same route choices, or None if that is not possible."""
         def is_known(iid, r):
             return iid in known_products if r["route"] == "craft" else r["recipe_id"] in known_recipes
 
@@ -119,6 +122,14 @@ class Crafting:
                 else:
                     hi = mid
             return lo
+
+        if consume is not None:
+            # Just spend the stock on `n` units of one item and hand the rest back.
+            iid, n = consume
+            inv = dict(stock)
+            short = defaultdict(int)
+            expand(iid, n, inv, short, 0, set())
+            return None if short else inv
 
         out = {}
         for iid, rs in routes.items():

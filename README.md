@@ -18,7 +18,7 @@ and while the game is closed. A new save snaps everything back to the truth.
 |---|---|
 | Right now | units, nanites, quicksilver, health, shield, life support, ship health, play time, save age, galactic address, the save summary text |
 | Refiners | recipe matched from the slots; which base, freighter or corvette it is in; output and input amounts, progress, remaining time and finish time, projected |
-| Extraction farms | fill level per base from the extractor and depot objects, capacity, rate (measured from consecutive saves once possible, class-C assumed until then), time to full |
+| Extraction farms | fill level per extractor network from the extractor and depot objects, capacity, rate (measured from consecutive saves once possible, class-C assumed until then), time to full. A base with both mineral and gas extractors is two rows, depots going with the nearer cluster; the row is named from the substances in the base name ("Copper Oxygen"), since the save does not record what a hotspot yields |
 | Plants | growth per plant, what each yields, ready-to-harvest count |
 | Fleet | frigates by class; per expedition: departure, due back, progress, events done/failed, damaged frigates |
 | Inventory | total and stack count per item across every container, and the amount per container for a "where is it" lookup |
@@ -86,8 +86,10 @@ on, reading `/json` on loopback (`apt install conky-all`):
   to gain, the collection and lifetime counters.
 - `conky/right.conf` - the bases: refiners (running first, soonest done at the
   top, with the base they are in), extraction farms with fill and time to
-  full, plants by kind with what they yield and how much is in stock, what is
-  almost craftable, and the largest inventory stacks.
+  full, plants by kind with what they yield and how much is in stock, and the
+  largest inventory stacks (click to search). The almost-craftable and tidy
+  sections still render on demand but are left off the screen so the search
+  stays in view.
 
 Both carry the save's age, because every timer on them is projected from it.
 Text is drawn at 0.8 of the design size so everything fits; `NMS_CONKY_TEXT_SCALE`
@@ -146,6 +148,31 @@ scripts/nms-extract-tables.py          # needs hgpaktool + MBINCompiler, see the
 exporter fetches a fresh one on first run if it can.
 
 `scripts/nms-decode-save.py SAVE.hg out.json` dumps any save as readable JSON.
+
+`scripts/nms-data item Methane` (also `recipes`, `uses`, `search`, `crops`, `biomes`,
+`strings`) queries the extracted tables from the shell. The pak toolchain lives in
+`/opt/nmstools` (hgpaktool, MBINCompiler-linux, a .NET 8 runtime); the extractor
+defaults to it.
+
+## Planner, history and the shell
+
+- `/json` carries a `planner` section: how many Fusion Ignitors and Stasis Devices
+  (`NMS_PLAN_TARGETS` to change) the stock builds right now and after one full
+  harvest of the planted crops, with the ingredient blocking the next unit. The
+  right wall screen shows it under the summary.
+- `/diff?against=N` says what changed (units, items, farm fills) between the
+  latest save and the one N saves earlier; the exporter keeps the last 48 saves
+  in its state file.
+- `/raw/bases` is the decoded `PersistentPlayerBases` list, for positional
+  questions without a separate decode.
+- `scripts/nms-rundown.py [--short|--diff]` prints the state as one screen, one
+  line or a diff. `scripts/dev-deploy.sh [--render] [--test]` tests the working
+  tree on :9878, optionally renders the right screen in Xvfb, installs to /opt
+  and reloads the wall screens.
+- `claude/nms-dash/` is a Claude Code plugin: `/nms`, `/nms diff`, `/deploy-nms`,
+  the one-line state in the status line, and the opening state in the system
+  prompt. Load it with `claude --plugin-dir claude/nms-dash` or by naming the
+  folder in `CLAUDE_CODE_PLUGIN_DIRS`.
 
 ## How it works
 

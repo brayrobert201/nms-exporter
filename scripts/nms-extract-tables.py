@@ -25,7 +25,7 @@ DEFAULT_PCBANKS = os.path.join(STEAM, "common/No Man's Sky/GAMEDATA/PCBANKS")
 PAKS = ["NMSARC.MetadataEtc.pak", "NMSARC.globals.pak", "NMSARC.misc.pak", "NMSARC.Precache.pak"]
 FILTERS = ["*GCRECIPETABLE*", "*GCSUBSTANCETABLE*", "*GCPRODUCTTABLE*", "*GCTECHNOLOGYTABLE*",
            "LANGUAGE/NMS_*_ENGLISH.MBIN", "*GCGAMEPLAYGLOBALS*", "*GCENVIRONMENTGLOBALS*",
-           "*REGIONHOTSPOTSTABLE*", "*BASEBUILDINGOBJECTSTABLE*", "*GCFLEETGLOBALS*",
+           "*REGIONHOTSPOTSTABLE*", "*BASEBUILDINGOBJECTSTABLE*", "*GCFLEETGLOBALS*", "*BIOMELISTPERSTARTYPE*",
            "*NMS_BASEPARTPRODUCTS*", "*NMS_MODULARCUSTOMISATIONPRODUCTS*", "*PROCEDURALPRODUCTTABLE*",
            "*MISSIONS/TABLES*", "*REALITY/TABLES/REWARDTABLE*", "*PROCEDURALTECHNOLOGYTABLE*",
            "*FRIGATETRAITTABLE*"]
@@ -57,7 +57,7 @@ def extract(args):
             or os.path.getmtime(p) > os.path.getmtime(p[:-5] + ".MXML")]
     if todo:
         env = dict(os.environ)
-        env.setdefault("DOTNET_ROOT", "/tmp/dotnet8")
+        env.setdefault("DOTNET_ROOT", "/opt/nmstools/dotnet8")
         run([args.mbincompiler, "convert", "-y", "--force", "-q"] + todo, env=env)
 
 
@@ -127,6 +127,14 @@ def parse_items(work, loc):
                 sym = val(e, "Symbol")
                 if sym and loc.get(sym):
                     rec["symbol"] = loc[sym]
+                if kind != "Technology" and val(e, "BaseValue") is not None:
+                    rec["value"] = num(val(e, "BaseValue"))
+                cost = props(e).get("Cost")
+                if kind == "Product" and cost is not None:
+                    rec["price"] = {"low": round(1 + num(val(cost, "LowPriceMod") or 0), 4),
+                                    "high": round(1 + num(val(cost, "HighPriceMod") or 0), 4),
+                                    "station_markup": num(val(cost, "SpaceStationMarkup") or 0),
+                                    "influence": num(val(e, "EconomyInfluenceMultiplier") or 0)}
                 if kind == "Technology":
                     # Adjacency bonuses group technologies by the stat they drive.
                     bs = props(e).get("BaseStat")
@@ -194,7 +202,64 @@ def parse_globals(work):
         "max_hotspot_offset_distance_m": num(val(env, "MaxHotspotOffsetDistance")),
         "min_hotspot_falloff_distance_m": num(val(env, "MinHotspotFalloffDistance")),
         "max_hotspot_falloff_distance_m": num(val(env, "MaxHotspotFalloffDistance")),
+        "survey_max_distance_m": num(val(g, "SurveyMaxDistance")),
     }
+
+
+# Which reward-table entry a planted crop hands out when harvested.
+CROP_REWARDS = {"RADIOPLANT": "PLANT_RADIO", "TOXICPLANT": "PLANT_TOXIC", "SNOWPLANT": "PLANT_SNOW",
+                "SACVENOMPLANT": "PLANT_SACVENOM", "SCORCHEDPLANT": "PLANT_SCORCHED", "POOPPLANT": "PLANT_POOP",
+                "GRAVPLANT": "PLANT_GRAV", "CREATUREPLANT": "PLANT_CREATURE", "BARRENPLANT": "PLANT_BARREN",
+                "LUSHPLANT": "PLANT_LUSH", "PEARLPLANT": "PLANT_PEARL", "NIPPLANT": "PLANT_NIP"}
+# Language-key prefixes of the planet-type labels, per biome as the game names it.
+BIOME_LABEL_KEYS = {"LUSH": "Lush", "TOXIC": "Toxic", "SCORCHED": "Scorched", "FROZEN": "Frozen",
+                    "IRRADIATED": "Radioactive", "BARREN": "Barren", "DEAD": "Dead", "SWAMPBIOME": "Swamp",
+                    "LAVABIOME": "Lava", "WATERWORLD": "Waterworld", "GASGIANT": "GasGiant", "REDBIOME": "Red",
+                    "GREENBIOME": "Green", "BLUEBIOME": "Blue", "GLITCHBIOME": "Weird"}
+
+
+def parse_crops(work, parts, items):
+    """Per planted crop: what one harvest gives and how long it grows."""
+    rewards = {}
+    for e in load(work, r"^rewardtable\.mxml$").iter("Property"):
+        if e.get("value") == "GcGenericRewardTableEntry" and val(e, "Id") in CROP_REWARDS.values():
+            s = ET.tostring(e, encoding="unicode")
+            ids = re.findall(r'name="ID" value="([^"]+)"', s)
+            lo = re.findall(r'name="AmountMin" value="([^"]+)"', s)
+            hi = re.findall(r'name="AmountMax" value="([^"]+)"', s)
+            if ids:
+                rewards[val(e, "Id")] = {"id": ids[0], "min": int(float(lo[0])) if lo else 1, "max": int(float(hi[0])) if hi else 1}
+    out = {}
+    for part, rid in CROP_REWARDS.items():
+        r = rewards.get(rid)
+        if not r:
+            continue
+        out[part] = {"plant": items.get(part, {}).get("name", part), "yield_id": r["id"],
+                     "yields": items.get(r["id"], {}).get("name", r["id"]),
+                     "amount": r["max"], "amount_min": r["min"],
+                     "grow_seconds": parts.get(part, {}).get("storage")}
+    return out
+
+
+def parse_star_biomes(work):
+    """Biome weights per star colour: which planets a star can have at all."""
+    root = load(work, r"^biomelistperstartype\.mxml$")
+    out = {}
+    for star in root.find("Property[@name='StarType']").findall("Property"):
+        probs = props(star).get("BiomeProbability")
+        if probs is not None:
+            out[star.get("name")] = {b.get("name"): num(b.get("value")) for b in probs.findall("Property")}
+    return out
+
+
+def parse_biome_labels(loc):
+    """The discovery panel's planet-type names, per biome ("Humid Planet" is Lush)."""
+    out = {}
+    for key, text in loc.items():
+        m = re.match(r"^([A-Z]+?)(\d+)$", key)
+        if m and m.group(1) in BIOME_LABEL_KEYS and text and ("%PLANETCLASS%" in text or len(text) < 40):
+            out.setdefault(BIOME_LABEL_KEYS[m.group(1)], []).append(text.replace("%PLANETCLASS%", "Planet"))
+    return {k: sorted(set(v)) for k, v in out.items()}
 
 
 def parse_fleet(work, loc):
@@ -454,19 +519,22 @@ def main():
     ap.add_argument("--pcbanks", default=DEFAULT_PCBANKS)
     ap.add_argument("--work", default="/tmp/nmsdata")
     ap.add_argument("--out", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "nms_tables.json"))
-    ap.add_argument("--hgpaktool", default="/tmp/hgpaktool")
-    ap.add_argument("--mbincompiler", default="/tmp/MBINCompiler-linux")
+    ap.add_argument("--hgpaktool", default="/opt/nmstools/hgpaktool")
+    ap.add_argument("--mbincompiler", default="/opt/nmstools/MBINCompiler-linux")
     args = ap.parse_args()
 
     extract(args)
     loc = parse_loc(args.work)
     items = parse_items(args.work, loc)
     made, falloff = parse_globals(args.work)
+    survey_m = falloff.pop("survey_max_distance_m")
     recipes = parse_recipes(args.work, loc, items, made)
     classes, biome_gases, substances = parse_hotspots(args.work)
     parts = parse_buildings(args.work)
     fleet = parse_fleet(args.work, loc)
     missions = parse_missions(args.work, loc, items)
+    crops = parse_crops(args.work, parts, items)
+    planets = {"biomes_by_star": parse_star_biomes(args.work), "labels": parse_biome_labels(loc)}
 
     units_per_item = substances[0]["amount_cost"] // substances[0]["yield"]  # 360000 / 250 = 1440
     ext = parts["U_EXTRACTOR_S"]
@@ -493,6 +561,11 @@ def main():
             "fleet.traits": "frigate trait id -> display name, the stat it raises and the points it adds (from FrigateTraitStrengths); subtract trait points and level-ups to recover a frigate's base roll",
             "fleet.events_by_duration": "number of expedition events per duration class; an expedition lasts events * event_seconds from StartTime",
             "items.<id>.craft": "crafting blueprint: ingredients per craft and units made per craft (CraftAmountMultiplier)",
+            "items.<id>.value": "BaseValue in units; a terminal pays this times the system's modifier, which for products sits between price.low and price.high (1 + LowPriceMod / HighPriceMod); each sale moves the local price by a formula in code, scaled by price.influence",
+            "crops.<base part id>": "what one planted crop yields per harvest (item, amount) and the seconds it takes to mature",
+            "planets.biomes_by_star": "relative weight of each biome when a planet is rolled under a star colour (BiomeProbability); zero means never",
+            "planets.labels": "the planet-type names the discovery panel can show for each biome, from the language tables",
+            "extraction.survey_max_distance_m": "how far the survey device detects a hotspot (SurveyMaxDistance)",
             "items.<id>.category": "substance Category or product Type from the game tables, the grouping data/nms_storage_plan.json sorts by",
             "items.<id>.stat": "technology only: the stat family (BaseStat) adjacency bonuses group by; procedural modules take it from their template",
             "missions.<id>": "final = the save's MissionProgress.Progress value once the mission is complete (-1 = never started); stages = [progress number, objective] for the latest mission version, so the current objective is the last stage whose number <= Progress; rewards = [reward id, descriptions]; leads_to = missions this one starts",
@@ -512,9 +585,12 @@ def main():
             "hotspot_falloff": falloff,
             "biome_gases": biome_gases,
             "hotspot_substances": substances,
+            "survey_max_distance_m": survey_m,
         },
         "fleet": fleet,
         "buildings": parts,
+        "crops": crops,
+        "planets": planets,
         "items": items,
         "recipes": recipes,
         "missions": missions,

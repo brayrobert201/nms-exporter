@@ -230,7 +230,7 @@ def build():
     y += 8
     # ---------------------------------------------------------------- farms
     P.append(row("Extraction farms (projected)", y)); y += 1
-    P.append(bargauge("Storage used", "nms_farm_fill_ratio", "{{base}}", 0, y, 16, 6,
+    P.append(bargauge("Storage used", "nms_farm_fill_ratio", "{{name}}", 0, y, 16, 6,
                       description="Extractors plus supply depots, projected from the last save at the measured rate"))
     P.append(stats("Farms", [dict(name="Next farm full in", expr="min(nms_farm_full_in_seconds > 0) or vector(0)", unit=DUR, mappings=NONE),
                              dict(name="Total stored", expr="sum(nms_farm_stored_items)", decimals=0)], 16, y, 8, 6))
@@ -249,7 +249,7 @@ def build():
                      ("kind", "Kind"), ("Value #F", "Extractors"), ("Value #G", "Depots")],
         sort=("Full in", False), description="Rate is measured from consecutive saves once two differing fill levels exist; until then it assumes a class-C hotspot."))
     y += 6
-    P.append(timeseries("Storage used over time", [target("nms_farm_fill_ratio", "{{base}}")], 0, y, 24, 8, unit="percentunit", vmin=0, vmax=1))
+    P.append(timeseries("Storage used over time", [target("nms_farm_fill_ratio", "{{name}}")], 0, y, 24, 8, unit="percentunit", vmin=0, vmax=1))
     y += 8
     # ---------------------------------------------------------------- fleet
     P.append(row("Fleet", y)); y += 1

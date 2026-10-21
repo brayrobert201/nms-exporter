@@ -1,0 +1,5 @@
+{
+  "name": "nms-dash",
+  "version": "0.1.0",
+  "description": "No Man's Sky state at hand: /nms rundown and diff, /deploy-nms for the exporter, a status-line summary, and the state injected at session start"
+}

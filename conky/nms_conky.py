@@ -2,7 +2,7 @@
 """Conky renderer for two portrait No Man's Sky screens.
 
     nms_conky.py left  <section>    # the traveller: money, vitals, fleet, missions, technology, lifetime
-    nms_conky.py right <section>    # the bases: refiners, farms, plants, crafting, tidy, inventory
+    nms_conky.py right <section>    # the bases: refiners, farms, plants, inventory (crafting and tidy exist but are off the screen)
 
 Each call prints one section as conky markup; left.conf and right.conf stitch
 the sections together with ${execpi}. Data is the exporter's own /json on
@@ -480,6 +480,30 @@ def right_summary(d) -> str:
     ])
 
 
+def right_planner(d) -> str:
+    """What the stock builds right now and after one full harvest, per target,
+    with the ingredient standing in the way of the next unit."""
+    p = d.get("planner") or {}
+    out = [header("Device planner", f"{c('ink-muted')}known blueprints, from stock")]
+    if not p.get("targets"):
+        out.append(empty("no planner data"))
+        return "\n".join(out)
+    def counts(run: dict) -> str:
+        names = run.get("names") or {}
+        parts = [f"{n} {names.get(t, t)}" for t, n in (run.get("counts") or {}).items() if n]
+        return esc(", ".join(parts)) if parts else "nothing"
+
+    best, after = p.get("best_now") or {}, p.get("best_after_harvest") or {}
+    out.append(stats([("Craftable now", counts(best), f"worth {fbig(best.get('value'))}"),
+                      ("After a full harvest", counts(after), f"worth {fbig(after.get('value'))}")], 2, value_px=40))
+    for t in p["targets"]:
+        b = t.get("blocker")
+        blk = f"next one needs {b['item']}, {fnum(b['have'])} of {fnum(b['need'])}" if b else "nothing in the way"
+        out.append(f"{font(28)}{c('ink-1')}{esc(t['item'])}{c('ink-muted')}  ·  now {t['now']}"
+                   f"  ·  after harvest {t['after_harvest']}  ·  {esc(blk)}")
+    return "\n".join(out)
+
+
 def right_refiners(d, show: int = 10) -> str:
     refs = d.get("refiners") or []
     out = [header("Refiners", f"{c('ink-muted')}projected")]
@@ -495,6 +519,8 @@ def right_refiners(d, show: int = 10) -> str:
         left_in = sum(x for x in (r.get("projected_inputs") or []) if _ok(x))
         if r.get("active"):
             state = f"{c('series-1')}{bar(r.get('progress'), 'series-1', width=220, px=16)}{font(28, mono=True)}{c('ink-2')} {fdur(r.get('remaining_seconds'))}"
+        elif r.get("stalls_at_cap") and r.get("ops_remaining"):
+            state = pill("warning", "full - empty it")      # output slot at its cap with inputs left
         elif (r.get("projected_output") or 0) > 0:
             state = pill("good", "ready")
         else:
@@ -520,8 +546,10 @@ def right_farms(d) -> str:
         state = (pill("warning", "full - collect") if full
                  else f"{c('ink-2')}full in {fdur(f.get('full_in_seconds'))}")
         rate = f"{fnum(f.get('rate_items_per_hour'))}/h {'measured' if f.get('rate_measured') else 'assumed C-class'}"
-        out.append(f"{font(32, bold=True)}{c('ink-1')}{esc(f.get('base', '?'))}"
-                   f"{font(26)}{c('ink-muted')}  ·  {esc(f.get('kind', ''))}  ·  {rate}"
+        name = f.get("name") or f.get("base") or "?"
+        where = f"  ·  {esc(f['base'])}" if f.get("base") and f["base"] != name else ""
+        out.append(f"{font(32, bold=True)}{c('ink-1')}{esc(name)}"
+                   f"{font(26)}{c('ink-muted')}{where}  ·  {esc(f.get('kind', ''))}  ·  {rate}"
                    f"${{alignr}}{font(28)}{state}")
         # Filling up is the point of a farm, so a full one is a to-do, not an alarm:
         # the bar stays blue and the pill carries the state.
@@ -768,7 +796,7 @@ SECTIONS = {
     "left": {"where": left_where, "money": left_money, "vitals": left_vitals, "travel": left_where_in,
              "fleet": left_fleet, "missions": left_missions, "tech": left_tech, "collection": left_collections,
              "lifetime": left_lifetime},
-    "right": {"summary": right_summary, "refiners": right_refiners, "farms": right_farms,
+    "right": {"summary": right_summary, "planner": right_planner, "refiners": right_refiners, "farms": right_farms,
               "plants": right_plants, "crafting": right_crafting, "tidy": right_tidy, "inventory": right_inventory},
 }
 SUBTITLE = {"left": "traveller", "right": "bases"}

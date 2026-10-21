@@ -43,18 +43,28 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(body)
 
     def do_GET(self):
-        path = self.path.split("?", 1)[0].rstrip("/") or "/"
+        path, _, query = self.path.partition("?")
+        path = path.rstrip("/") or "/"
+        params = dict(p.split("=", 1) for p in query.split("&") if "=" in p)
         try:
-            if path in ("/metrics", "/json", "/"):
+            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases"):
                 collector.refresh()
             if path == "/metrics":
                 return self._send(collector.metrics().encode(), "text/plain; version=0.0.4")
             if path == "/json":
                 return self._send(json.dumps(collector.projected()).encode(), "application/json")
+            if path == "/diff":
+                try:
+                    against = int(params.get("against", "1"))
+                except ValueError:
+                    against = 1
+                return self._send(json.dumps(collector.diff(against)).encode(), "application/json")
+            if path == "/raw/bases":
+                return self._send(json.dumps(collector.raw_bases).encode(), "application/json")
             if path == "/healthz":
                 return self._send(b"ok", "text/plain")
             if path == "/":
-                return self._send(b"nms-exporter: /metrics /json /healthz\n", "text/plain")
+                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /healthz\n", "text/plain")
             self._send(b"not found", "text/plain", 404)
         except BrokenPipeError:
             pass

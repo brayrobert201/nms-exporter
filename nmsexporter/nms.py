@@ -23,6 +23,7 @@ import time
 import urllib.request
 
 from . import nmssave
+from .planner import Planner
 from .crafting import Crafting
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -43,6 +44,7 @@ MAPPING_CANDIDATES = [os.environ.get("NMS_MAPPING", ""),
 
 RESOURCE_KINDS = {"^U_EXTRACTOR_S": "mineral", "^U_GASEXTRACTOR": "gas", "^U_SILO_S": "depot"}
 EXTRACTORS = {"^U_EXTRACTOR_S", "^U_GASEXTRACTOR"}
+GAS_SUBSTANCES = {"GAS1", "GAS2", "GAS3", "GAS4", "OXYGEN"}   # what a gas extractor can yield
 SUBSTANCE_STACK = 9999          # refiner output cap for substances
 REFINER_STALE_SECONDS = 7 * 86400   # ignore refiner entries not touched for a week
 PLANT_NAMES = {"RADIOPLANT": "Gamma Weed", "TOXICPLANT": "Fungal Cluster", "SNOWPLANT": "Frostwort",
@@ -54,6 +56,79 @@ PLANT_YIELDS = {"RADIOPLANT": "PLANT_RADIO", "TOXICPLANT": "PLANT_TOXIC", "SNOWP
                 "SACVENOMPLANT": "SACVENOM", "SCORCHEDPLANT": "PLANT_HOT", "POOPPLANT": "PLANT_POOP",
                 "GRAVPLANT": "GRAVBALL", "CREATUREPLANT": "CREATURE1", "BARRENPLANT": "PLANT_DUST",
                 "LUSHPLANT": "PLANT_LUSH", "PEARLPLANT": "ALBUMENPEARL", "NIPPLANT": "NIPNIPBUDS"}
+def _centre(objs: list) -> list:
+    return [sum(o["Position"][i] for o in objs) / len(objs) for i in range(3)]
+
+
+def _dist(a, b) -> float:
+    return math.dist(a, b)
+
+
+def _pipe_networks(units: list, pipes: list, tol: float = 3.2, unit_tol: float = 0.0) -> list:
+    """Connected components of extractors and depots joined by pipeline
+    segments. A U_PIPELINE's Position is one end and Position + At the other
+    (At is not normalised; its length is the segment length). Ends within
+    `tol` of a unit or of another pipe end are joined (the game's connection
+    distance is 3). Joining units that merely touch (`unit_tol`) is off by
+    default: it lumps neighbouring networks' depot rows together. Components
+    are then split by extractor fill: the extractors on one network always
+    carry the same fill (observed on every base), so two extractors with
+    different fills are on different networks whatever the geometry says;
+    depot fills vary along a network, so depots follow the extractor group
+    whose centre is nearest."""
+    parent: dict = {}
+
+    def find(x):
+        while parent.setdefault(x, x) != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        parent[find(a)] = find(b)
+
+    ends = []
+    for i, p in enumerate(pipes):
+        a = p["Position"]
+        ends.append((i, a))
+        ends.append((i, [a[k] + p["At"][k] for k in range(3)]))
+    for i, e in ends:
+        for j, u in enumerate(units):
+            if _dist(e, u["Position"]) < tol:
+                union(("p", i), ("u", j))
+        for i2, e2 in ends:
+            if i2 != i and _dist(e, e2) < tol:
+                union(("p", i), ("p", i2))
+    if unit_tol > 0:
+        for j in range(len(units)):
+            for k in range(j + 1, len(units)):
+                if _dist(units[j]["Position"], units[k]["Position"]) < unit_tol:
+                    union(("u", j), ("u", k))
+    comps: dict = {}
+    for j, u in enumerate(units):
+        comps.setdefault(find(("u", j)), []).append(u)
+    out = []
+    for comp in comps.values():
+        out.extend(_split_by_fill(comp))
+    return out
+
+
+def _split_by_fill(comp: list) -> list:
+    """Split one traced component where the extractors' fills disagree."""
+    fill = lambda o: o.get("UserData", 0) >> 32
+    exts = [o for o in comp if o["ObjectID"] in EXTRACTORS]
+    depots = [o for o in comp if o["ObjectID"] not in EXTRACTORS]
+    levels = sorted({fill(o) for o in exts})
+    if len(levels) <= 1:
+        return [comp]
+    groups = {lv: [o for o in exts if fill(o) == lv] for lv in levels}
+    centres = {lv: _centre(g) for lv, g in groups.items()}
+    for o in depots:
+        lv = min(levels, key=lambda l: _dist(o["Position"], centres[l]))
+        groups[lv].append(o)
+    return list(groups.values())
+
+
 GAME_MODES = {1: "Normal", 2: "Creative", 3: "Survival", 4: "Permadeath", 5: "Ambient"}
 
 # RefinerBufferKeys are GcMaintenanceSaveKey: a position and an integer Location.
@@ -120,6 +195,8 @@ class Collector:
         self._loaded_path, self._loaded_mtime = "", 0.0
         self.tables = self._load_tables()
         self.crafting = Crafting(self.tables)
+        self.planner = Planner(self.tables.get("items", {}), self.tables.get("crops", {}))
+        self.raw_bases: list = []
         self.crafting_result: dict = {}
         self.crafting_seconds = 0.0
         self.mapping: dict = {}
@@ -181,8 +258,50 @@ class Collector:
             self.decodes += 1
             self._loaded_path, self._loaded_mtime = path, mtime
             self.snapshot = snap
+            self._record_history(snap)
             self._save_state()
             threading.Thread(target=self._compute_crafting, args=(snap,), daemon=True).start()
+
+    HISTORY_KEEP = 48
+
+    def _record_history(self, snap: dict):
+        """A compact record per decoded save, so /diff can say what changed."""
+        try:
+            rec = {"timestamp": snap["save"]["timestamp"], "file": snap["save"]["file"],
+                   "units": snap["player"]["units"], "nanites": snap["player"]["nanites"],
+                   "items": {iid: r["total"] for iid, r in snap["items"].items()},
+                   "farms": {k: round(f["stored_items"]) for k, f in snap["farms"].items()}}
+            hist = self.state.setdefault("history", [])
+            if hist and hist[-1]["timestamp"] == rec["timestamp"] and hist[-1]["file"] == rec["file"]:
+                hist[-1] = rec
+            else:
+                hist.append(rec)
+            del hist[:-self.HISTORY_KEEP]
+        except Exception as e:
+            snap.setdefault("errors", {})["history"] = str(e)
+
+    def diff(self, against: int = 1) -> dict:
+        """What changed between the latest save and the one `against` saves
+        earlier (1 = the previous save). Items sorted by absolute change."""
+        hist = self.state.get("history", [])
+        if len(hist) < 2:
+            return {"error": "fewer than two saves recorded yet", "recorded": len(hist)}
+        against = max(1, min(against, len(hist) - 1))
+        a, b = hist[-1 - against], hist[-1]
+        items = self.tables.get("items", {})
+        rows = []
+        for iid in set(a["items"]) | set(b["items"]):
+            x, y = a["items"].get(iid, 0), b["items"].get(iid, 0)
+            if x != y:
+                rows.append({"id": iid, "item": items.get(iid, {}).get("name", iid), "from": x, "to": y, "delta": y - x})
+        rows.sort(key=lambda r: -abs(r["delta"]))
+        farms = [{"farm": k, "from": a["farms"].get(k, 0), "to": v, "delta": v - a["farms"].get(k, 0)}
+                 for k, v in b["farms"].items() if a["farms"].get(k, 0) != v]
+        return {"from": {"timestamp": a["timestamp"], "file": a["file"]},
+                "to": {"timestamp": b["timestamp"], "file": b["file"]},
+                "units": {"from": a["units"], "to": b["units"], "delta": b["units"] - a["units"]},
+                "nanites": {"from": a["nanites"], "to": b["nanites"], "delta": b["nanites"] - a["nanites"]},
+                "items": rows, "farms": farms, "recorded": len(hist), "against": against}
 
     def _compute_crafting(self, snap: dict):
         """Multi-level crafting search takes a few seconds; never hold a scrape for it."""
@@ -315,6 +434,19 @@ class Collector:
 
         # extraction farms and plants
         snap["farms"], snap["plants"] = self._bases(ps, name)
+
+        # device planner: what the stock and the next harvest support
+        try:
+            stock = {iid: rec["total"] for iid, rec in snap["items"].items()}
+            snap["planner"] = self.planner.plan(stock, snap["known"]["products"], snap["plants"])
+        except Exception as e:
+            snap["errors"]["planner"] = str(e)
+            snap["planner"] = {}
+
+        # the base objects themselves, for /raw/bases (positions, fills, timestamps)
+        self.raw_bases = [{k: b.get(k) for k in ("Name", "BaseType", "GalacticAddress", "Position", "Forward",
+                                                  "LastUpdateTimestamp", "Objects")}
+                          for b in ps.get("PersistentPlayerBases", [])]
 
         # missions, against the game's mission tables
         snap["missions"] = self._missions(ps)
@@ -468,6 +600,78 @@ class Collector:
                 last_update=d.get("LastUpdateTimestamp", 0), last_completed=d.get("LastCompletedTimestamp", 0)))
         return out
 
+    def _farm_rows(self, bname: str, objs: list, cap_units: dict, upi: float, base_stamp: int) -> dict:
+        """One farm row per pipe network in a base. Networks are traced from the
+        pipeline segments (each is a start Position and an At vector to its end),
+        so a Radon pipe that runs 500u to a depot field by the Dioxite extractors
+        is counted with Radon, not with whatever is nearer. Depots on no network
+        with an extractor are reported with the nearest one. With no pipes at
+        all the extractors are grouped by type and depots by proximity. The save
+        stores nothing about what a hotspot yields, so the row's name comes from
+        the resource words in the base name ("Copper Oxygen")."""
+        res = [o for o in objs if o.get("ObjectID") in RESOURCE_KINDS]
+        pipes = [o for o in objs if o.get("ObjectID") == "^U_PIPELINE"]
+        comps = _pipe_networks(res, pipes) if pipes else []
+        groups = []
+        if comps:
+            with_ext = [c for c in comps if any(o["ObjectID"] in EXTRACTORS for o in c)]
+            orphans = [o for c in comps if c not in with_ext for o in c]
+            for o in orphans:                       # a depot cluster nobody pipes to
+                if with_ext:
+                    min(with_ext, key=lambda c: _dist(o["Position"], _centre(c))).append(o)
+            for c in with_ext:
+                gas = sum(o["ObjectID"] == "^U_GASEXTRACTOR" for o in c)
+                mineral = sum(o["ObjectID"] == "^U_EXTRACTOR_S" for o in c)
+                groups.append(("gas" if gas >= mineral else "mineral", c))
+        else:
+            mins = [o for o in res if o["ObjectID"] == "^U_EXTRACTOR_S"]
+            gases = [o for o in res if o["ObjectID"] == "^U_GASEXTRACTOR"]
+            depots = [o for o in res if o["ObjectID"] == "^U_SILO_S"]
+            if mins and gases:
+                cm, cg = _centre(mins), _centre(gases)
+                near_m = [d for d in depots if _dist(d["Position"], cm) <= _dist(d["Position"], cg)]
+                groups = [("mineral", mins + near_m), ("gas", gases + [d for d in depots if d not in near_m])]
+            else:
+                groups = [("gas" if gases else "mineral", res)]
+        groups.sort(key=lambda kc: -sum(o["ObjectID"] in EXTRACTORS for o in kc[1]))
+        words = self._farm_words(bname)
+        rows = {}
+        seen: dict = {}
+        for kind, group in groups:
+            split = len(groups) > 1
+            n = seen[kind] = seen.get(kind, 0) + 1
+            suffix = f" {n}" if n > 1 else ""
+            name = (" ".join(words[kind]) or (f"{bname} ({kind})" if split else bname)) + suffix
+            key = (f"{bname} \u00b7 {kind}" if split else bname) + suffix
+            f = {"base": bname, "name": name, "kind": kind, "extractors": 0, "gas_extractors": 0, "depots": 0,
+                 "stored_units": 0, "capacity_units": 0, "anchor": base_stamp}
+            for o in group:
+                oid = o["ObjectID"]
+                f["extractors" if oid == "^U_EXTRACTOR_S" else "gas_extractors" if oid == "^U_GASEXTRACTOR" else "depots"] += 1
+                f["stored_units"] += (o.get("UserData", 0) >> 32)
+                f["capacity_units"] += cap_units[oid]
+                f["anchor"] = max(f["anchor"], o.get("Timestamp", 0))
+            f["stored_items"] = f["stored_units"] / upi
+            f["capacity_items"] = f["capacity_units"] / upi
+            rows[key] = f
+        return rows
+
+    def _farm_words(self, bname: str) -> dict:
+        """Substance names found in a base name, split by whether a gas or a
+        mineral extractor yields them. Longest names match first so
+        "Magnetised Ferrite" is not read as "Ferrite"."""
+        if not hasattr(self, "_substance_names"):
+            items = self.tables.get("items", {})
+            subs = [(v["name"].lower(), k) for k, v in items.items() if v.get("type") == "Substance" and v.get("name")]
+            self._substance_names = sorted(subs, key=lambda kv: -len(kv[0]))
+        low = " " + re.sub(r"[^a-z0-9]+", " ", bname.lower()) + " "
+        found = {"mineral": [], "gas": []}
+        for nm, iid in self._substance_names:
+            if f" {nm} " in low:
+                found["gas" if iid in GAS_SUBSTANCES else "mineral"].append(self.tables["items"][iid]["name"])
+                low = low.replace(f" {nm} ", "  ")
+        return found
+
     def _bases(self, ps: dict, name) -> tuple:
         ext = self.tables.get("extraction", {})
         upi = ext.get("resource_units_per_item", 1440)
@@ -480,19 +684,8 @@ class Collector:
         for b in ps.get("PersistentPlayerBases", []):
             bname = self._base_name(ps, b)
             objs = b.get("Objects", [])
-            res = [o for o in objs if o.get("ObjectID") in RESOURCE_KINDS]
-            if res:
-                f = farms.setdefault(bname, {"base": bname, "extractors": 0, "gas_extractors": 0, "depots": 0,
-                                            "stored_units": 0, "capacity_units": 0, "anchor": b.get("LastUpdateTimestamp", 0)})
-                for o in res:
-                    oid = o["ObjectID"]
-                    f["extractors" if oid == "^U_EXTRACTOR_S" else "gas_extractors" if oid == "^U_GASEXTRACTOR" else "depots"] += 1
-                    f["stored_units"] += (o.get("UserData", 0) >> 32)
-                    f["capacity_units"] += cap_units[oid]
-                    f["anchor"] = max(f["anchor"], o.get("Timestamp", 0))
-                f["kind"] = "gas" if f["gas_extractors"] and not f["extractors"] else "mineral"
-                f["stored_items"] = f["stored_units"] / upi
-                f["capacity_items"] = f["capacity_units"] / upi
+            if any(o.get("ObjectID") in RESOURCE_KINDS for o in objs):
+                farms.update(self._farm_rows(bname, objs, cap_units, upi, b.get("LastUpdateTimestamp", 0)))
             pl = [o for o in objs if o.get("ObjectID") in plant_grow]
             if pl:
                 rec = plants.setdefault(bname, {"base": bname, "plants": []})
@@ -807,16 +1000,25 @@ class Collector:
         for r in snap["refiners"]:
             spo = r["seconds_per_op"] or 1
             elapsed = max(0.0, now - r["last_update"])
-            done = min(r["ops_remaining"], int(elapsed // spo))
+            # The output slot caps at the item's stack size (9999 for substances,
+            # 10 for most products); the refiner stalls there with inputs left.
+            ops = r["ops_remaining"]
+            if r["output_cap"] and r["output_per_op"]:
+                ops_to_cap = max(0, (r["output_cap"] - r["output_amount"]) // r["output_per_op"])
+                r["stalls_at_cap"] = ops_to_cap < ops
+                ops = min(ops, ops_to_cap)
+            else:
+                r["stalls_at_cap"] = False
+            done = min(ops, int(elapsed // spo))
             r["projected_ops_done"] = done
             r["projected_output"] = r["output_amount"] + done * r["output_per_op"]
             if r["output_cap"]:
                 r["projected_output"] = min(r["projected_output"], r["output_cap"])
             r["projected_inputs"] = [max(0, i["amount"] - done * i["per_op"]) for i in r["inputs"]]
-            r["remaining_seconds"] = max(0.0, r["ops_remaining"] * spo - elapsed)
-            r["finish_at"] = r["last_update"] + r["ops_remaining"] * spo
-            r["progress"] = 1.0 if r["ops_remaining"] == 0 else min(1.0, done / r["ops_remaining"])
-            r["active"] = 1 if r["ops_remaining"] and r["remaining_seconds"] > 0 else 0
+            r["remaining_seconds"] = max(0.0, ops * spo - elapsed)
+            r["finish_at"] = r["last_update"] + ops * spo
+            r["progress"] = 1.0 if ops == 0 else min(1.0, done / ops)
+            r["active"] = 1 if ops and r["remaining_seconds"] > 0 else 0
         for f in snap["farms"].values():
             elapsed = max(0.0, now - f["anchor"])
             proj = min(f["capacity_units"], f["stored_units"] + f["rate_units_per_s"] * elapsed)
@@ -916,7 +1118,7 @@ class Collector:
         m("nms_refiner_last_update_seconds", "Unix time the refiner state was last written.", "gauge", [(rl(r), r["last_update"]) for r in R])
 
         F = list(snap["farms"].values())
-        fl = lambda f: {"base": f["base"], "kind": f["kind"]}
+        fl = lambda f: {"base": f["base"], "name": f["name"], "kind": f["kind"]}
         m("nms_farm_stored_items", "Items in the farm's extractors and depots (projected).", "gauge", [(fl(f), round(f["projected_items"], 1)) for f in F])
         m("nms_farm_stored_items_saved", "Items in the farm as last saved.", "gauge", [(fl(f), round(f["stored_items"], 1)) for f in F])
         m("nms_farm_capacity_items", "Total storage of the farm's extractors and depots.", "gauge", [(fl(f), round(f["capacity_items"], 1)) for f in F])
