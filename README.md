@@ -174,6 +174,18 @@ defaults to it.
   prompt. Load it with `claude --plugin-dir claude/nms-dash` or by naming the
   folder in `CLAUDE_CODE_PLUGIN_DIRS`.
 
+## Map
+
+`http://<host>:9877/map` is a pan-and-zoom map (mouse, touch, pinch) built from
+the save: each planet with its bases, exocraft, settlements and drained
+deposits (distances true from the centre), and every base's layout from the
+base computer - extractors, depots, power, pipes, wires and wire teleports -
+with loose extractors flagged and listed. `?base=<name>` opens a base,
+`?planet=<base name>` its planet. `/api/map` is the data behind it.
+
+North is taken as the planet's +Y axis and is not yet checked against the
+in-game compass; the page says so until it is.
+
 ## Mechanics compendium and research
 
 `knowledge/` is a sourced compendium of how the game works (mechanics, where

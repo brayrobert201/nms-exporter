@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NMS map</title>
+<style>
+:root {
+  /* the holly-dashboards dark palette (data-viz skill, validated) */
+  --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232321;
+  --ink-1: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10);
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-7: #9085e9;
+  --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--page); color: var(--ink-1);
+  font: 15px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; }
+body { display: grid; grid-template-rows: auto 1fr auto; }
+header { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 14px;
+  border-bottom: 2px solid var(--axis); }
+header h1 { font-size: 18px; margin: 0; font-weight: 600; }
+header .crumbs { color: var(--ink-2); }
+header .crumbs a { color: var(--ink-1); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+select, button { background: var(--surface-2); color: var(--ink-1); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 10px; font: inherit; }
+button { cursor: pointer; }
+.note { color: var(--ink-muted); font-size: 13px; margin-left: auto; }
+main { position: relative; overflow: hidden; touch-action: none; }
+svg { width: 100%; height: 100%; display: block; cursor: grab; }
+svg.dragging { cursor: grabbing; }
+.panel { position: absolute; right: 12px; top: 12px; max-width: min(360px, calc(100% - 24px));
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px;
+  color: var(--ink-2); display: none; }
+.panel b { color: var(--ink-1); }
+.panel .close { float: right; margin: -4px -6px 0 8px; padding: 0 8px; }
+.issues { position: absolute; left: 12px; bottom: 12px; max-width: min(420px, calc(100% - 24px));
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; }
+.issues:empty { display: none; }
+@media (max-width: 700px) { .issues { max-height: 32%; overflow: auto; font-size: 13px; } }
+.issues div { cursor: pointer; padding: 3px 0; color: var(--ink-2); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 13px; font-weight: 600;
+  background: var(--surface-2); border: 1px solid currentColor; margin-right: 6px; }
+.pill.critical { color: var(--critical); } .pill.warning { color: var(--warning); } .pill.good { color: var(--good); }
+footer { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 8px 14px; border-top: 1px solid var(--axis);
+  color: var(--ink-2); font-size: 13px; }
+footer span i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+text { font-family: system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<header>
+  <h1>NMS map</h1>
+  <select id="planet" aria-label="Planet"></select>
+  <span class="crumbs" id="crumbs"></span>
+  <button id="fit" title="Fit to screen">Fit</button>
+  <span class="note" id="note"></span>
+</header>
+<main id="main">
+  <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="panel" id="panel"></div>
+  <div class="issues" id="issues"></div>
+</main>
+<footer id="legend"></footer>
+<script>
+"use strict";
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS = "http://www.w3.org/2000/svg";
+const $ = (id) => document.getElementById(id);
+const el = (tag, attrs = {}, parent) => {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+};
+const fmtDist = (m) => m >= 10000 ? (m / 1000).toFixed(0) + " km" : m >= 1000 ? (m / 1000).toFixed(1) + " km" : Math.round(m) + " m";
+const bearing = (e, n) => ((Math.atan2(e, n) * 180 / Math.PI) + 360) % 360;
+const compass = (deg) => ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][Math.round(deg / 45) % 8];
+
+// Kinds: series colours for categories, status hues only for problems.
+const KIND = {
+  "base":              { label: "Base",              colour: "--series-1", r: 7 },
+  "exocraft":          { label: "Exocraft",          colour: "--series-7", r: 5 },
+  "deposit":           { label: "Drained deposit",   colour: "--ink-muted", r: 4 },
+  "settlement":        { label: "Settlement",        colour: "--series-4", r: 6 },
+  "extractor-mineral": { label: "Mineral extractor", colour: "--series-1", r: 1.6 },
+  "extractor-gas":     { label: "Gas extractor",     colour: "--series-3", r: 1.6 },
+  "depot":             { label: "Depot",             colour: "--ink-2",    r: 1.2 },
+  "power":             { label: "Power",             colour: "--series-4", r: 1.4 },
+  "refiner":           { label: "Refiner",           colour: "--series-2", r: 1.4 },
+  "teleporter":        { label: "Teleporter",        colour: "--series-7", r: 1.6 },
+  "computer":          { label: "Base computer",     colour: "--ink-1",    r: 2.2 },
+  "plants":            { label: "Plants",            colour: "--series-3", r: 1.0 },
+  "structure":         { label: "Structure",         colour: "--axis",     r: 1.0 },
+};
+const SEG = { pipe: { colour: "--ink-muted", w: 0.5, label: "Pipe" },
+              wire: { colour: "--series-4", w: 0.35, dash: "1.2 0.8", label: "Wire" },
+              link: { colour: "--series-7", w: 0.35, dash: "0.5 1", label: "Wire teleport" } };
+
+let data = null, planet = null, base = null;
+let view = { x: 0, y: 0, w: 100, h: 100 };   // viewBox in map units (east right, north up)
+
+function setView(v) {
+  view = v;
+  $("svg").setAttribute("viewBox", `${v.x} ${-v.y - v.h} ${v.w} ${v.h}`);
+  drawScale();
+}
+
+function fit(points, pad = 0.12, minSize = 40) {
+  const box = $("main").getBoundingClientRect();
+  const xs = points.map(p => p[0]), ys = points.map(p => p[1]);
+  let minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
+  let w = Math.max(maxx - minx, minSize), h = Math.max(maxy - miny, minSize);
+  const cx = (minx + maxx) / 2, cy = (miny + maxy) / 2;
+  w *= 1 + 2 * pad; h *= 1 + 2 * pad;
+  const aspect = box.width / Math.max(box.height, 1);
+  if (w / h > aspect) h = w / aspect; else w = h * aspect;
+  setView({ x: cx - w / 2, y: cy - h / 2, w, h });
+}
+
+// Marks are drawn in screen pixels: they stay the same size while zooming.
+function px() { return view.w / Math.max($("main").getBoundingClientRect().width, 1); }
+
+function render() {
+  const svg = $("svg");
+  svg.innerHTML = "";
+  const g = el("g", { id: "content" }, svg);
+  el("g", { id: "scale" }, svg);
+  base ? drawBase(g) : drawPlanet(g);
+  rescale();
+  drawScale();
+  crumbs();
+}
+
+function rescale() {
+  // keep marks a constant on-screen size
+  const k = px();
+  document.querySelectorAll("[data-r]").forEach(c => c.setAttribute("r", c.dataset.r * k));
+  document.querySelectorAll("[data-w]").forEach(l => {
+    l.setAttribute("stroke-width", l.dataset.w * k);
+    if (l.dataset.dash) l.setAttribute("stroke-dasharray", l.dataset.dash.split(" ").map(x => x * k * 3).join(" "));
+  });
+  document.querySelectorAll("[data-fs]").forEach(t => {
+    t.setAttribute("font-size", t.dataset.fs * k);
+    t.setAttribute("x", +t.dataset.x + 10 * k); t.setAttribute("y", -t.dataset.y + (4 + (+t.dataset.dy || 0)) * k);
+  });
+}
+
+function dot(g, x, y, kind, onclick, problems) {
+  const k = KIND[kind] || KIND.structure;
+  const r = kind.startsWith("extractor") || kind === "computer" ? 5 : kind === "base" ? 8 : kind === "structure" ? 3 : 4;
+  const c = el("circle", { cx: x, cy: -y, "data-r": problems ? r + 2 : r, fill: css(k.colour),
+    stroke: problems ? css("--critical") : css("--page"), "data-w": problems ? 3 : 1, cursor: "pointer" }, g);
+  if (onclick) c.addEventListener("click", (ev) => { ev.stopPropagation(); onclick(); });
+  return c;
+}
+
+function label(g, x, y, text, colour = "--ink-2", fs = 13) {
+  const t = el("text", { "data-x": x, "data-y": y, "data-fs": fs, fill: css(colour) }, g);
+  t.textContent = text;
+  return t;
+}
+
+function drawPlanet(g) {
+  const pts = planet.points;
+  for (const p of pts.filter(p => p.kind !== "base")) dot(g, p.x, p.y, p.kind, () => show(p));
+  fit(pts.map(p => [p.x, p.y]), 0.25, 3000);
+  const k = px(), placed = [];
+  for (const p of pts.filter(p => p.kind === "base").sort((a, b) => b.y - a.y)) {
+    dot(g, p.x, p.y, "base", () => openBase(p.name), p.loose > 0);
+    // stack labels of bases that sit within a label's height of each other
+    const dy = placed.filter(q => Math.abs(q.x - p.x) < 160 * k && Math.abs(q.y - p.y) < 18 * k).length;
+    placed.push(p);
+    const t = label(g, p.x, p.y, p.name + (p.loose ? `  ⚠ ${p.loose} loose` : ""), p.loose ? "--critical" : "--ink-1", 14);
+    t.dataset.dy = dy * 18;
+  }
+  issues(pts.filter(p => p.loose).map(p => ({ text: `${p.name}: ${p.loose} loose extractor${p.loose > 1 ? "s" : ""}`,
+    go: () => openBase(p.name) })));
+  legend(["base", "exocraft", "settlement", "deposit"], []);
+}
+
+function drawBase(g) {
+  const lay = planet.layouts[base];
+  if (!lay) { label(g, 0, 0, "No layout for this base"); return; }
+  for (const s of lay.segments) {
+    const st = SEG[s.kind];
+    el("line", { x1: s.a[0], y1: -s.a[1], x2: s.b[0], y2: -s.b[1], stroke: css(st.colour), "data-w": st.w * 4,
+      ...(st.dash ? { "data-dash": st.dash } : {}), "stroke-linecap": "round" }, g);
+  }
+  const order = ["structure", "plants", "depot", "power", "refiner", "teleporter", "extractor-mineral", "extractor-gas", "computer"];
+  const items = [...lay.items].sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || !!a.problems - !!b.problems);
+  for (const it of items) dot(g, it.e, it.n, it.kind, () => show(it), !!it.problems);
+  const loose = lay.items.filter(i => i.problems);
+  for (const it of loose) label(g, it.e, it.n, "⚠ " + it.problems.join(", "), "--critical", 13);
+  fit(lay.items.map(i => [i.e, i.n]), 0.06);
+  issues(loose.map(it => {
+    const d = Math.hypot(it.e, it.n);
+    return { text: `⚠ ${it.kind.replace("extractor-", "")} extractor: ${it.problems.join(", ")} — ${fmtDist(d)} ${compass(bearing(it.e, it.n))} of the computer`,
+      go: () => { zoomTo(it.e, it.n, 60); show(it); } };
+  }));
+  const kinds = [...new Set(lay.items.map(i => i.kind))].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  legend(kinds, [...new Set(lay.segments.map(s => s.kind))]);
+}
+
+function zoomTo(x, y, w) {
+  const box = $("main").getBoundingClientRect();
+  const h = w * box.height / Math.max(box.width, 1);
+  setView({ x: x - w / 2, y: y - h / 2, w, h });
+  rescale();
+}
+
+function show(p) {
+  const P = $("panel");
+  const rows = [];
+  if (p.kind === "base") rows.push(`<b>${p.name}</b>`, `${p.objects} objects`, `lat ${p.lat}°, lon ${p.lon}° (north assumed)`);
+  else if (p.name) rows.push(`<b>${p.name}</b>`);
+  else rows.push(`<b>${(KIND[p.kind] || {}).label || p.kind}</b> <span style="color:var(--ink-muted)">${p.id || ""}</span>`);
+  if (p.e !== undefined) {
+    const d = Math.hypot(p.e, p.n);
+    rows.push(`${fmtDist(d)} ${compass(bearing(p.e, p.n))} (${Math.round(bearing(p.e, p.n))}°) of the base computer, ${p.h >= 0 ? "+" : ""}${p.h} m height`);
+  } else if (p.x !== undefined && planet) {
+    rows.push(`${fmtDist(Math.hypot(p.x, p.y))} ${compass(bearing(p.x, p.y))} of the map centre`);
+  }
+  if (p.problems) {
+    rows.push(p.problems.map(x => `<span class="pill critical">⚠ ${x}</span>`).join(" "));
+    rows.push(`fill ${p.fill}/250 · nearest pipe end ${p.pipe_gap} m`);
+    if (p.near) rows.push(p.near);
+  }
+  if (p.kind === "base") rows.push(`<button onclick="openBase(${JSON.stringify(p.name).replace(/"/g, "&quot;")})">Open layout</button>`);
+  P.innerHTML = `<button class="close" onclick="this.parentNode.style.display='none'">×</button>` + rows.join("<br>");
+  P.style.display = "block";
+}
+
+function issues(list) {
+  const I = $("issues");
+  I.innerHTML = "";
+  for (const it of list) {
+    const d = document.createElement("div");
+    d.innerHTML = `<span class="pill critical">⚠ loose</span>` + it.text.replace(/^⚠ /, "");
+    d.onclick = it.go;
+    I.appendChild(d);
+  }
+}
+
+function legend(kinds, segs) {
+  const L = $("legend");
+  L.innerHTML = kinds.map(k => `<span><i style="background:${css(KIND[k].colour)}"></i>${KIND[k].label}</span>`).join("")
+    + segs.map(s => `<span><i style="border-radius:0;height:3px;background:${css(SEG[s].colour)}"></i>${SEG[s].label}</span>`).join("")
+    + `<span><i style="background:transparent;border:2px solid ${css("--critical")}"></i>⚠ problem</span>`;
+}
+
+function crumbs() {
+  const C = $("crumbs");
+  C.innerHTML = base ? `<a onclick="openPlanet()">${planet.label}</a> › ${base}` : `${planet.points.filter(p => p.kind === "base").length} bases · radius ${fmtDist(planet.radius)}`;
+}
+
+function drawScale() {
+  const s = $("scale");
+  if (!s) return;
+  s.innerHTML = "";
+  const k = px();
+  const target = 120 * k;
+  const pow = Math.pow(10, Math.floor(Math.log10(target)));
+  const len = [1, 2, 5, 10].map(m => m * pow).filter(v => v <= target).pop() || pow;
+  const x0 = view.x + view.w - len - 16 * k, y0 = -view.y - 22 * k;
+  el("line", { x1: x0, y1: y0, x2: x0 + len, y2: y0, stroke: css("--ink-2"), "stroke-width": 2 * k }, s);
+  const t = el("text", { x: x0, y: y0 - 6 * k, fill: css("--ink-2"), "font-size": 12 * k }, s);
+  t.textContent = fmtDist(len);
+  // north arrow, top left
+  const ax = view.x + 24 * k, ay = -view.y - view.h + 40 * k;
+  el("path", { d: `M ${ax} ${ay - 18 * k} L ${ax - 6 * k} ${ay} L ${ax + 6 * k} ${ay} Z`, fill: css("--ink-2") }, s);
+  const n = el("text", { x: ax - 4 * k, y: ay + 16 * k, fill: css("--ink-2"), "font-size": 12 * k }, s);
+  n.textContent = data && data.north_verified ? "N" : "N?";
+}
+
+function openPlanet() { base = null; $("panel").style.display = "none"; render(); }
+function openBase(name) { base = name; $("panel").style.display = "none"; render(); }
+window.openBase = openBase; window.openPlanet = openPlanet;
+
+// pan and zoom: drag, wheel, pinch
+(() => {
+  const svg = $("svg");
+  const ptrs = new Map();
+  let last = null, lastDist = null;
+  const toMap = (cx, cy) => {
+    const b = svg.getBoundingClientRect();
+    return [view.x + (cx - b.left) / b.width * view.w, view.y + (1 - (cy - b.top) / b.height) * view.h];
+  };
+  const zoom = (f, cx, cy) => {
+    const [mx, my] = toMap(cx, cy);
+    setView({ x: mx - (mx - view.x) * f, y: my - (my - view.y) * f, w: view.w * f, h: view.h * f });
+    rescale();
+  };
+  svg.addEventListener("wheel", (e) => { e.preventDefault(); zoom(Math.exp(e.deltaY * 0.0015), e.clientX, e.clientY); }, { passive: false });
+  svg.addEventListener("pointerdown", (e) => { svg.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, e); last = e; svg.classList.add("dragging"); });
+  svg.addEventListener("pointermove", (e) => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId, e);
+    if (ptrs.size === 2) {
+      const [a, b] = [...ptrs.values()];
+      const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+      if (lastDist) zoom(lastDist / d, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
+      lastDist = d;
+      return;
+    }
+    const b = svg.getBoundingClientRect();
+    const dx = (e.clientX - last.clientX) / b.width * view.w, dy = (e.clientY - last.clientY) / b.height * view.h;
+    setView({ ...view, x: view.x - dx, y: view.y + dy });
+    last = e;
+  });
+  const up = (e) => { ptrs.delete(e.pointerId); lastDist = null; if (!ptrs.size) svg.classList.remove("dragging"); last = [...ptrs.values()][0] || null; };
+  svg.addEventListener("pointerup", up); svg.addEventListener("pointercancel", up);
+})();
+
+$("fit").onclick = () => render();
+$("planet").onchange = (e) => { planet = data.planets[+e.target.value]; base = planet.bases.length === 1 ? planet.bases[0] : null; render(); };
+let resizeTimer = null;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
+
+async function load() {
+  const r = await fetch("/api/map", { cache: "no-store" });
+  data = await r.json();
+  const sel = $("planet");
+  sel.innerHTML = data.planets.map((p, i) => `<option value="${i}">${p.label}${p.points.some(q => q.loose) ? " ⚠" : ""}</option>`).join("");
+  const q = new URLSearchParams(location.search);
+  const want = q.get("base"), wantPlanet = q.get("planet");
+  let pi = data.planets.findIndex(p => (want && p.bases.includes(want)) || (wantPlanet && p.bases.includes(wantPlanet)));
+  if (pi < 0) pi = Math.max(0, data.planets.findIndex(p => p.points.some(x => x.loose)));
+  sel.value = pi;
+  planet = data.planets[pi];
+  base = want && planet.bases.includes(want) ? want : wantPlanet ? null : planet.bases.length === 1 ? planet.bases[0] : null;
+  $("note").textContent = data.north_verified ? "" : "North and east/west not yet checked against the in-game compass";
+  render();
+}
+load();
+</script>
+</body>
+</html>

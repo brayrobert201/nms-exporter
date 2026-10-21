@@ -197,6 +197,7 @@ class Collector:
         self.crafting = Crafting(self.tables)
         self.planner = Planner(self.tables.get("items", {}), self.tables.get("crops", {}))
         self.raw_bases: list = []
+        self.raw_points: dict = {}
         self.crafting_result: dict = {}
         self.crafting_seconds = 0.0
         self.mapping: dict = {}
@@ -453,6 +454,14 @@ class Collector:
         self.raw_bases = [{k: b.get(k) for k in ("Name", "BaseType", "GalacticAddress", "Position", "Forward",
                                                   "LastUpdateTimestamp", "Objects")}
                           for b in ps.get("PersistentPlayerBases", [])]
+        # other planet-surface positions, for /api/map
+        self.raw_points = {
+            "vehicles": [{"Location": v.get("Location"), "Position": v.get("Position")}
+                         for v in ps.get("VehicleOwnership", [])],
+            "deposits": ps.get("DrainedTerrainResourceDeposits", []),
+            "settlements": [{"UniverseAddress": s.get("UniverseAddress"), "Position": s.get("Position"),
+                             "Name": s.get("Name")} for s in ps.get("SettlementStatesV2", [])],
+        }
 
         # missions, against the game's mission tables
         snap["missions"] = self._missions(ps)

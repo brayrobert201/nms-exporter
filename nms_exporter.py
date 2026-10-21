@@ -18,12 +18,19 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from nmsexporter import maps  # noqa: E402
 from nmsexporter.nms import Collector  # noqa: E402
 
 HOST = os.environ.get("NMS_EXPORTER_HOST", "0.0.0.0")
 PORT = int(os.environ.get("NMS_EXPORTER_PORT", "9877"))
 
 collector = Collector()
+
+
+def map_html() -> bytes:
+    """Read on each request so an edited page needs no restart."""
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "nmsexporter", "web", "map.html"), "rb") as f:
+        return f.read()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -47,7 +54,7 @@ class Handler(BaseHTTPRequestHandler):
         path = path.rstrip("/") or "/"
         params = dict(p.split("=", 1) for p in query.split("&") if "=" in p)
         try:
-            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases"):
+            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases", "/api/map"):
                 collector.refresh()
             if path == "/metrics":
                 return self._send(collector.metrics().encode(), "text/plain; version=0.0.4")
@@ -61,10 +68,15 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(json.dumps(collector.diff(against)).encode(), "application/json")
             if path == "/raw/bases":
                 return self._send(json.dumps(collector.raw_bases).encode(), "application/json")
+            if path == "/api/map":
+                return self._send(json.dumps(maps.build(collector.raw_points, collector.raw_bases)).encode(),
+                                  "application/json")
+            if path == "/map":
+                return self._send(map_html(), "text/html; charset=utf-8")
             if path == "/healthz":
                 return self._send(b"ok", "text/plain")
             if path == "/":
-                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /healthz\n", "text/plain")
+                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /map /api/map /healthz\n", "text/plain")
             self._send(b"not found", "text/plain", 404)
         except BrokenPipeError:
             pass
