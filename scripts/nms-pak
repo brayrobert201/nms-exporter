@@ -1,0 +1,203 @@
+#!/usr/bin/env python3
+"""Find, unpack, read and cite any file in the installed game's .pak archives.
+
+    nms-pak find REGEX                  # every packed path matching, with its pak
+    nms-pak get REGEX [--all]           # unpack the matches and convert MBIN -> MXML
+    nms-pak grep PATTERN [--in REGEX]   # search what has been unpacked so far
+    nms-pak show PATH [--lines A-B]     # print an unpacked file, numbered
+    nms-pak cite PATH --lines A-B --why TEXT
+                                        # store an excerpt as a research source
+
+`find` is what answers "where does the game keep X": entity, scene and table
+files are spread over ~100 paks and 190k paths, and the setting you want is
+often on the object you did not think of (the Harvest All radius is on the
+room's floor entity, not the crop). Searching file *contents* only works on
+what has been unpacked, so `get` first, then `grep`.
+
+`cite` copies a line range into research/sources/game-data/<build>/ with a
+provenance header (build, pak, path, lines, retrieval date, why). It never
+overwrites: a cited excerpt is a record of what the build said.
+
+The index and unpacked files live under NMS_PAK_WORK (default /tmp/nms-pak/<build>),
+keyed by Steam build id, so a game update starts clean. Uses the toolchain in
+/opt/nmstools (hgpaktool, MBINCompiler-linux, dotnet8). Standard library only.
+"""
+from __future__ import annotations
+
+import argparse
+import datetime
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+
+STEAM = os.path.expanduser("~/.local/share/Steam/steamapps")
+PCBANKS = os.environ.get("NMS_PCBANKS", os.path.join(STEAM, "common/No Man's Sky/GAMEDATA/PCBANKS"))
+TOOLS = os.environ.get("NMS_TOOLS", "/opt/nmstools")
+HGPAK = os.path.join(TOOLS, "hgpaktool")
+MBINC = os.path.join(TOOLS, "MBINCompiler-linux")
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MAX_GET = 200
+
+
+
+def _read(path, **kw):
+    with open(path, **kw) as f:
+        return f.read()
+
+
+def _write(path, text):
+    with open(path, "w") as f:
+        f.write(text)
+
+def build_id() -> str:
+    try:
+        acf = _read(os.path.join(STEAM, "appmanifest_275850.acf"))
+        return re.search(r'"buildid"\s+"(\d+)"', acf).group(1)
+    except Exception:
+        return "unknown"
+
+
+BUILD = build_id()
+WORK = os.environ.get("NMS_PAK_WORK", f"/tmp/nms-pak/{BUILD}")
+
+
+def index() -> dict:
+    """{packed path: pak file name}, built once per build (about a second)."""
+    path = os.path.join(WORK, "index.json")
+    if os.path.exists(path):
+        return json.loads(_read(path))
+    os.makedirs(WORK, exist_ok=True)
+    paks = sorted(os.path.join(PCBANKS, p) for p in os.listdir(PCBANKS) if p.endswith(".pak"))
+    # hgpaktool -L writes filenames.json into the current directory, whatever -O says.
+    with tempfile.TemporaryDirectory() as tmp:
+        subprocess.run([HGPAK, "-L"] + paks, cwd=tmp, capture_output=True, check=True)
+        listing = json.loads(_read(os.path.join(tmp, "filenames.json")))
+    idx = {f: os.path.basename(pak) for pak, files in listing.items() for f in files}
+    _write(path, json.dumps(idx))
+    return idx
+
+
+def mxml_path(packed: str) -> str:
+    base = os.path.join(WORK, "files", packed)
+    return base[:-5] + ".MXML" if base.lower().endswith(".mbin") else base
+
+
+def cmd_find(a):
+    rx = re.compile(a.regex, re.I)
+    hits = [(p, k) for p, k in index().items() if rx.search(p)]
+    for p, k in sorted(hits):
+        print(f"{k:32s} {p}")
+    print(f"{len(hits)} match(es) in build {BUILD}", file=sys.stderr)
+
+
+def cmd_get(a):
+    rx = re.compile(a.regex, re.I)
+    hits = sorted((p, k) for p, k in index().items() if rx.search(p))
+    if not hits:
+        sys.exit("no packed path matches")
+    if len(hits) > MAX_GET and not a.all:
+        sys.exit(f"{len(hits)} matches; narrow the regex or pass --all")
+    out = os.path.join(WORK, "files")
+    by_pak: dict = {}
+    for p, k in hits:
+        by_pak.setdefault(k, []).append(p)
+    for pak, files in by_pak.items():
+        cmd = [HGPAK, "-U", "-O", out]
+        for f in files:
+            cmd += ["-f", f.upper()]
+        subprocess.run(cmd + [os.path.join(PCBANKS, pak)], capture_output=True, check=True)
+    mbins = [os.path.join(out, p) for p, _ in hits if p.lower().endswith(".mbin")]
+    mbins = [m for m in mbins if os.path.exists(m) and not os.path.exists(m[:-5] + ".MXML")]
+    env = dict(os.environ)
+    env.setdefault("DOTNET_ROOT", os.path.join(TOOLS, "dotnet8"))
+    for i in range(0, len(mbins), 100):
+        subprocess.run([MBINC, "convert", "-y", "--force", "-q"] + mbins[i:i + 100],
+                       capture_output=True, env=env)
+    for p, k in hits:
+        m = mxml_path(p)
+        print(m if os.path.exists(m) else f"(not converted) {os.path.join(out, p)}")
+
+
+def unpacked() -> list:
+    root = os.path.join(WORK, "files")
+    for dp, _, fs in os.walk(root):
+        for f in fs:
+            if f.endswith(".MXML"):
+                yield os.path.join(dp, f)
+
+
+def cmd_grep(a):
+    rx = re.compile(a.pattern, re.I)
+    within = re.compile(a.within, re.I) if a.within else None
+    n = 0
+    for f in sorted(unpacked()):
+        if within and not within.search(f):
+            continue
+        for i, line in enumerate(_read(f, errors="replace").splitlines(), 1):
+            if rx.search(line):
+                print(f"{f}:{i}: {line.strip()}")
+                n += 1
+    print(f"{n} line(s); only unpacked files are searched (nms-pak get first)", file=sys.stderr)
+
+
+def resolve(path: str) -> str:
+    if os.path.exists(path):
+        return path
+    m = mxml_path(path.lower())
+    if os.path.exists(m):
+        return m
+    sys.exit(f"not unpacked: {path} (nms-pak get it first)")
+
+
+def span(lines: str | None, total: int) -> tuple:
+    if not lines:
+        return 1, total
+    a, _, b = lines.partition("-")
+    return int(a), int(b or a)
+
+
+def cmd_show(a):
+    f = resolve(a.path)
+    text = _read(f, errors="replace").splitlines()
+    lo, hi = span(a.lines, len(text))
+    for i in range(lo, min(hi, len(text)) + 1):
+        print(f"{i:6d}  {text[i - 1]}")
+
+
+def cmd_cite(a):
+    f = resolve(a.path)
+    rel = os.path.relpath(f, os.path.join(WORK, "files"))
+    text = _read(f, errors="replace").splitlines()
+    lo, hi = span(a.lines, len(text))
+    packed = rel[:-5] + ".mbin" if rel.endswith(".MXML") else rel
+    pak = index().get(packed, "?")
+    dest = os.path.join(REPO, "research/sources/game-data", BUILD, f"{rel}.L{lo}-{hi}.xml")
+    if os.path.exists(dest):
+        sys.exit(f"already cited (never overwritten): {os.path.relpath(dest, REPO)}")
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    header = (f"<!--\n  source: game-data\n  build: {BUILD}\n  pak: {pak}\n  path: {packed}\n"
+              f"  lines: {lo}-{hi} of the MBINCompiler MXML\n"
+              f"  retrieved: {datetime.date.today().isoformat()}\n  why: {a.why}\n-->\n")
+    with open(dest, "w") as out:
+        out.write(header + "\n".join(text[lo - 1:hi]) + "\n")
+    print(os.path.relpath(dest, REPO))
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    p = sub.add_parser("find"); p.add_argument("regex"); p.set_defaults(fn=cmd_find)
+    p = sub.add_parser("get"); p.add_argument("regex"); p.add_argument("--all", action="store_true"); p.set_defaults(fn=cmd_get)
+    p = sub.add_parser("grep"); p.add_argument("pattern"); p.add_argument("--in", dest="within"); p.set_defaults(fn=cmd_grep)
+    p = sub.add_parser("show"); p.add_argument("path"); p.add_argument("--lines"); p.set_defaults(fn=cmd_show)
+    p = sub.add_parser("cite"); p.add_argument("path"); p.add_argument("--lines", required=True)
+    p.add_argument("--why", required=True); p.set_defaults(fn=cmd_cite)
+    a = ap.parse_args()
+    a.fn(a)
+
+
+if __name__ == "__main__":
+    main()

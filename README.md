@@ -174,6 +174,26 @@ defaults to it.
   prompt. Load it with `claude --plugin-dir claude/nms-dash` or by naming the
   folder in `CLAUDE_CODE_PLUGIN_DIRS`.
 
+## Mechanics compendium and research
+
+`knowledge/` is a sourced compendium of how the game works (mechanics, where
+settings live in the game files, analysis tools); `research/` holds the open
+questions, the stored sources every claim rests on, and research runs. Start at
+`research/index.md` (charter and evidence ladder) and `knowledge/index.md`.
+
+- `scripts/nms-pak find|get|grep|show|cite` - locate any of the ~195k packed
+  paths, unpack and convert them, search them, and store an excerpt as a
+  source under `research/sources/game-data/<build>/`.
+- `scripts/research-fetch URL --slug --why` - store a web page verbatim with
+  provenance under `research/sources/web/`.
+- `scripts/research-index` regenerates the question and concept indexes;
+  `scripts/okf-lint` checks frontmatter and sources and flags concepts not yet
+  re-checked on the installed build.
+- `.claude/skills/deep-research/` is this repo's instance of the deep-research
+  skill, with its workflow script.
+
+Nothing under `knowledge/` or `research/` is installed to /opt.
+
 ## How it works
 
 - `nmsexporter/nmssave.py` decodes the save: chunks of `<u32 0xFEEDA1E5><u32 comp><u32 uncomp><u32 0>` + a raw LZ4 block each, then key de-obfuscation.

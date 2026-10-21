@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+"""Check the knowledge bundle and question files against knowledge/meta/conventions.md.
+
+    okf-lint            # errors and stale warnings; exit 1 on any error
+
+Errors: missing required fields, unknown status or evidence level, sources or
+related links that do not resolve, game-data style concepts without `builds`.
+Warnings: `stale_after: next-build` concepts not yet re-checked on the
+installed build, dated concepts past their date.
+
+Standard library only (a small frontmatter reader, not a YAML parser: the
+conventions keep frontmatter to scalars, [inline lists] and "- " lists).
+"""
+from __future__ import annotations
+
+import datetime
+import os
+import re
+import sys
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STEAM = os.path.expanduser("~/.local/share/Steam/steamapps")
+STATUS = {"draft", "stable", "superseded"}
+Q_STATUS = {"open", "partial", "answered", "dropped"}
+LEVELS = {"game-data", "code", "measured", "official", "community-measured", "community-claim", "none"}
+NO_BUILD = {"community-claim", "official", "none"}
+REQUIRED = ["type", "title", "status", "evidence_level", "stale_after", "sources", "generated", "verified"]
+Q_REQUIRED = ["type", "title", "status", "asked", "decides"]
+SKIP = {"index.md", "log.md"}
+
+
+
+def _read(path, **kw):
+    with open(path, **kw) as f:
+        return f.read()
+
+
+def frontmatter(path: str) -> dict | None:
+    text = _read(path)
+    if not text.startswith("---\n"):
+        return None
+    block = text[4:text.find("\n---", 4)]
+    fm, key = {}, None
+    for line in block.splitlines():
+        if re.match(r"^\s+- ", line) and key:
+            fm.setdefault(key, [])
+            if isinstance(fm[key], list):
+                fm[key].append(line.strip()[2:].strip().strip('"'))
+            continue
+        m = re.match(r"^([A-Za-z_]+):\s*(.*)$", line)
+        if not m:
+            continue
+        key, v = m.group(1), m.group(2).strip()
+        if v.startswith("[") and v.endswith("]"):
+            fm[key] = [x.strip().strip('"') for x in v[1:-1].split(",") if x.strip()]
+        elif v in ("", ">", "|"):
+            fm[key] = [] if v == "" else v
+        else:
+            fm[key] = v.strip('"')
+    return fm
+
+
+def build_id() -> str | None:
+    try:
+        acf = _read(os.path.join(STEAM, "appmanifest_275850.acf"))
+        return re.search(r'"buildid"\s+"(\d+)"', acf).group(1)
+    except Exception:
+        return None
+
+
+def resolves(base: str, ref: str) -> bool:
+    ref = ref.split("#")[0]
+    if not ref:
+        return True
+    return os.path.exists(os.path.join(REPO, ref)) or os.path.exists(os.path.normpath(os.path.join(base, ref)))
+
+
+def main():
+    errors, warnings = [], []
+    build = build_id()
+    today = datetime.date.today().isoformat()
+    files = []
+    for root in ("knowledge", "research/questions"):
+        for dp, _, fs in os.walk(os.path.join(REPO, root)):
+            if os.sep + "meta" in dp:
+                continue
+            files += [os.path.join(dp, f) for f in fs if f.endswith(".md") and f not in SKIP]
+    for path in sorted(files):
+        rel = os.path.relpath(path, REPO)
+        fm = frontmatter(path)
+        if fm is None:
+            errors.append(f"{rel}: no frontmatter")
+            continue
+        question = fm.get("type") == "Question"
+        for k in (Q_REQUIRED if question else REQUIRED):
+            if k not in fm:
+                errors.append(f"{rel}: missing {k}")
+        st = fm.get("status")
+        if st and st not in (Q_STATUS if question else STATUS):
+            errors.append(f"{rel}: status {st!r}")
+        for ref in (fm.get("answered_by") or []) + (fm.get("related") or []):
+            if not resolves(os.path.dirname(path), ref):
+                errors.append(f"{rel}: link does not resolve: {ref}")
+        if question:
+            continue
+        lvl = fm.get("evidence_level")
+        if lvl and lvl not in LEVELS:
+            errors.append(f"{rel}: evidence_level {lvl!r}")
+        if lvl not in NO_BUILD and not fm.get("builds"):
+            errors.append(f"{rel}: {lvl} needs builds")
+        srcs = fm.get("sources") or []
+        if not srcs:
+            errors.append(f"{rel}: no sources")
+        for s in srcs:
+            if not resolves(os.path.dirname(path), s):
+                errors.append(f"{rel}: source missing: {s}")
+        sa = fm.get("stale_after", "")
+        if sa == "next-build" and build and build not in (fm.get("builds") or []):
+            warnings.append(f"{rel}: not re-checked on installed build {build}")
+        elif re.fullmatch(r"\d{4}-\d{2}-\d{2}", sa) and sa < today:
+            warnings.append(f"{rel}: past stale_after {sa}")
+        if "human:bob" in _read(path) and os.environ.get("OKF_ALLOW_BOB") != "1":
+            warnings.append(f"{rel}: carries human:bob - only Bob adds that (OKF_ALLOW_BOB=1 to silence)")
+    for e in errors:
+        print("error:", e)
+    for w in warnings:
+        print("warn: ", w)
+    print(f"{len(files)} files, {len(errors)} error(s), {len(warnings)} warning(s)")
+    sys.exit(1 if errors else 0)
+
+
+if __name__ == "__main__":
+    main()

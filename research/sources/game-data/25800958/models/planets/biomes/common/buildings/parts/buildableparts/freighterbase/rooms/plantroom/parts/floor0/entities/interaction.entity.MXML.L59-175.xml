@@ -1,0 +1,126 @@
+<!--
+  source: game-data
+  build: 25800958
+  pak: NMSARC.Precache.pak
+  path: models/planets/biomes/common/buildings/parts/buildableparts/freighterbase/rooms/plantroom/parts/floor0/entities/interaction.entity.mbin
+  lines: 59-175 of the MBINCompiler MXML
+  retrieved: 2026-10-21
+  why: Harvest All Plants: interaction (UI_HARVEST_ALL) and GcHarvestPlantAction Radius on the freighter hydroponic room floor
+-->
+		<Property name="Components" value="GcSimpleInteractionComponentData">
+			<Property name="GcSimpleInteractionComponentData">
+				<Property name="SimpleInteractionType" value="Interact" />
+				<Property name="InteractDistance" value="0.000000" />
+				<Property name="Use2dInteractDistance" value="false" />
+				<Property name="InteractAngle" value="360.000000" />
+				<Property name="Id" value="" />
+				<Property name="Rarity" value="GcRarity">
+					<Property name="Rarity" value="Common" />
+				</Property>
+				<Property name="Size" value="GcSizeIndicator">
+					<Property name="SizeIndicator" value="Medium" />
+				</Property>
+				<Property name="TriggerAction" value="HARVEST" />
+				<Property name="TriggerActionOnPrepare" value="" />
+				<Property name="TriggerActionToggle" value="" />
+				<Property name="DeactivateSimilarInteractionsNearbyRadius" value="0.000000" />
+				<Property name="BroadcastTriggerAction" value="true" />
+				<Property name="Delay" value="0.000000" />
+				<Property name="HideContents" value="true" />
+				<Property name="InteractIsCrime" value="false" />
+				<Property name="InteractFiendCrimeType" value="GcFiendCrime">
+					<Property name="FiendCrime" value="None" />
+				</Property>
+				<Property name="InteractFiendCrimeChance" value="1.000000" />
+				<Property name="InteractCrimeLevel" value="0" />
+				<Property name="IncreaseCorruptSentinelWanted" value="0" />
+				<Property name="NotifyEncounter" value="false" />
+				<Property name="ActivationCost" value="GcInteractionActivationCost">
+					<Property name="SubstanceId" value="" />
+					<Property name="AltIds" />
+					<Property name="Cost" value="0" />
+					<Property name="Repeat" value="false" />
+					<Property name="RequiredTech" value="" />
+					<Property name="UseCostID" value="" />
+					<Property name="StartMissionOnCantAfford" value="" />
+					<Property name="OnlyChargeDuringSeasons" />
+				</Property>
+				<Property name="StatToTrack" value="GcStatsEnum">
+					<Property name="StatEnum" value="None" />
+				</Property>
+				<Property name="StartsBuried" value="false" />
+				<Property name="MustBeVisibleToInteract" value="false" />
+				<Property name="NeedsStorm" value="false" />
+				<Property name="Name" value="UI_HARVEST_ALL" />
+				<Property name="ForceSubtitle" value="" />
+				<Property name="VRInteractMessage" value="" />
+				<Property name="TerminalHeading" value="" />
+				<Property name="TerminalMessage" value="" />
+				<Property name="ScanType" value="BINOC_INTERACTABLE" />
+				<Property name="ScanData" value="" />
+				<Property name="ScanIcon" value="GcDiscoveryType">
+					<Property name="DiscoveryType" value="Unknown" />
+				</Property>
+				<Property name="ActivateLocatorsFromRarity" value="false" />
+				<Property name="RarityLocators">
+					<Property name="Common" value="" />
+					<Property name="Uncommon" value="" />
+					<Property name="Rare" value="" />
+				</Property>
+				<Property name="BaseBuildingTriggerActions" />
+				<Property name="RewardOverrideTable" />
+				<Property name="PersistencyBufferOverride" />
+				<Property name="UsePersonalPersistentBuffer" value="false" />
+				<Property name="ReseedOnRewardSuccess" value="false" />
+				<Property name="CanCollectInMech" value="false" />
+				<Property name="AnimateOnInteract" value="true" />
+				<Property name="DisableAnimationUntilInteract" value="false" />
+				<Property name="HideInteractLabelUntilRelease" value="false" />
+				<Property name="OnlyActiveDuringSeasons" />
+			</Property>
+		</Property>
+		<Property name="Components" value="GcTriggerActionComponentData">
+			<Property name="GcTriggerActionComponentData">
+				<Property name="HideModel" value="false" />
+				<Property name="StartInactive" value="false" />
+				<Property name="States">
+					<Property name="States" value="GcActionTriggerState" _id="BOOT">
+						<Property name="StateID" value="BOOT" />
+						<Property name="Triggers">
+							<Property name="Triggers" value="GcActionTrigger" _index="0">
+								<Property name="Event" value="GcStateTimeEvent">
+									<Property name="GcStateTimeEvent">
+										<Property name="Seconds" value="0.000000" />
+										<Property name="RandomSeconds" value="0.000000" />
+										<Property name="UseMissionClock" value="false" />
+									</Property>
+								</Property>
+								<Property name="Action" />
+							</Property>
+						</Property>
+					</Property>
+					<Property name="States" value="GcActionTriggerState" _id="HARVEST">
+						<Property name="StateID" value="HARVEST" />
+						<Property name="Triggers">
+							<Property name="Triggers" value="GcActionTrigger" _index="0">
+								<Property name="Event" value="GcStateTimeEvent">
+									<Property name="GcStateTimeEvent">
+										<Property name="Seconds" value="0.000000" />
+										<Property name="RandomSeconds" value="0.000000" />
+										<Property name="UseMissionClock" value="false" />
+									</Property>
+								</Property>
+								<Property name="Action">
+									<Property name="Action" value="GcHarvestPlantAction">
+										<Property name="GcHarvestPlantAction">
+											<Property name="Radius" value="6.000000" />
+										</Property>
+									</Property>
+									<Property name="Action" value="GcParticleAction">
+										<Property name="GcParticleAction">
+											<Property name="Effect" value="HARVESTALL" />
+											<Property name="Joint" value="FX1" />
+											<Property name="Exact" value="true" />
+											<Property name="FindRange" value="GcBroadcastLevel">
+												<Property name="BroadcastLevel" value="Scene" />
+											</Property>
