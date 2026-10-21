@@ -29,6 +29,7 @@ careful measurement, and nothing public documents them.**
 |---|---|
 | `scripts/nms-pak` | Find any of the ~195k packed paths, unpack and convert, grep, and cite excerpts as sources. |
 | `scripts/nms-data` | Query the extracted tables (items, recipes, crops, biomes). |
+| `scripts/nms-farm-check` | Extractors that are not piped, have no depot, are split off their network, have no wire, or have never filled, with where to find them. Power is not traced end to end: on working farms the saved wires stop 4-15 m short of the generators. |
 | `scripts/nms-extract-tables.py` | Rebuild `data/nms_tables.json` after a game update. |
 | `scripts/research-fetch` | Store a web page verbatim with provenance. |
 | `scripts/nms-decode-save.py`, `/json`, `/diff` | Save contents and save-to-save differences, the basis for measurements. |
