@@ -2,6 +2,14 @@
 
 Newest first. One entry per change to the bundle: what landed, from where.
 
+## 2026-10-21 - measurement plans
+
+- Measurement plans added to six questions (sale price drop, Gold yield,
+  network falloff, hotspot distance, wallet cap, refiner speed, crop growth).
+- New measurement: network rate vs extractor count across Bob's 14 measured
+  networks (`research/sources/measurements/2026-10-21-network-rates-cross-section.md`);
+  extraction-network-falloff moved to partial.
+
 ## 2026-10-21 - bundle created
 
 - Scaffolded: `research/` charter, question register, sources store; `knowledge/`

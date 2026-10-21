@@ -22,3 +22,9 @@ Base value 353/unit, ~104M at base for current holdings. Depends on [[sale-price
 ## What would answer it
 
 A game-data citation (`scripts/nms-pak`) for the values, plus a measurement or code evidence for the behaviour.
+
+## Measurement plan
+
+Answered by the Gold half of the [sale-price-drop plan](sale-price-drop.md):
+ten 1,000-unit batches give the curve; extrapolating it to ~290k says whether
+Gold is worth selling in one place, spread over systems, or not at all.
