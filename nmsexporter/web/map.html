@@ -93,7 +93,7 @@ footer button.chip.off i { opacity: 0.3; }
 .issues div { cursor: pointer; padding: 3px 0; color: var(--ink-2); }
 .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 13px; font-weight: 600;
   background: var(--surface-2); border: 1px solid currentColor; margin-right: 6px; }
-.pill.critical { color: var(--critical); } .pill.warning { color: var(--warning); } .pill.good { color: var(--good); }
+.pill.critical { color: var(--critical); } .pill.serious { color: var(--serious); } .pill.warning { color: var(--warning); } .pill.good { color: var(--good); }
 footer { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 8px 14px; border-top: 1px solid var(--axis);
   color: var(--ink-2); font-size: 13px; }
 footer span i, footer button.chip i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
@@ -741,6 +741,27 @@ function drawLive() {
     : { d: "M 0 -12 L 8 9 L 0 4 L -8 9 Z", fill: css(stale ? "--ink-muted" : "--ink-1"), stroke: css("--page"), "stroke-width": 1.5 }, a);
 }
 
+// Storm state is a hazard state: status hue + glyph + word. Planet weather is plain text.
+const STORM = { Warning: ["warning", "Storm coming"], TransitionIn: ["serious", "Storm starting"],
+  Active: ["serious", "Storm"], TransitionOut: ["warning", "Storm ending"] };
+function conditions() {
+  const w = live && live.weather;
+  if (!w) return "";
+  const parts = [];
+  const st = w.storm && STORM[w.storm.state];
+  if (st) {
+    const mins = Math.round((Date.now() / 1000 - w.storm.t) / 60);
+    parts.push(`<span class="pill ${st[0]}">⛈ ${st[1]}</span>${mins >= 1 ? `${mins} min` : "now"}`);
+  }
+  const p = w.planet;
+  if (p && live.on_planet) {
+    const freq = { None_: "no storms", Low: "occasional storms", High: "frequent storms", Always: "constant storms" }[p.storm_frequency] || "";
+    parts.push([`${(p.weather || "").replace(/([a-z])([A-Z])/g, "$1 $2")} weather${p.intensity === "Extreme" ? " (extreme)" : ""}`, freq,
+      p.substances && p.substances.length ? `resources: ${p.substances.join(", ")}` : ""].filter(Boolean).join(" · "));
+  }
+  return parts.length ? ` · ${parts.join(" · ")}` : "";
+}
+
 function drawPill() {
   const P = $("livepill");
   if (!live) { P.innerHTML = ""; return; }
@@ -748,8 +769,8 @@ function drawPill() {
   const age = live.age < 90 ? `${Math.round(live.age)} s` : `${Math.round(live.age / 60)} min`;
   const where = live.on_planet ? locName(live.location) : `${locName(live.location)} · ${live.why}`;
   P.title = live.state === "live" ? "" : "The game stopped reporting: paused, in a menu, or not hooked";
-  P.innerHTML = live.state === "live" ? `<span class="pill good">● Live</span>${where}`
-    : `<span class="pill warning">⚠ Stale</span>${where}, last ${age} ago`;
+  P.innerHTML = (live.state === "live" ? `<span class="pill good">● Live</span>${where}`
+    : `<span class="pill warning">⚠ Stale</span>${where}, last ${age} ago`) + conditions();
 }
 
 function drawNearby() {

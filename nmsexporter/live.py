@@ -243,13 +243,25 @@ class Live:
         self._objs_for, self._objs = bases, out
         return out
 
-    def build(self, bases: list, base: str | None = None, target: str | None = None, trail_s: float = 6 * 3600) -> dict:
+    @staticmethod
+    def weather(sample: dict, items: dict) -> dict | None:
+        """The mod's weather block, with resource IDs named from the item table."""
+        w = sample.get("weather")
+        if not w:
+            return None
+        p = dict(w.get("planet") or {})
+        if p.get("substances"):
+            p["substances"] = [(items.get(i) or {}).get("name") or i for i in p["substances"] if i]
+        return {**w, "planet": p or None}
+
+    def build(self, bases: list, base: str | None = None, target: str | None = None, trail_s: float = 6 * 3600,
+              items: dict | None = None) -> dict:
         sample, err = read_sample()
         if sample is None:
             return {"state": "none", "error": err}
         age = time.time() - sample.get("t", 0)
         out = {"state": "stale" if age > STALE_S else "live", "age": round(age, 1),
-               "location": sample.get("location"), "error": None}
+               "location": sample.get("location"), "error": None, "weather": self.weather(sample, items or {})}
         address = ua_int(sample.get("ua"))
         out["address"] = f"0x{address:X}" if address is not None else None
         rel, at = sample.get("rel"), sample.get("at")

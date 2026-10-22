@@ -79,7 +79,8 @@ class Handler(BaseHTTPRequestHandler):
                                   "application/json")
             if path == "/api/live":
                 return self._send(json.dumps(live.build(collector.raw_bases, unquote_plus(params.get("base", "")) or None,
-                                                        unquote_plus(params.get("target", "")) or None)).encode(),
+                                                        unquote_plus(params.get("target", "")) or None,
+                                                        items=collector.tables.get("items"))).encode(),
                                   "application/json")
             if path == "/api/elevation":
                 try:
