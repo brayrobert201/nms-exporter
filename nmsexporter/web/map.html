@@ -290,7 +290,6 @@ function render() {
   crumbs();
   loadElevation();
   loadFinds();
-  $("globebtn").hidden = !!base;
   if (globeOn) { if (base) setGlobe(false); else setGlobe(true); }
 }
 
@@ -1093,7 +1092,12 @@ function setGlobe(on) {
     drawGlobe();
   }
 }
-$("globebtn").onclick = () => setGlobe(!globeOn);
+// from a base's layout, Globe goes to its planet first (the button is always there)
+$("globebtn").onclick = () => {
+  if (globeOn) return setGlobe(false);
+  if (base) { base = null; userChose = true; if (follow) setFollow(0); $("panel").style.display = "none"; render(); poll(); }
+  setGlobe(true);
+};
 (() => {
   const cv = $("globe"), ptrs = new Map();
   let last = null, moved = 0, lastDist = null;
