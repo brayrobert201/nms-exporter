@@ -69,6 +69,8 @@ svg.dragging { cursor: grabbing; }
 .livepill { color: var(--ink-2); font-size: 13px; }
 button.on { border-color: var(--ink-1); }
 .viewmenu { position: relative; }
+a.navlink { color: var(--ink-1); background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 10px; text-decoration: none; }
 .mapctl { position: absolute; left: 12px; top: 64px; display: flex; flex-direction: column; gap: 6px; }
 .mapctl button { width: 38px; height: 38px; padding: 0; font-size: 20px; line-height: 1; background: var(--surface-1); }
 .mapctl button:disabled { color: var(--ink-muted); cursor: default; }
@@ -105,6 +107,7 @@ text { font-family: system-ui, sans-serif; }
   <h1>NMS map</h1>
   <select id="planet" aria-label="Planet"></select>
   <span class="crumbs" id="crumbs"></span>
+  <a class="navlink" href="/systems">Systems</a>
   <button id="fit" title="Fit to screen">Fit</button>
   <details class="viewmenu" id="viewmenu"><summary>Show ▾</summary><div id="viewopts"></div></details>
   <button id="follow" title="Centre on you: off, north up, facing up">Centre</button>
@@ -428,7 +431,8 @@ function legend(kinds, segs) {
 
 function crumbs() {
   const C = $("crumbs");
-  C.innerHTML = base ? `<a onclick="openPlanet()">${planet.bases.length === 1 ? "Planet" : planet.label}</a> › ${base}` : `${planet.bases.length ? `${planet.bases.length} base${planet.bases.length === 1 ? "" : "s"}` : "No bases"} · radius ${fmtDist(planet.radius)}`;
+  const where = planet.planet_name ? `<b>${planet.planet_name}</b>${planet.system_name ? ` in ${planet.system_name}` : ""} · ` : planet.system_name ? `${planet.system_name} · ` : "";
+  C.innerHTML = base ? `<a onclick="openPlanet()">${planet.planet_name || (planet.bases.length === 1 ? "Planet" : planet.label)}</a> › ${base}` : where + `${planet.bases.length ? `${planet.bases.length} base${planet.bases.length === 1 ? "" : "s"}` : "No bases"} · radius ${fmtDist(planet.radius)}`;
 }
 
 function niceLen(target) {
@@ -535,7 +539,7 @@ async function load() {
   const r = await fetch("/api/map", { cache: "no-store" });
   data = await r.json();
   const sel = $("planet");
-  sel.innerHTML = data.planets.map((p, i) => `<option value="${i}">${p.label}${p.points.some(q => q.loose) ? " ⚠" : ""}</option>`).join("");
+  sel.innerHTML = data.planets.map((p, i) => `<option value="${i}">${p.label}${p.planet_name && !p.visited ? ` · ${p.planet_name}` : ""}${p.points.some(q => q.loose) ? " ⚠" : ""}</option>`).join("");
   const q = new URLSearchParams(location.search);
   const want = q.get("base"), wantPlanet = q.get("planet");
   userChose = !!(want || wantPlanet);
@@ -718,7 +722,7 @@ let live = null, target = null, follow = 0, placed = false, userChose = false;  
 // cGcPlayerEnvironment locations as seen: the corvette interior reports "Freighter" (9), the capital freighter "FreighterInternals" (10)
 const LOC = { FreighterInternals: "Freighter", Freighter: "In your corvette", IndoorInBase: "In a base", PlanetOnFoot: "On foot",
   PlanetInVehicle: "In exocraft", PlanetInShip: "In ship (landed)", SpaceInShip: "In space", PlanetInAtmoShip: "Flying",
-  SpaceStation: "Space station", Underwater: "Underwater", Cave: "In a cave" };
+  SpaceStation: "Space station", Underwater: "Underwater", Cave: "In a cave", Default: "In space" };
 const locName = (l) => LOC[l] || (l || "").replace(/([a-z])([A-Z])/g, "$1 $2");
 const turnWord = (t) => t === null || t === undefined ? "" : Math.abs(t) < 10 ? "ahead" : Math.abs(t) > 170 ? "behind" : `${Math.round(Math.abs(t))}° ${t < 0 ? "left" : "right"}`;
 // direction relative to the player's facing: up = straight ahead
@@ -770,7 +774,7 @@ function drawAway() {
   const elsewhere = live.on_planet ? data.planets.find(p => p.address === live.address) : null;
   A.innerHTML = live.on_planet
     ? `You're on <b>${elsewhere ? elsewhere.label : "another planet"}</b>.<button onclick="showMe()">Show</button>`
-    : `You're <b>${locName(live.location).toLowerCase().replace(/^in /, "in ").replace(/^freighter$/, "on your freighter")}</b> · ${live.why}.<br>Showing ${showing} from the save.`;
+    : `You're <b>${locName(live.location).toLowerCase().replace(/^in /, "in ").replace(/^freighter$/, "on your freighter")}</b>${live.names && live.names.system ? ` in ${live.names.system}` : ""} · ${live.why}.<br>Showing ${showing} from the save.`;
   A.hidden = false;
 }
 
@@ -863,7 +867,9 @@ function drawPill() {
   if (!live) { P.innerHTML = ""; return; }
   if (live.state === "none") { P.innerHTML = `<span class="pill">○ No live data</span>`; P.title = live.error || ""; return; }
   const age = live.age < 90 ? `${Math.round(live.age)} s` : `${Math.round(live.age / 60)} min`;
-  const where = live.on_planet ? locName(live.location) : `${locName(live.location)} · ${live.why}`;
+  const nm = live.names || {};
+  const named = nm.planet ? ` · ${nm.planet}${nm.system ? `, ${nm.system}` : ""}` : nm.system ? ` · ${nm.system}` : "";
+  const where = live.on_planet ? locName(live.location) + named : `${locName(live.location)}${named} · ${live.why}`;
   P.title = live.state === "live" ? "" : "The game stopped reporting: paused, in a menu, or not hooked";
   P.innerHTML = (live.state === "live" ? `<span class="pill good">● Live</span>${where}`
     : `<span class="pill warning">⚠ Stale</span>${where}, last ${age} ago`) + conditions();
@@ -911,7 +917,7 @@ let polling = null, pollSeq = 0, reloadedFor = null;
 async function reloadMap() {
   data = await (await fetch("/api/map", { cache: "no-store" })).json();
   const keep = planet && data.planets.findIndex(p => p.address === planet.address);
-  $("planet").innerHTML = data.planets.map((p, i) => `<option value="${i}">${p.label}${p.points.some(q => q.loose) ? " ⚠" : ""}</option>`).join("");
+  $("planet").innerHTML = data.planets.map((p, i) => `<option value="${i}">${p.label}${p.planet_name && !p.visited ? ` · ${p.planet_name}` : ""}${p.points.some(q => q.loose) ? " ⚠" : ""}</option>`).join("");
   if (keep >= 0) { $("planet").value = keep; planet = data.planets[keep]; }
 }
 async function poll() {

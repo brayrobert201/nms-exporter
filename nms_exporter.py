@@ -31,10 +31,14 @@ collector = Collector()
 live = Live()
 
 
-def map_html() -> bytes:
+def page_html(name: str) -> bytes:
     """Read on each request so an edited page needs no restart."""
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "nmsexporter", "web", "map.html"), "rb") as f:
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "nmsexporter", "web", name), "rb") as f:
         return f.read()
+
+
+def map_html() -> bytes:
+    return page_html("map.html")
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -58,7 +62,7 @@ class Handler(BaseHTTPRequestHandler):
         path = path.rstrip("/") or "/"
         params = dict(p.split("=", 1) for p in query.split("&") if "=" in p)
         try:
-            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases", "/api/map", "/api/live", "/api/elevation", "/api/finds"):
+            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases", "/api/map", "/api/live", "/api/elevation", "/api/finds", "/api/systems"):
                 collector.refresh()
             if path == "/metrics":
                 return self._send(collector.metrics().encode(), "text/plain; version=0.0.4")
@@ -75,6 +79,10 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/map":
                 m = maps.build(collector.raw_points, collector.raw_bases, collector.tables)
                 m["planets"] += live.visited_planets(collector.raw_bases)
+                live.systems.refresh()
+                for pl in m["planets"]:
+                    a = maps._addr(pl.get("address"))
+                    pl["planet_name"], pl["system_name"] = live.systems.planet_name(a), live.systems.system_name(a)
                 return self._send(json.dumps(m).encode(),
                                   "application/json")
             if path == "/api/live":
@@ -82,6 +90,13 @@ class Handler(BaseHTTPRequestHandler):
                                                         unquote_plus(params.get("target", "")) or None,
                                                         items=collector.tables.get("items"), tables=collector.tables)).encode(),
                                   "application/json")
+            if path == "/api/systems":
+                live.systems.refresh()
+                return self._send(json.dumps({"systems": live.systems.listing(maps._addr(unquote_plus(params.get("from", ""))) ,
+                                                                              collector.raw_bases),
+                                              "ly_per_voxel": 400}).encode(), "application/json")
+            if path == "/systems":
+                return self._send(page_html("systems.html"), "text/html; charset=utf-8")
             if path == "/api/finds":
                 return self._send(json.dumps(live.finds_api(collector.raw_bases, maps._addr(unquote_plus(params.get("address", ""))),
                                                             unquote_plus(params.get("base", "")) or None, collector.tables)).encode(),
@@ -99,7 +114,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/healthz":
                 return self._send(b"ok", "text/plain")
             if path == "/":
-                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /map /api/map /api/live /api/elevation /api/finds /healthz\n", "text/plain")
+                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /map /api/map /api/live /api/elevation /api/finds /systems /api/systems /healthz\n", "text/plain")
             self._send(b"not found", "text/plain", 404)
         except BrokenPipeError:
             pass

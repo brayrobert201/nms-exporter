@@ -23,6 +23,7 @@ from collections import deque
 
 from . import maps
 from .finds import Finds
+from .systems import Systems
 
 LIVE_DIR = os.environ.get("NMS_LIVE_DIR", os.path.expanduser(
     "~/.local/share/Steam/steamapps/compatdata/275850/pfx/drive_c/pymhf/mod_saves/live"))
@@ -175,7 +176,7 @@ class Elevation:
             self.timeline.append((s["t"], address))
         rel = s["rel"]
         dfp = s.get("distance_from_planet")
-        if dfp is not None and dfp < 20000:
+        if dfp is not None and dfp < 20000 and (address >> 52) & 0xF:
             self.radius[address] = round(math.hypot(*rel) - dfp)
             self.anchor.setdefault(address, rel)
             self.visited.setdefault(address, s.get("ua"))
@@ -253,8 +254,10 @@ class Live:
             if address in with_bases or address not in self.elev.radius:
                 continue
             ua = ua or {}
+            self.systems.refresh()
+            pname, sname = self.systems.planet_name(address), self.systems.system_name(address)
             out.append({"address": f"0x{address:X}", "radius": self.elev.radius[address],
-                        "label": f"Planet {ua.get('planet', '?')} of system {ua.get('system', '?')} (no bases)",
+                        "label": f"{pname or 'Planet ' + str(ua.get('planet', '?'))} in {sname or 'system ' + str(ua.get('system', '?'))} (no bases)",
                         "bases": [], "points": [], "layouts": {}, "visited": True})
         return out
 
@@ -262,6 +265,7 @@ class Live:
         self.trail = Trail()
         self.elev = Elevation()
         self.finds = Finds(LIVE_DIR)
+        self.systems = Systems(LIVE_DIR)
         self._grid_key = None
         self._grid = None
         self._objs_for = None
@@ -336,11 +340,15 @@ class Live:
                "location": sample.get("location"), "error": None, "weather": self.weather(sample, items or {})}
         address = ua_int(sample.get("ua"))
         out["address"] = f"0x{address:X}" if address is not None else None
+        self.systems.refresh()
+        out["names"] = {"planet": self.systems.planet_name(address), "system": self.systems.system_name(address)}
         rel, at = sample.get("rel"), sample.get("at")
         planet_bases = [b for b in bases if b.get("Position")
                         and (b.get("BaseType") or {}).get("PersistentBaseTypes") not in maps.SKIP_BASES]
         mine = [b for b in planet_bases if maps._addr(b.get("GalacticAddress")) == address]
-        surface = sample.get("in_atmosphere") or sample.get("distance_from_planet", 1e9) <= 20000
+        # planet bits 0 = in the system but at no planet (space, galaxy map), whatever the distance says
+        surface = (address is not None and (address >> 52) & 0xF != 0
+                   and (sample.get("in_atmosphere") or sample.get("distance_from_planet", 1e9) <= 20000))
         if address is not None and rel and surface:
             self.elev.refresh()
             self.elev.add(address, sample)        # the first moments on a new planet may not be in the trail yet

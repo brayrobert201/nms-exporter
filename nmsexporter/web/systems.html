@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NMS systems</title>
+<style>
+:root {
+  /* the holly-dashboards dark palette (data-viz skill, validated); same tokens as map.html */
+  --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232321;
+  --ink-1: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10);
+  --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--page); color: var(--ink-1);
+  font: 15px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 14px;
+  border-bottom: 2px solid var(--axis); position: sticky; top: env(safe-area-inset-top, 0px); background: var(--page); z-index: 2; }
+header h1 { font-size: 18px; margin: 0; font-weight: 600; }
+a.navlink { color: var(--ink-1); background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 10px; text-decoration: none; }
+select, input { background: var(--surface-2); color: var(--ink-1); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 10px; font: inherit; }
+label.check { display: inline-flex; gap: 6px; align-items: center; color: var(--ink-2); }
+.note { color: var(--ink-muted); font-size: 13px; }
+main { padding: 10px 14px 24px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+table { border-collapse: collapse; width: 100%; min-width: 760px; }
+th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { color: var(--ink-2); font-weight: 600; font-size: 13px; cursor: pointer; user-select: none; background: var(--surface-1);
+  position: sticky; top: 0; }
+th.sorted::after { content: " ▾"; } th.sorted.asc::after { content: " ▴"; }
+td { color: var(--ink-2); }
+td.name { color: var(--ink-1); font-weight: 600; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.sys { cursor: pointer; }
+tr.sys:hover td { background: var(--surface-1); }
+tr.here td.name::before { content: "● "; color: var(--good); }
+tr.detail td { color: var(--ink-muted); white-space: normal; background: var(--surface-1); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: var(--surface-2); border: 1px solid currentColor; }
+.pill.warning { color: var(--warning); } .pill.serious { color: var(--serious); } .pill.good { color: var(--good); }
+.empty { color: var(--ink-muted); padding: 24px; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>NMS systems</h1>
+  <a class="navlink" href="/map">Map</a>
+  <select id="economy" aria-label="Economy"><option value="">Any economy</option></select>
+  <select id="wealth" aria-label="Wealth"><option value="">Any wealth</option></select>
+  <input id="q" type="search" placeholder="Name or race" aria-label="Search">
+  <label class="check"><input type="checkbox" id="nopirate"> Hide pirate</label>
+  <span class="note" id="note"></span>
+</header>
+<main>
+  <div class="tablewrap"><table>
+    <thead><tr>
+      <th data-k="name">System</th><th data-k="distance_ly" class="sorted asc">Distance</th><th data-k="economy">Economy</th>
+      <th data-k="wealth">Wealth</th><th data-k="conflict">Conflict</th><th data-k="race">Race</th><th data-k="star">Star</th>
+      <th data-k="planets">Planets</th><th data-k="bases">Your bases</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+  <p class="note">Systems you have seen on the galaxy map (pymhf_mods/galaxy_log.py). Distance is between galactic
+    regions at ≈ 400 ly each, so systems in your region show as "same region". Tap a row for its planets.</p>
+</main>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const WEALTH = ["Poor", "Average", "Wealthy", "Pirate"];
+const CONFLICT = ["Low", "Default", "High", "Pirate"];
+let systems = [], sortKey = "distance_ly", asc = true, open = new Set(), here = null;
+let prefs = {};
+try { prefs = JSON.parse(localStorage.getItem("nms-systems") || "{}"); } catch (e) { /* defaults */ }
+
+const dist = (s) => s.here ? "here" : s.distance_ly === null ? "–" : s.distance_ly === 0 ? "same region" : `≈ ${s.distance_ly.toLocaleString()} ly`;
+const conflict = (c) => c === "Pirate" ? `<span class="pill serious">☠ Pirate</span>` : c === "High" ? `<span class="pill warning">⚠ High</span>` : esc(c === "Default" ? "Medium" : c);
+const wealth = (w) => w === "Wealthy" ? `<b style="color:var(--ink-1)">Wealthy</b>` : esc(w);
+const rank = { wealth: WEALTH, conflict: CONFLICT };
+
+function render() {
+  const eco = $("economy").value, wl = $("wealth").value, q = $("q").value.trim().toLowerCase(), np = $("nopirate").checked;
+  const rows = systems.filter(s => (!eco || s.economy === eco) && (!wl || s.wealth === wl) && (!np || !(s.pirate || s.wealth === "Pirate"))
+    && (!q || [s.name, s.race, ...(s.planet_names || [])].some(x => (x || "").toLowerCase().includes(q))));
+  const key = (s) => sortKey === "bases" ? s.bases.length : rank[sortKey] ? rank[sortKey].indexOf(s[sortKey]) : s[sortKey];
+  rows.sort((a, b) => {
+    if (a.here !== b.here) return a.here ? -1 : 1;
+    if (!a.name !== !b.name) return a.name ? -1 : 1;       // named (hovered) systems before unnamed ones
+    const x = key(a), y = key(b);
+    if (x === y) return (a.name || "~").localeCompare(b.name || "~");
+    if (x === null || x === undefined) return 1;
+    if (y === null || y === undefined) return -1;
+    return (x < y ? -1 : 1) * (asc ? 1 : -1);
+  });
+  $("rows").innerHTML = rows.length ? rows.map(s => {
+    const row = `<tr class="sys${s.here ? " here" : ""}" data-ua="${s.ua}">
+      <td class="name"${s.name ? "" : ` style="color:var(--ink-muted);font-weight:400" title="Hover it on the galaxy map to get its name"`}>${esc(s.name || "unnamed")}${s.anomaly && s.anomaly !== "None_" ? ` <span class="note">${esc(s.anomaly.replace(/([a-z])([A-Z])/g, "$1 $2"))}</span>` : ""}</td>
+      <td class="num">${dist(s)}</td><td>${esc(s.economy)}</td><td>${wealth(s.wealth)}</td><td>${conflict(s.conflict)}</td>
+      <td>${esc(s.race === "None_" ? "none" : s.race)}</td><td>${esc(s.star)}</td><td class="num">${s.planets ?? ""}</td>
+      <td>${esc(s.bases.join(", "))}</td></tr>`;
+    const names = (s.planet_names || []).map(n => n || "?");
+    return row + (open.has(s.ua) ? `<tr class="detail"><td colspan="9">Planets: ${names.length ? esc(names.join(", ")) : "none recorded"}${names.includes("?") ? " (hover the system on the galaxy map to name the rest)" : ""}</td></tr>` : "");
+  }).join("") : `<tr><td colspan="9" class="empty">No systems match. Browse the galaxy map in game to add more.</td></tr>`;
+  document.querySelectorAll("tr.sys").forEach(tr => tr.onclick = () => { open.has(tr.dataset.ua) ? open.delete(tr.dataset.ua) : open.add(tr.dataset.ua); render(); });
+  document.querySelectorAll("th").forEach(th => th.className = th.dataset.k === sortKey ? `sorted${asc ? " asc" : ""}` : "");
+  $("note").textContent = `${rows.length} of ${systems.length} systems`;
+}
+
+function savePrefs() {
+  try { localStorage.setItem("nms-systems", JSON.stringify({ economy: $("economy").value, wealth: $("wealth").value, nopirate: $("nopirate").checked, sortKey, asc })); } catch (e) { /* not remembered */ }
+}
+
+async function load() {
+  try {
+    const live = await (await fetch("/api/live", { cache: "no-store" })).json();
+    here = live.address || here;
+  } catch (e) { /* keep the last known position */ }
+  const d = await (await fetch("/api/systems" + (here ? `?from=${here}` : ""), { cache: "no-store" })).json();
+  systems = d.systems;
+  for (const [id, vals] of [["economy", [...new Set(systems.map(s => s.economy))].sort()], ["wealth", WEALTH.filter(w => systems.some(s => s.wealth === w))]]) {
+    const sel = $(id), cur = sel.value || prefs[id] || "";
+    sel.innerHTML = sel.options[0].outerHTML + vals.map(v => `<option>${esc(v)}</option>`).join("");
+    sel.value = vals.includes(cur) ? cur : "";
+  }
+  render();
+}
+
+document.querySelectorAll("th").forEach(th => th.onclick = () => {
+  asc = th.dataset.k === sortKey ? !asc : true; sortKey = th.dataset.k; savePrefs(); render();
+});
+for (const id of ["economy", "wealth", "nopirate"]) $(id).onchange = () => { savePrefs(); render(); };
+$("q").oninput = render;
+if (prefs.sortKey) { sortKey = prefs.sortKey; asc = prefs.asc !== false; }
+$("nopirate").checked = !!prefs.nopirate;
+load();
+setInterval(load, 20000);
+</script>
+</body>
+</html>
