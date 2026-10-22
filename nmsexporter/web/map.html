@@ -212,7 +212,7 @@ function zoomTo(x, y, w) {
 function show(p) {
   const P = $("panel");
   const rows = [];
-  if (p.kind === "base") rows.push(`<b>${p.name}</b>`, `${p.objects} objects`, `lat ${p.lat}°, lon ${p.lon}° (north assumed)`);
+  if (p.kind === "base") rows.push(`<b>${p.name}</b>`, `${p.objects} objects`, `lat ${p.lat}°, lon ${p.lon}°`);
   else if (p.name) rows.push(`<b>${p.name}</b>`);
   else rows.push(`<b>${(KIND[p.kind] || {}).label || p.kind}</b> <span style="color:var(--ink-muted)">${p.id || ""}</span>`);
   if (p.e !== undefined) {

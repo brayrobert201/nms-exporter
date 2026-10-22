@@ -2,6 +2,14 @@
 
 Newest first. One entry per change to the bundle: what landed, from where.
 
+## 2026-10-22 - compass north and live position
+
+- Measured with the live_position mod: compass north = planet +Y, east = north
+  x up (maps.py was right); live player position is in the save's
+  planet-centred frame (21.6 from the base Position). `/map` drops its
+  "north assumed" notes. Source:
+  `research/sources/measurements/2026-10-22-live-position-compass.md`.
+
 ## 2026-10-22 - first live pyMHF attach
 
 - `scripts/nms-hook` attached to the running game (2 mods, 5 hooks). A second

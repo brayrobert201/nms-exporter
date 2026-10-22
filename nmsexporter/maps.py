@@ -9,8 +9,8 @@ Frames (see knowledge/mechanics/save-coordinates.md):
   with Up = the base position normalised, Forward = the base's Forward made
   orthogonal, Right = Up x Forward (the rotation the exporter verified on
   refiners).
-- North is ASSUMED to be the planet's +Y axis and east = north x up. Neither
-  is checked against the in-game compass yet; the page says so.
+- North is the planet's +Y axis and east = north x up, checked against the
+  in-game compass (research/sources/measurements/2026-10-22-live-position-compass.md).
 
 Planet view: azimuthal equidistant projection centred on the planet's bases,
 so distances and bearings from the centre are true. Base view: top-down, metres
@@ -216,4 +216,4 @@ def build(ps_points: dict, bases: list) -> dict:
                     "label": names[0] if len(names) == 1 else f"{names[0]} + {len(names) - 1} more",
                     "bases": names, "points": pts, "layouts": layouts})
     out.sort(key=lambda p: -len(p["bases"]))
-    return {"north_verified": False, "planets": out}
+    return {"north_verified": True, "planets": out}

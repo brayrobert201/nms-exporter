@@ -7,6 +7,7 @@ builds: ["25800958"]
 stale_after: next-build
 sources:
   - research/sources/measurements/2026-10-21-save-coordinate-frames.md
+  - research/sources/measurements/2026-10-22-live-position-compass.md
 tags: [save-format, mapping]
 generated: {by: "machine:session", at: 2026-10-21}
 verified: []
@@ -27,9 +28,12 @@ exporter uses to place refiners, which matches every planet-base refiner.
 
 ## Scope and caveats
 
-Which axis is north, and east/west handedness, are not yet checked against the
-in-game compass; until then latitude, longitude and compass bearings derived
-from these are unverified. Freighter and corvette bases use another frame.
+Compass north is the planet's +Y axis and east = north x up, checked against
+the in-game compass on 2026-10-22 (one planet), so latitude, longitude and
+bearings derived from these frames are right, not mirrored. The live player
+position (cGcPlayerEnvironment mPlayerTM.pos minus mNearestPlanetPos) is in
+the same planet-centred frame; mPlayerTM.at points behind the player. Freighter
+and corvette bases use another frame.
 
 ## Open
 
