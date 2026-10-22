@@ -34,10 +34,28 @@ svg.dragging { cursor: grabbing; }
   color: var(--ink-2); display: none; }
 .panel b { color: var(--ink-1); }
 .panel .close { float: right; margin: -4px -6px 0 8px; padding: 0 8px; }
-.issues { position: absolute; left: 12px; bottom: 12px; max-width: min(420px, calc(100% - 24px));
-  background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; }
-.issues:empty { display: none; }
-@media (max-width: 700px) { .issues { max-height: 32%; overflow: auto; font-size: 13px; } }
+.dock { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; flex-wrap: wrap-reverse;
+  gap: 8px; align-items: flex-end; justify-content: space-between; pointer-events: none; }
+.dock > div { pointer-events: auto; max-width: min(420px, 100%); background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; }
+.dock > div:empty { display: none; }
+.issues { max-height: 40vh; overflow: auto; }
+.nearby { width: min(380px, 100%); max-height: 46vh; overflow: auto; color: var(--ink-2); }
+@media (max-width: 700px) { .dock > div { font-size: 13px; } .issues { max-height: 22vh; } .nearby { max-height: 34vh; } }
+.nearby h2 { cursor: pointer; font-size: 14px; margin: 0 0 4px; color: var(--ink-1); font-weight: 600; display: flex; gap: 8px; align-items: baseline; }
+.nearby h2 span { color: var(--ink-muted); font-weight: 400; font-size: 13px; }
+.nearby .row { display: grid; grid-template-columns: 22px 1fr auto; gap: 6px; align-items: center; padding: 3px 0;
+  cursor: pointer; }
+.nearby .row.on { color: var(--ink-1); }
+.nearby .row small { color: var(--ink-muted); }
+.turn { display: block; width: 18px; height: 18px; color: var(--ink-1); }
+.goto { border: 1px solid var(--axis); border-radius: 10px; padding: 6px 8px; margin: 2px 0 8px; color: var(--ink-1);
+  display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; align-items: center; }
+.goto .turn { width: 28px; height: 28px; }
+.goto b { font-size: 17px; }
+.goto button { padding: 2px 8px; }
+.livepill { color: var(--ink-2); font-size: 13px; }
+button.on { border-color: var(--ink-1); }
 .issues div { cursor: pointer; padding: 3px 0; color: var(--ink-2); }
 .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 13px; font-weight: 600;
   background: var(--surface-2); border: 1px solid currentColor; margin-right: 6px; }
@@ -54,12 +72,14 @@ text { font-family: system-ui, sans-serif; }
   <select id="planet" aria-label="Planet"></select>
   <span class="crumbs" id="crumbs"></span>
   <button id="fit" title="Fit to screen">Fit</button>
+  <button id="follow" title="Keep the map centred on you">Follow</button>
+  <span class="livepill" id="livepill"></span>
   <span class="note" id="note"></span>
 </header>
 <main id="main">
   <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
   <div class="panel" id="panel"></div>
-  <div class="issues" id="issues"></div>
+  <div class="dock"><div class="issues" id="issues"></div><div class="nearby" id="nearby"></div></div>
 </main>
 <footer id="legend"></footer>
 <script>
@@ -125,6 +145,7 @@ function render() {
   const svg = $("svg");
   svg.innerHTML = "";
   const g = el("g", { id: "content" }, svg);
+  el("g", { id: "live" }, svg);
   el("g", { id: "scale" }, svg);
   base ? drawBase(g) : drawPlanet(g);
   rescale();
@@ -144,6 +165,7 @@ function rescale() {
     t.setAttribute("font-size", t.dataset.fs * k);
     t.setAttribute("x", +t.dataset.x + 10 * k); t.setAttribute("y", -t.dataset.y + (4 + (+t.dataset.dy || 0)) * k);
   });
+  drawLive();
 }
 
 function dot(g, x, y, kind, onclick, problems) {
@@ -226,7 +248,14 @@ function show(p) {
     rows.push(`fill ${p.fill}/250 · nearest pipe end ${p.pipe_gap} m`);
     if (p.near) rows.push(p.near);
   }
-  if (p.kind === "base") rows.push(`<button onclick="openBase(${JSON.stringify(p.name).replace(/"/g, "&quot;")})">Open layout</button>`);
+  const btns = [];
+  if (p.kind === "base") btns.push(`<button onclick="openBase(${JSON.stringify(p.name).replace(/"/g, "&quot;")})">Open layout</button>`);
+  const key = p.kind === "base" ? `b:${p.name}` : p.i !== undefined && base ? `o:${base}:${p.i}` : p.w ? `w:${p.w.join(",")}` : null;
+  if (key) {
+    const lbl = p.name || `${(KIND[p.kind] || {}).label || p.kind}${base ? " · " + base : ""}`;
+    btns.push(`<button onclick='setTarget(${JSON.stringify(key).replace(/'/g, "&#39;")}, ${JSON.stringify(lbl).replace(/'/g, "&#39;")})'>Go to</button>`);
+  }
+  if (btns.length) rows.push(btns.join(" "));
   P.innerHTML = `<button class="close" onclick="this.parentNode.style.display='none'">×</button>` + rows.join("<br>");
   P.style.display = "block";
 }
@@ -246,12 +275,14 @@ function legend(kinds, segs) {
   const L = $("legend");
   L.innerHTML = kinds.map(k => `<span><i style="background:${css(KIND[k].colour)}"></i>${KIND[k].label}</span>`).join("")
     + segs.map(s => `<span><i style="border-radius:0;height:3px;background:${css(SEG[s].colour)}"></i>${SEG[s].label}</span>`).join("")
-    + `<span><i style="background:transparent;border:2px solid ${css("--critical")}"></i>⚠ problem</span>`;
+    + `<span><i style="background:transparent;border:2px solid ${css("--critical")}"></i>⚠ problem</span>`
+    + `<span><i style="border-radius:0;clip-path:polygon(50% 0,100% 100%,50% 75%,0 100%);background:${css("--ink-1")}"></i>You</span>`
+    + `<span><i style="border-radius:0;height:3px;background:${css("--ink-muted")}"></i>Your trail</span>`;
 }
 
 function crumbs() {
   const C = $("crumbs");
-  C.innerHTML = base ? `<a onclick="openPlanet()">${planet.label}</a> › ${base}` : `${planet.points.filter(p => p.kind === "base").length} bases · radius ${fmtDist(planet.radius)}`;
+  C.innerHTML = base ? `<a onclick="openPlanet()">${planet.label}</a> › ${base}` : `${planet.bases.length} base${planet.bases.length === 1 ? "" : "s"} · radius ${fmtDist(planet.radius)}`;
 }
 
 function drawScale() {
@@ -273,8 +304,8 @@ function drawScale() {
   n.textContent = data && data.north_verified ? "N" : "N?";
 }
 
-function openPlanet() { base = null; $("panel").style.display = "none"; render(); }
-function openBase(name) { base = name; $("panel").style.display = "none"; render(); }
+function openPlanet() { base = null; userChose = true; $("panel").style.display = "none"; render(); poll(); }
+function openBase(name) { base = name; userChose = true; $("panel").style.display = "none"; render(); poll(); }
 window.openBase = openBase; window.openPlanet = openPlanet;
 
 // pan and zoom: drag, wheel, pinch
@@ -292,7 +323,7 @@ window.openBase = openBase; window.openPlanet = openPlanet;
     rescale();
   };
   svg.addEventListener("wheel", (e) => { e.preventDefault(); zoom(Math.exp(e.deltaY * 0.0015), e.clientX, e.clientY); }, { passive: false });
-  svg.addEventListener("pointerdown", (e) => { svg.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, e); last = e; svg.classList.add("dragging"); });
+  svg.addEventListener("pointerdown", (e) => { setFollow(false); svg.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, e); last = e; svg.classList.add("dragging"); });
   svg.addEventListener("pointermove", (e) => {
     if (!ptrs.has(e.pointerId)) return;
     ptrs.set(e.pointerId, e);
@@ -313,7 +344,7 @@ window.openBase = openBase; window.openPlanet = openPlanet;
 })();
 
 $("fit").onclick = () => render();
-$("planet").onchange = (e) => { planet = data.planets[+e.target.value]; base = planet.bases.length === 1 ? planet.bases[0] : null; render(); };
+$("planet").onchange = (e) => { userChose = true; planet = data.planets[+e.target.value]; base = planet.bases.length === 1 ? planet.bases[0] : null; render(); };
 let resizeTimer = null;
 window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
 
@@ -324,6 +355,7 @@ async function load() {
   sel.innerHTML = data.planets.map((p, i) => `<option value="${i}">${p.label}${p.points.some(q => q.loose) ? " ⚠" : ""}</option>`).join("");
   const q = new URLSearchParams(location.search);
   const want = q.get("base"), wantPlanet = q.get("planet");
+  userChose = !!(want || wantPlanet);
   let pi = data.planets.findIndex(p => (want && p.bases.includes(want)) || (wantPlanet && p.bases.includes(wantPlanet)));
   if (pi < 0) pi = Math.max(0, data.planets.findIndex(p => p.points.some(x => x.loose)));
   sel.value = pi;
@@ -331,6 +363,147 @@ async function load() {
   base = want && planet.bases.includes(want) ? want : wantPlanet ? null : planet.bases.length === 1 ? planet.bases[0] : null;
   $("note").textContent = data.north_verified ? "" : "North and east/west not yet checked against the in-game compass";
   render();
+  poll();
+}
+
+// ---- live position (pymhf_mods/live_position.py via /api/live) ----
+let live = null, target = null, follow = false, placed = false, userChose = false;
+const LOC = { FreighterInternals: "Freighter", IndoorInBase: "In a base", PlanetOnFoot: "On foot", PlanetInVehicle: "In exocraft",
+  PlanetInShip: "In ship (landed)", SpaceInShip: "In space", PlanetInAtmoShip: "Flying", SpaceStation: "Space station" };
+const locName = (l) => LOC[l] || (l || "").replace(/([a-z])([A-Z])/g, "$1 $2");
+const turnWord = (t) => t === null || t === undefined ? "" : Math.abs(t) < 10 ? "ahead" : Math.abs(t) > 170 ? "behind" : `${Math.round(Math.abs(t))}° ${t < 0 ? "left" : "right"}`;
+// direction relative to the player's facing: up = straight ahead
+const arrow = (t, cls = "turn") => t === null || t === undefined ? `<span class="${cls}"></span>`
+  : `<svg class="${cls}" viewBox="-10 -10 20 20" aria-label="${turnWord(t)}"><path transform="rotate(${t})" d="M 0 -9 L 7 7 L 0 3 L -7 7 Z" fill="currentColor"/></svg>`;
+const height = (h) => Math.abs(h) < 2 ? "" : `${h > 0 ? "↑" : "↓"} ${Math.round(Math.abs(h))} m`;
+const onThisPlanet = () => live && live.on_planet && planet && live.address === planet.address;
+
+function setFollow(on) { follow = on; $("follow").classList.toggle("on", on); if (on) centreOnMe(); }
+$("follow").onclick = () => setFollow(!follow);
+function setTarget(key, label) { target = key ? { key, label } : null; $("panel").style.display = "none"; poll(); }
+window.setTarget = setTarget;
+
+function me() {
+  if (!onThisPlanet()) return null;
+  if (base) return live.in_base && live.in_base.name === base ? { x: live.in_base.e, y: live.in_base.n, trail: live.in_base.trail } : null;
+  return { x: live.player.x, y: live.player.y, trail: live.trail };
+}
+
+function centreOnMe() {
+  const m = me();
+  if (!m) return;
+  // on a phone the nearby panel spans the bottom: centre on the map above it
+  const box = $("nearby").getBoundingClientRect(), main = $("main").getBoundingClientRect();
+  const covered = box.width > main.width * 0.6 ? Math.max(0, main.bottom - box.top) : 0;
+  setView({ ...view, x: m.x - view.w / 2, y: m.y - view.h / 2 - covered / 2 * px() });
+}
+
+function drawLive() {
+  const g = $("live");
+  if (!g) return;
+  g.innerHTML = "";
+  const m = me();
+  if (!m) return;
+  const k = px(), stale = live.state !== "live";
+  if (m.trail && m.trail.length > 1)
+    el("polyline", { points: m.trail.map(p => `${p[0]},${-p[1]}`).join(" "), fill: "none", stroke: css("--ink-muted"),
+      "stroke-width": 2 * k, "stroke-linejoin": "round", "stroke-linecap": "round", opacity: 0.8 }, g);
+  const t = live.target;
+  if (t && !t.error) {
+    const tx = base ? t.e : t.x, ty = base ? t.n : t.y;
+    if (tx !== undefined) {
+      el("line", { x1: m.x, y1: -m.y, x2: tx, y2: -ty, stroke: css("--ink-2"), "stroke-width": 1.5 * k,
+        "stroke-dasharray": `${6 * k} ${4 * k}` }, g);
+      el("circle", { cx: tx, cy: -ty, r: 9 * k, fill: "none", stroke: css("--ink-1"), "stroke-width": 2 * k }, g);
+    }
+  }
+  const h = live.player.heading;
+  const a = el("g", { transform: `translate(${m.x} ${-m.y}) scale(${k}) rotate(${h === null ? 0 : h})` }, g);
+  el("circle", { r: 15, fill: css("--ink-1"), opacity: 0.12 }, a);
+  el(h === null ? "circle" : "path", h === null ? { r: 6, fill: css(stale ? "--ink-muted" : "--ink-1") }
+    : { d: "M 0 -12 L 8 9 L 0 4 L -8 9 Z", fill: css(stale ? "--ink-muted" : "--ink-1"), stroke: css("--page"), "stroke-width": 1.5 }, a);
+}
+
+function drawPill() {
+  const P = $("livepill");
+  if (!live) { P.innerHTML = ""; return; }
+  if (live.state === "none") { P.innerHTML = `<span class="pill">○ No live data</span>`; P.title = live.error || ""; return; }
+  const age = live.age < 90 ? `${Math.round(live.age)} s` : `${Math.round(live.age / 60)} min`;
+  const where = live.on_planet ? locName(live.location) : `${locName(live.location)} · ${live.why}`;
+  P.title = live.state === "live" ? "" : "The game stopped reporting: paused, in a menu, or not hooked";
+  P.innerHTML = live.state === "live" ? `<span class="pill good">● Live</span>${where}`
+    : `<span class="pill warning">⚠ Stale</span>${where}, last ${age} ago`;
+}
+
+function drawNearby() {
+  const N = $("nearby");
+  if (!live || !live.on_planet || !live.nearby) { N.innerHTML = ""; return; }
+  const rows = [];
+  const t = live.target;
+  if (t) {
+    rows.push(t.error ? `<div class="goto"><span></span><span>${target.label}: ${t.error}</span><button onclick="setTarget(null)">×</button></div>`
+      : `<div class="goto">${arrow(t.turn)}<span><b>${fmtDist(t.dist)}</b> ${turnWord(t.turn)} ${height(t.h)}<br><small>${target.label} · ${compass(t.bearing)} ${Math.round(t.bearing)}°</small></span><button onclick="setTarget(null)" title="Stop navigating">×</button></div>`);
+  }
+  rows.push(`<h2 id="nearbyhead" title="Show or hide the list">${collapsed ? "▸" : "▾"} Nearby you built <span>${live.state === "live" ? "arrows are relative to your facing" : "stale"}</span></h2>`);
+  if (collapsed) { N.innerHTML = rows.join(""); $("nearbyhead").onclick = toggleNearby; return; }
+  for (const r of live.nearby) {
+    const name = r.kind === "base" ? r.base : `${(KIND[r.kind] || {}).label || r.kind} <small>${r.base}</small>`;
+    rows.push(`<div class="row${target && target.key === r.key ? " on" : ""}" data-key="${r.key.replace(/"/g, "&quot;")}" data-label="${(r.kind === "base" ? r.base : `${(KIND[r.kind] || {}).label || r.kind} · ${r.base}`).replace(/"/g, "&quot;")}">`
+      + `${arrow(r.turn)}<span>${name}</span><span>${fmtDist(r.dist)} <small>${height(r.h)}</small></span></div>`);
+  }
+  const far = (live.bases || []).filter(b => !live.nearby.some(n => n.key === b.key));
+  if (far.length) rows.push(`<h2 style="margin-top:6px">Other bases here</h2>` + far.map(r =>
+    `<div class="row" data-key="${r.key.replace(/"/g, "&quot;")}" data-label="${r.base.replace(/"/g, "&quot;")}">${arrow(r.turn)}<span>${r.base}</span><span>${fmtDist(r.dist)}</span></div>`).join(""));
+  N.innerHTML = rows.join("");
+  N.querySelectorAll(".row").forEach(d => d.onclick = () => setTarget(d.dataset.key, d.dataset.label));
+  $("nearbyhead").onclick = toggleNearby;
+}
+
+let collapsed = false;
+try { collapsed = localStorage.getItem("nms-nearby-collapsed") === "1"; } catch (e) { /* storage blocked: default open */ }
+function toggleNearby() {
+  collapsed = !collapsed;
+  try { localStorage.setItem("nms-nearby-collapsed", collapsed ? "1" : "0"); } catch (e) { /* not remembered */ }
+  drawNearby();
+  if (follow) centreOnMe();
+}
+
+let polling = null, pollSeq = 0;
+async function poll() {
+  clearTimeout(polling);
+  const seq = ++pollSeq;            // a newer poll (after a click) supersedes this one
+  try {
+    if (!document.hidden) {
+      const q = new URLSearchParams();
+      if (base) q.set("base", base);
+      if (target) q.set("target", target.key);
+      const r = await fetch("/api/live?" + q, { cache: "no-store" });
+      const got = await r.json();
+      if (seq !== pollSeq) return;
+      live = got;
+      // first time we see the player on a planet with bases, show that planet (unless the URL chose one)
+      if (!placed && !userChose && live.on_planet && data) {
+        const pi = data.planets.findIndex(p => p.address === live.address);
+        if (pi >= 0) {
+          placed = true;
+          $("planet").value = pi; planet = data.planets[pi];
+          const near = (live.bases || [])[0];
+          base = near && near.dist < 300 ? near.base : planet.bases.length === 1 ? planet.bases[0] : null;
+          render(); setFollow(true);
+          return poll();
+        }
+      }
+      drawPill();
+      if (follow) centreOnMe();
+      drawLive();
+      drawNearby();
+    }
+  } catch (e) {
+    if (seq !== pollSeq) return;
+    live = { state: "none", error: String(e) };
+    drawPill();
+  }
+  polling = setTimeout(poll, 1000);
 }
 load();
 </script>

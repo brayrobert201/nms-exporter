@@ -121,7 +121,15 @@ def _kind(oid: str) -> str:
 SEGMENTS = {"^U_PIPELINE": "pipe", "^U_POWERLINE": "wire", "^U_PORTALLINE": "link"}
 
 
-def base_layout(b) -> dict | None:
+def world_to_local(b, axes, w):
+    r, u, f = axes
+    d = [w[i] - b["Position"][i] for i in range(3)]
+    return [_dot(d, r), _dot(d, u), _dot(d, f)]
+
+
+def base_en(b):
+    """(axes, en) for a base, or None. en maps a base-local position to
+    (east, north, height) in metres from the base computer."""
     axes = base_axes(b)
     if not axes:
         return None
@@ -130,20 +138,35 @@ def base_layout(b) -> dict | None:
     # local (x, z) -> (east, north): project the base's Right and Forward axes
     rx, rz = _dot(r, east), _dot(f, east)
     nx, nz = _dot(r, north), _dot(f, north)
-    objs = b.get("Objects") or []
-    comp = next((o for o in objs if o.get("ObjectID") == "^BASE_FLAG"), None)
+    comp = next((o for o in b.get("Objects") or [] if o.get("ObjectID") == "^BASE_FLAG"), None)
     o0 = comp["Position"] if comp else [0.0, 0.0, 0.0]
 
     def en(p):
         x, z = p[0] - o0[0], p[2] - o0[2]
         return round(rx * x + rz * z, 2), round(nx * x + nz * z, 2), round(p[1] - o0[1], 1)
+    return axes, en
+
+
+def planet_projection(bs) -> Projection:
+    """The /map planet projection: centred on the planet's bases, radius = their mean |Position|."""
+    radius = sum(math.hypot(*b["Position"][:3]) for b in bs) / len(bs)
+    centre = [sum(b["Position"][i] for b in bs) for i in range(3)]
+    return Projection(centre, radius)
+
+
+def base_layout(b) -> dict | None:
+    frame = base_en(b)
+    if not frame:
+        return None
+    en = frame[1]
+    objs = b.get("Objects") or []
 
     flags = {}
     for row in check_base(b):
         if row["problems"]:
             flags[tuple(row["pos"])] = row
     items, segs = [], []
-    for o in objs:
+    for i, o in enumerate(objs):
         oid = o.get("ObjectID") or ""
         p = o.get("Position")
         if not p:
@@ -154,7 +177,7 @@ def base_layout(b) -> dict | None:
             segs.append({"kind": SEGMENTS[oid], "a": a[:2], "b": c[:2]})
             continue
         e, n, h = en(p)
-        item = {"kind": _kind(oid), "id": oid.lstrip("^"), "e": e, "n": n, "h": h}
+        item = {"kind": _kind(oid), "id": oid.lstrip("^"), "e": e, "n": n, "h": h, "i": i}
         row = flags.get(tuple(p))
         if row:
             item["problems"] = row["problems"]
@@ -180,9 +203,8 @@ def build(ps_points: dict, bases: list) -> dict:
 
     out = []
     for key, bs in planets.items():
-        radius = sum(math.hypot(*b["Position"][:3]) for b in bs) / len(bs)
-        centre = [sum(b["Position"][i] for b in bs) for i in range(3)]
-        proj = Projection(centre, radius)
+        proj = planet_projection(bs)
+        radius = proj.r
         pts, layouts = [], {}
         for b in bs:
             x, y = proj.xy(b["Position"])
@@ -192,7 +214,7 @@ def build(ps_points: dict, bases: list) -> dict:
             lat, lon = latlon(b["Position"])
             pts.append({"kind": "base", "name": name, "x": round(x, 1), "y": round(y, 1),
                         "lat": lat, "lon": lon, "loose": (lay or {}).get("loose", 0),
-                        "objects": len(b.get("Objects") or [])})
+                        "objects": len(b.get("Objects") or []), "w": [round(c, 1) for c in b["Position"][:3]]})
 
         def near_planet(p):
             return p and abs(math.hypot(*p[:3]) - radius) < 0.03 * radius
@@ -201,7 +223,7 @@ def build(ps_points: dict, bases: list) -> dict:
             if _addr(v.get("Location")) == key and near_planet(v.get("Position")):
                 x, y = proj.xy(v["Position"])
                 pts.append({"kind": "exocraft", "name": EXOCRAFT[i] if i < len(EXOCRAFT) else f"Exocraft {i + 1}",
-                            "x": round(x, 1), "y": round(y, 1)})
+                            "x": round(x, 1), "y": round(y, 1), "w": [round(c, 1) for c in v["Position"][:3]]})
         for d in ps_points.get("deposits", []):
             if _addr(d.get("GalacticAddress")) == key and near_planet(d.get("Position")):
                 x, y = proj.xy(d["Position"])
@@ -210,7 +232,7 @@ def build(ps_points: dict, bases: list) -> dict:
             if _addr(s.get("UniverseAddress")) == key and near_planet(s.get("Position")):
                 x, y = proj.xy(s["Position"])
                 pts.append({"kind": "settlement", "name": s.get("Name") or "Settlement",
-                            "x": round(x, 1), "y": round(y, 1)})
+                            "x": round(x, 1), "y": round(y, 1), "w": [round(c, 1) for c in s["Position"][:3]]})
         names = sorted(b.get("Name") or "base" for b in bs)
         out.append({"address": f"0x{key:X}" if key is not None else "?", "radius": round(radius),
                     "label": names[0] if len(names) == 1 else f"{names[0]} + {len(names) - 1} more",
