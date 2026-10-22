@@ -20,6 +20,7 @@ marker is compared with the save's base position.
 
 Output: C:\\pymhf\\mod_saves\\live\\visor-YYYYMMDD.jsonl
 """
+import ctypes
 import json
 import logging
 import math
@@ -38,6 +39,11 @@ OUT_DIR = r"C:\pymhf\mod_saves\live"
 MARKER_REPEAT_S = 60.0
 VISOR_IDLE_S = 0.75         # no UpdateTarget for this long = visor closed
 # High-churn marker types that say nothing about the visor or resources.
+# Hotspot markers get their whole 0x2B0-byte struct logged as hex: the class is
+# not in the mapped fields (name is just UI_SURVEY_MINERALS_LABEL), so comparing
+# hotspots of different classes should show which byte carries it.
+RAW_TYPES = {"MineralHotspot", "GasHotspot", "PowerHotspot"}
+MARKER_SIZE = 0x2B0
 # SpacePoi moves every frame (879 of the first 902 lines, 2026-10-22).
 QUIET_TYPES = {"NetworkPlayer", "NetworkPlayerShip", "NetworkPlayerVehicle", "NetworkPlayerFireTeam",
                "NetworkPlayerFireTeamShip", "NetworkPlayerFireTeamFreighter", "SpacePoi"}
@@ -165,6 +171,8 @@ class VisorLog(Mod):
         row = {"type": mtype, "building": _name(m.meBuildingClass, cGcBuildingClassification),
                "name": _text(m.mCustomName), "subtitle": _text(m.mCustomSubtitle),
                "local": local, "offset": offset}
+        if mtype in RAW_TYPES:
+            row["raw"] = ctypes.string_at(ctypes.addressof(m), MARKER_SIZE).hex()
         if self._player:
             w = [a + b for a, b in zip(local, offset)]
             row["rel"] = [round(a - b, 2) for a, b in zip(w, self._player["planet_pos"])]
