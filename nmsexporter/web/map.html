@@ -80,6 +80,8 @@ button.on { border-color: var(--ink-1); }
 .viewmenu { position: relative; }
 a.navlink { color: var(--ink-1); background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
   padding: 6px 10px; text-decoration: none; }
+.mapctl[hidden] { display: none; }
+#globe { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
 .mapctl { position: absolute; left: 12px; top: 64px; display: flex; flex-direction: column; gap: 6px; }
 .mapctl button { width: 38px; height: 38px; padding: 0; font-size: 20px; line-height: 1; background: var(--surface-1); }
 .mapctl button:disabled { color: var(--ink-muted); cursor: default; }
@@ -118,6 +120,7 @@ text { font-family: system-ui, sans-serif; }
   <span class="crumbs" id="crumbs"></span>
   <a class="navlink" href="/systems">Systems</a>
   <button id="fit" title="Fit to screen">Fit</button>
+  <button id="globebtn" title="Show the planet as a globe (true distances between far-apart bases)">Globe</button>
   <details class="viewmenu" id="viewmenu"><summary>Show ▾</summary><div id="viewopts"></div></details>
   <button id="follow" title="Centre on you: off, north up, facing up">Centre</button>
   <span class="livepill" id="livepill"></span>
@@ -125,6 +128,7 @@ text { font-family: system-ui, sans-serif; }
 </header>
 <main id="main">
   <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+  <canvas id="globe" hidden></canvas>
   <div class="panel" id="panel"></div>
   <div class="tip" id="tip" hidden></div>
   <div class="away" id="away" hidden></div>
@@ -271,6 +275,8 @@ function render() {
   crumbs();
   loadElevation();
   loadFinds();
+  $("globebtn").hidden = !!base;
+  if (globeOn) { if (base) setGlobe(false); else setGlobe(true); }
 }
 
 function rescale() {
@@ -534,7 +540,7 @@ function drawScale() {
 }
 
 function openPlanet() { base = null; userChose = true; $("panel").style.display = "none"; render(); poll(); }
-function openBase(name) { base = name; userChose = true; $("panel").style.display = "none"; render(); poll(); }
+function openBase(name) { if (globeOn) setGlobe(false); base = name; userChose = true; $("panel").style.display = "none"; render(); poll(); }
 window.openBase = openBase; window.openPlanet = openPlanet;
 
 // pan and zoom: drag, wheel, pinch
@@ -733,11 +739,12 @@ function drawFinds() {
     hit.addEventListener("pointerleave", () => { $("tip").hidden = true; });
   }
   declutter();      // the finds arrive after the rest of the map
+  if (globeOn) drawGlobe();
 }
 
 function showFind(f, p) {
   const P = $("panel");
-  selected = p; drawSel();
+  selected = p || null; drawSel();
   const rows = [`<b>${findTitle(f)}</b>`];
   if (f.kind.startsWith("hotspot")) {
     if (f.kind !== "hotspot-power") {
@@ -976,6 +983,129 @@ function legendHeights() {
   }
   L.appendChild(span);
 }
+
+// ---- globe: the planet as an orthographic globe, for bases far apart where the flat map stretches ----
+let globeOn = false, gc = null, gzoom = 1;
+const iconImg = {};
+const imgOf = (name) => {
+  if (!iconImg[name]) { iconImg[name] = new Image(); iconImg[name].src = `/icon/${name}.png`; iconImg[name].onload = () => globeOn && drawGlobe(); }
+  return iconImg[name];
+};
+const vnorm = (v) => { const n = Math.hypot(...v); return n ? v.map(x => x / n) : v; };
+const vdot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const vcross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+function gframe() {         // north (planet +Y made tangent) and east, as maps.tangent_frame
+  const d = gc[1], n = vnorm([-d * gc[0], 1 - d * gc[1], -d * gc[2]]);
+  return [n, vnorm(vcross(n, gc))];
+}
+function rotAbout(v, a, t) {   // Rodrigues
+  const c = Math.cos(t), s = Math.sin(t), k = vdot(a, v), x = vcross(a, v);
+  return v.map((vi, i) => vi * c + x[i] * s + a[i] * k * (1 - c));
+}
+function globeItems() {
+  const out = [];
+  for (const p of planet.points) if (p.w) out.push({ w: p.w, kind: p.kind, name: p.name, p });
+  if (finds) for (const f of finds.finds) if (!hiddenKinds.has(findKind(f.kind))) out.push({ w: f.w, kind: findKind(f.kind), cls: f.class, name: f.kind === "mark" ? f.name : null, f });
+  return out;
+}
+function drawGlobe() {
+  const cv = $("globe"), box = $("main").getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = box.width * dpr; cv.height = box.height * dpr;
+  const ctx = cv.getContext("2d"); ctx.scale(dpr, dpr);
+  const cx = box.width / 2, cy = (box.height - coveredBottom()) / 2, R = Math.min(box.width, box.height - coveredBottom()) * 0.42 * gzoom;
+  const [n, e] = gframe();
+  const toScreen = (u) => [cx + R * vdot(u, e), cy - R * vdot(u, n), vdot(u, gc)];
+  // sphere, lit from the upper left
+  const gr = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.4, R * 0.1, cx, cy, R);
+  gr.addColorStop(0, css("--surface-2")); gr.addColorStop(1, css("--page"));
+  ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.fill();
+  ctx.strokeStyle = css("--axis"); ctx.lineWidth = 1.5; ctx.stroke();
+  // graticule every 30 degrees, front side only
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+  const line = (f) => { ctx.beginPath(); let on = false;
+    for (let t = 0; t <= 360; t += 3) { const [x, y, d] = toScreen(f(t * Math.PI / 180));
+      if (d > 0) { on ? ctx.lineTo(x, y) : ctx.moveTo(x, y); on = true; } else on = false; }
+    ctx.stroke(); };
+  for (let lat = -60; lat <= 60; lat += 30) { const a = lat * Math.PI / 180; line(t => [Math.cos(a) * Math.sin(t), Math.sin(a), Math.cos(a) * Math.cos(t)]); }
+  for (let lon = 0; lon < 180; lon += 30) { const b = lon * Math.PI / 180; line(t => [Math.sin(t) * Math.sin(b), Math.cos(t), Math.sin(t) * Math.cos(b)]); }
+  // things on the planet; labels skip if they would overlap
+  const boxes = [];
+  globe.hits = [];
+  const items = globeItems().map(it => ({ ...it, s: toScreen(vnorm(it.w)) })).filter(it => it.s[2] > 0.02);
+  items.sort((a, b) => (a.kind === "base") - (b.kind === "base"));
+  ctx.font = "13px system-ui, sans-serif"; ctx.lineJoin = "round";
+  for (const it of items) {
+    const [x, y] = it.s, ic = iconOf(it.kind, it.cls), size = it.kind === "base" ? 26 : it.kind === "deposit-find" ? 16 : 22;
+    if (ic && imgOf(ic).complete && imgOf(ic).naturalWidth) ctx.drawImage(imgOf(ic), x - size / 2, y - size / 2, size, size);
+    else { ctx.fillStyle = css((KIND[it.kind] || KIND.structure).colour); ctx.beginPath(); ctx.arc(x, y, 5, 0, 2 * Math.PI); ctx.fill(); }
+    globe.hits.push({ x, y, it });
+  }
+  // labels after the icons, bases first, so a base's name wins the space
+  const rank = (it) => it.kind === "base" ? 0 : it.kind === "mark" ? 1 : 2;
+  for (const it of [...items].sort((a, b) => rank(a) - rank(b))) {
+    const [x, y] = it.s;
+    if (it.name) {
+      const w = ctx.measureText(it.name).width, b = [x + 14, y - 8, x + 18 + w, y + 6];
+      if (!boxes.some(q => b[0] < q[2] && b[2] > q[0] && b[1] < q[3] && b[3] > q[1])) {
+        boxes.push(b);
+        ctx.strokeStyle = css("--page"); ctx.lineWidth = 3; ctx.strokeText(it.name, x + 15, y + 4);
+        ctx.fillStyle = css("--ink-1"); ctx.fillText(it.name, x + 15, y + 4);
+      }
+    }
+  }
+  if (onThisPlanet()) {            // you
+    const [x, y, d] = toScreen(vnorm(live.player.w));
+    if (d > 0) { ctx.fillStyle = css(live.state === "live" ? "--ink-1" : "--ink-muted"); ctx.strokeStyle = css("--page"); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y, 6, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); }
+  }
+  ctx.fillStyle = css("--ink-muted"); ctx.font = "12px system-ui, sans-serif";
+  ctx.fillText(`radius ${fmtDist(planet.radius)} · drag to turn · pinch or scroll to zoom`, 14, box.height - coveredBottom() - 12);
+}
+const globe = { hits: [] };
+function setGlobe(on) {
+  globeOn = on && !base;
+  $("globe").hidden = !globeOn; $("svg").style.visibility = globeOn ? "hidden" : "";
+  document.querySelector(".mapctl").hidden = globeOn;
+  $("globebtn").classList.toggle("on", globeOn); $("globebtn").textContent = globeOn ? "Flat" : "Globe";
+  if (globeOn) {
+    if (follow) setFollow(0);
+    const bs = planet.points.filter(p => p.kind === "base" && p.w);
+    gc = vnorm(onThisPlanet() ? live.player.w : bs.length ? bs.reduce((a, p) => a.map((x, i) => x + p.w[i]), [0, 0, 0]) : [0, 0, 1]);
+    gzoom = 1;
+    drawGlobe();
+  }
+}
+$("globebtn").onclick = () => setGlobe(!globeOn);
+(() => {
+  const cv = $("globe"), ptrs = new Map();
+  let last = null, moved = 0, lastDist = null;
+  cv.addEventListener("pointerdown", (e) => { ptrs.set(e.pointerId, e); last = e; moved = 0; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener("pointermove", (e) => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId, e);
+    if (ptrs.size === 2) {
+      const [a, b] = [...ptrs.values()], d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+      if (lastDist) { gzoom = Math.max(0.6, Math.min(8, gzoom * d / lastDist)); drawGlobe(); }
+      lastDist = d; return;
+    }
+    const dx = e.clientX - last.clientX, dy = e.clientY - last.clientY; moved += Math.hypot(dx, dy); last = e;
+    const R = Math.min(cv.clientWidth, cv.clientHeight) * 0.42 * gzoom, [n, ea] = gframe();
+    gc = vnorm(rotAbout(rotAbout(gc, n, -dx / R), ea, dy / R));
+    drawGlobe();
+  });
+  const up = (e) => {
+    ptrs.delete(e.pointerId); lastDist = null;
+    if (moved < 6 && e.type === "pointerup") {       // a tap: the nearest thing within 16 px
+      const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+      const h = globe.hits.map(q => ({ q, d: Math.hypot(q.x - x, q.y - y) })).filter(o => o.d < 16).sort((a, b) => a.d - b.d)[0];
+      if (h && h.q.it.kind === "base") { setGlobe(false); openBase(h.q.it.name); }
+      else if (h && h.q.it.f) showFind(h.q.it.f, null);
+      else if (h && h.q.it.p) show(h.q.it.p);
+    }
+  };
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+  cv.addEventListener("wheel", (e) => { e.preventDefault(); gzoom = Math.max(0.6, Math.min(8, gzoom * Math.exp(-e.deltaY * 0.0015))); drawGlobe(); }, { passive: false });
+})();
 
 // ---- live position (pymhf_mods/live_position.py via /api/live) ----
 let live = null, target = null, follow = 0, placed = false, userChose = false;   // follow: 0 off, 1 north up, 2 facing up
@@ -1221,6 +1351,7 @@ async function poll() {
       drawLive();
       rotate();
       drawNearby();
+      if (globeOn) drawGlobe();
     }
   } catch (e) {
     if (seq !== pollSeq) return;
