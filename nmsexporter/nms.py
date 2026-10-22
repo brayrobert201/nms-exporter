@@ -461,6 +461,8 @@ class Collector:
             "deposits": ps.get("DrainedTerrainResourceDeposits", []),
             "settlements": [{"UniverseAddress": s.get("UniverseAddress"), "Position": s.get("Position"),
                              "Name": s.get("Name")} for s in ps.get("SettlementStatesV2", [])],
+            # one bit per portal glyph 0-F (15 = Sunset, Bird, Face, Diplo: confirmed in game 2026-10-22)
+            "known_runes": ps.get("KnownPortalRunes"),
         }
 
         # missions, against the game's mission tables

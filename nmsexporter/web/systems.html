@@ -43,6 +43,7 @@ tr.detail td { color: var(--ink-muted); white-space: normal; background: var(--s
 .pill.warning { color: var(--warning); } .pill.serious { color: var(--serious); } .pill.good { color: var(--good); }
 .glyphs { display: inline-flex; gap: 1px; vertical-align: middle; font-family: ui-monospace, monospace; }
 .glyphs img { display: block; }
+.glyphs img.unknown { opacity: 0.22; }
 .portalbig { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; margin: 6px 0; }
 .portalbig figure { margin: 0; text-align: center; font-size: 11px; color: var(--ink-muted); }
 .empty { color: var(--ink-muted); padding: 24px; text-align: center; }
@@ -56,9 +57,11 @@ tr.detail td { color: var(--ink-muted); white-space: normal; background: var(--s
   <select id="wealth" aria-label="Wealth"><option value="">Any wealth</option></select>
   <input id="q" type="search" placeholder="Name or race" aria-label="Search">
   <label class="check"><input type="checkbox" id="nopirate"> Hide pirate</label>
+  <label class="check"><input type="checkbox" id="dialable"> Only dialable</label>
   <span class="note" id="note"></span>
 </header>
 <main>
+  <p class="note" id="runes"></p>
   <div class="tablewrap"><table>
     <thead><tr>
       <th data-k="name">System</th><th data-k="distance_ly" class="sorted asc">Distance</th><th data-k="portal">Portal address</th><th data-k="economy">Economy</th>
@@ -75,8 +78,10 @@ tr.detail td { color: var(--ink-muted); white-space: normal; background: var(--s
 "use strict";
 // Portal glyphs, 0-F, served from /glyph/<digit>.png (scripts/nms-glyphs); the hex digit stands in if an image is missing.
 const GLYPH_NAMES = ["Sunset", "Bird", "Face", "Diplo", "Eclipse", "Balloon", "Boat", "Bug", "Dragonfly", "Galaxy", "Voxel", "Fish", "Tent", "Rocket", "Tree", "Atlas"];
-const glyphs = (code, px = 18) => `<span class="glyphs" title="${code} — ${[...code].map(c => GLYPH_NAMES[parseInt(c, 16)]).join(", ")}">`
-  + [...code.toLowerCase()].map(c => `<img src="/glyph/${c}.png" width="${px}" height="${px}" alt="${c.toUpperCase()}" onerror="this.replaceWith(document.createTextNode('${c.toUpperCase()}'))">`).join("") + "</span>";
+let known = null;    // KnownPortalRunes bitmask from the save; null = unknown
+const learned = (c) => known === null || (known >> parseInt(c, 16)) & 1;
+const glyphs = (code, px = 18) => `<span class="glyphs" title="${code} — ${[...code].map(c => GLYPH_NAMES[parseInt(c, 16)] + (learned(c) ? "" : " (not learned)")).join(", ")}">`
+  + [...code.toLowerCase()].map(c => `<img src="/glyph/${c}.png" width="${px}" height="${px}" alt="${c.toUpperCase()}"${learned(c) ? "" : ' class="unknown"'} onerror="this.replaceWith(document.createTextNode('${c.toUpperCase()}'))">`).join("") + "</span>";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -92,8 +97,8 @@ const wealth = (w) => w === "Wealthy" ? `<b style="color:var(--ink-1)">Wealthy</
 const rank = { wealth: WEALTH, conflict: CONFLICT };
 
 function render() {
-  const eco = $("economy").value, wl = $("wealth").value, q = $("q").value.trim().toLowerCase(), np = $("nopirate").checked;
-  const rows = systems.filter(s => (!eco || s.economy === eco) && (!wl || s.wealth === wl) && (!np || !(s.pirate || s.wealth === "Pirate"))
+  const eco = $("economy").value, wl = $("wealth").value, q = $("q").value.trim().toLowerCase(), np = $("nopirate").checked, dial = $("dialable").checked;
+  const rows = systems.filter(s => (!dial || s.dialable) && (!eco || s.economy === eco) && (!wl || s.wealth === wl) && (!np || !(s.pirate || s.wealth === "Pirate"))
     && (!q || [s.name, s.race, ...(s.planet_names || [])].some(x => (x || "").toLowerCase().includes(q))));
   const key = (s) => sortKey === "bases" ? s.bases.length : rank[sortKey] ? rank[sortKey].indexOf(s[sortKey]) : s[sortKey];
   rows.sort((a, b) => {
@@ -108,13 +113,13 @@ function render() {
   $("rows").innerHTML = rows.length ? rows.map(s => {
     const row = `<tr class="sys${s.here ? " here" : ""}" data-ua="${s.ua}">
       <td class="name"${s.name ? "" : ` style="color:var(--ink-muted);font-weight:400" title="Hover it on the galaxy map to get its name"`}>${esc(s.name || "unnamed")}${s.anomaly && s.anomaly !== "None_" ? ` <span class="note">${esc(s.anomaly.replace(/([a-z])([A-Z])/g, "$1 $2"))}</span>` : ""}</td>
-      <td class="num">${dist(s)}</td><td>${glyphs(s.portal)}</td><td>${esc(s.economy)}</td><td>${wealth(s.wealth)}</td><td>${conflict(s.conflict)}</td>
+      <td class="num">${dist(s)}</td><td>${glyphs(s.portal)}${s.dialable ? ` <span class="pill good">✓ dialable</span>` : ""}</td><td>${esc(s.economy)}</td><td>${wealth(s.wealth)}</td><td>${conflict(s.conflict)}</td>
       <td>${esc(s.race === "None_" ? "none" : s.race)}</td><td>${esc(s.star)}</td><td class="num">${s.planets ?? ""}</td>
       <td>${esc(s.bases.join(", "))}</td></tr>`;
     const names = (s.planet_names || []).map(n => n || "?");
     const big = `<div class="portalbig">${[...s.portal.toLowerCase()].map((c, i) => `<figure>${glyphs(c, 40)}<br>${i === 0 ? "planet" : GLYPH_NAMES[parseInt(c, 16)]}</figure>`).join("")}</div>`;
     return row + (open.has(s.ua) ? `<tr class="detail"><td colspan="10">Planets: ${names.length ? esc(names.join(", ")) : "none recorded"}${names.includes("?") ? " (hover the system on the galaxy map to name the rest)" : ""}
-      <br>Portal address ${s.portal} (first glyph = planet${s.bases.length ? ", set to your base's planet" : " 1; any planet in the system works"}) · galactic coordinates ${s.coords}${big}</td></tr>` : "");
+      <br>${s.dialable === false ? `Not dialable yet: learn ${s.missing_glyphs.map(c => GLYPH_NAMES[parseInt(c, 16)]).join(", ")}. ` : ""}Portal address ${s.portal} (first glyph = planet${s.bases.length ? ", set to your base's planet" : " 1; any planet in the system works"}) · galactic coordinates ${s.coords}${big}</td></tr>` : "");
   }).join("") : `<tr><td colspan="10" class="empty">No systems match. Browse the galaxy map in game to add more.</td></tr>`;
   document.querySelectorAll("tr.sys").forEach(tr => tr.onclick = () => { open.has(tr.dataset.ua) ? open.delete(tr.dataset.ua) : open.add(tr.dataset.ua); render(); });
   document.querySelectorAll("th").forEach(th => th.className = th.dataset.k === sortKey ? `sorted${asc ? " asc" : ""}` : "");
@@ -122,7 +127,7 @@ function render() {
 }
 
 function savePrefs() {
-  try { localStorage.setItem("nms-systems", JSON.stringify({ economy: $("economy").value, wealth: $("wealth").value, nopirate: $("nopirate").checked, sortKey, asc })); } catch (e) { /* not remembered */ }
+  try { localStorage.setItem("nms-systems", JSON.stringify({ economy: $("economy").value, wealth: $("wealth").value, nopirate: $("nopirate").checked, dialable: $("dialable").checked, sortKey, asc })); } catch (e) { /* not remembered */ }
 }
 
 async function load() {
@@ -132,6 +137,12 @@ async function load() {
   } catch (e) { /* keep the last known position */ }
   const d = await (await fetch("/api/systems" + (here ? `?from=${here}` : ""), { cache: "no-store" })).json();
   systems = d.systems;
+  known = d.known_runes ?? null;
+  if (known !== null) {
+    const have = GLYPH_NAMES.filter((_, i) => known >> i & 1);
+    $("runes").innerHTML = `You know ${have.length} of 16 portal glyphs: ${glyphs(have.map(n => GLYPH_NAMES.indexOf(n).toString(16)).join(""), 22)} ${have.join(", ")}.`
+      + ` ${systems.filter(s => s.dialable).length} of ${systems.length} systems are dialable now; the first glyph is set to a planet whose glyph you know.`;
+  }
   for (const [id, vals] of [["economy", [...new Set(systems.map(s => s.economy))].sort()], ["wealth", WEALTH.filter(w => systems.some(s => s.wealth === w))]]) {
     const sel = $(id), cur = sel.value || prefs[id] || "";
     sel.innerHTML = sel.options[0].outerHTML + vals.map(v => `<option>${esc(v)}</option>`).join("");
@@ -143,10 +154,11 @@ async function load() {
 document.querySelectorAll("th").forEach(th => th.onclick = () => {
   asc = th.dataset.k === sortKey ? !asc : true; sortKey = th.dataset.k; savePrefs(); render();
 });
-for (const id of ["economy", "wealth", "nopirate"]) $(id).onchange = () => { savePrefs(); render(); };
+for (const id of ["economy", "wealth", "nopirate", "dialable"]) $(id).onchange = () => { savePrefs(); render(); };
 $("q").oninput = render;
 if (prefs.sortKey) { sortKey = prefs.sortKey; asc = prefs.asc !== false; }
 $("nopirate").checked = !!prefs.nopirate;
+$("dialable").checked = !!prefs.dialable;
 load();
 setInterval(load, 20000);
 </script>

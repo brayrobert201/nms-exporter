@@ -95,9 +95,10 @@ class Handler(BaseHTTPRequestHandler):
                                   "application/json")
             if path == "/api/systems":
                 live.systems.refresh()
-                return self._send(json.dumps({"systems": live.systems.listing(maps._addr(unquote_plus(params.get("from", ""))) ,
-                                                                              collector.raw_bases),
-                                              "ly_per_voxel": 400}).encode(), "application/json")
+                runes = (collector.raw_points or {}).get("known_runes")
+                return self._send(json.dumps({"systems": live.systems.listing(maps._addr(unquote_plus(params.get("from", ""))),
+                                                                              collector.raw_bases, runes),
+                                              "known_runes": runes, "ly_per_voxel": 400}).encode(), "application/json")
             if path.startswith("/glyph/") and path.endswith(".png"):
                 # portal glyph icons extracted from the game by scripts/nms-glyphs (not in the repo)
                 h = path[len("/glyph/"):-len(".png")].lower()

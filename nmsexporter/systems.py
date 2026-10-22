@@ -91,8 +91,10 @@ class Systems:
         seeds = (rec or {}).get("planet_seeds") or []
         return self.planet_names.get(seeds[n - 1]) if 1 <= n <= len(seeds) else None
 
-    def listing(self, here: int | None, bases: list) -> list:
-        """Every system seen, with distance from `here` (any address in the player's system)."""
+    def listing(self, here: int | None, bases: list, known_runes: int | None = None) -> list:
+        """Every system seen, with distance from `here` (any address in the player's system).
+        known_runes: the save's KnownPortalRunes bitmask (bit n = glyph n learned); the
+        portal's planet glyph is then one the player knows where the system allows."""
         base_systems: dict = {}
         base_planet: dict = {}        # a portal code lands on the planet of one of your bases where there is one
         for b in bases:
@@ -110,6 +112,13 @@ class Systems:
         for ua, r in self.systems.items():
             v = voxel(ua)
             d = math.dist(v, hv) * LY_PER_VOXEL if hv else None
+            n = r.get("planets") or 1
+            planet = base_planet.get(ua)
+            if known_runes is not None and not (planet and known_runes >> planet & 1):
+                # any planet in the system will do: pick one whose glyph is learned, else keep the base's / 1
+                planet = next((i for i in range(1, min(n, 15) + 1) if known_runes >> i & 1), planet)
+            code = portal(ua, planet)
+            missing = [] if known_runes is None else sorted({c for c in code if not known_runes >> int(c, 16) & 1})
             out.append({"ua": f"0x{ua:X}", "name": self.names.get(ua), "economy": r.get("economy"),
                         "wealth": r.get("wealth"), "conflict": r.get("conflict"), "race": r.get("race"),
                         "star": r.get("star"), "anomaly": r.get("anomaly"), "planets": r.get("planets"),
@@ -118,6 +127,7 @@ class Systems:
                         "here": here is not None and system_ua(here) == ua,
                         "distance_ly": None if d is None else round(d), "voxel": list(v),
                         "bases": sorted(base_systems.get(ua, ())),
-                        "portal": portal(ua, base_planet.get(ua)), "coords": galactic_coords(ua)})
+                        "portal": code, "coords": galactic_coords(ua),
+                        "dialable": None if known_runes is None else not missing, "missing_glyphs": missing})
         out.sort(key=lambda s: (s["distance_ly"] is None, s["distance_ly"] or 0, s["name"] or ""))
         return out
