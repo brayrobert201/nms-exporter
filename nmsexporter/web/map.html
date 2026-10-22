@@ -16,6 +16,9 @@
      only: an empty cell means "never sampled", so the lowest height must still clear the surface. */
   --seq-1: #184f95; --seq-2: #1c5cab; --seq-3: #256abf; --seq-4: #2a78d6; --seq-5: #3987e5;
   --seq-6: #5598e7; --seq-7: #6da7ec; --seq-8: #86b6ef; --seq-9: #9ec5f4;
+  /* diverging (data-viz palette blue <-> red, gray midpoint) for height around a water surface;
+     arms are the documented dark slot hues stepped by opacity */
+  --div-below: #3987e5; --div-mid: #383835; --div-above: #e66767;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--page); color: var(--ink-1);
@@ -285,7 +288,8 @@ function label(g, x, y, text, colour = "--ink-2", fs = 13) {
 function drawPlanet(g) {
   const pts = planet.points;
   for (const p of pts.filter(p => p.kind !== "base")) dot(g, p.x, p.y, p.kind, () => show(p), false, p.name);
-  fit(pts.map(p => [p.x, p.y]), 0.25, 3000);
+  const m = live && live.on_planet && live.address === planet.address ? [[live.player.x, live.player.y]] : [[0, 0]];
+  fit(pts.length ? pts.map(p => [p.x, p.y]) : m, 0.25, pts.length ? 3000 : 600);
   const k = px(), placed = [];
   for (const p of pts.filter(p => p.kind === "base").sort((a, b) => b.y - a.y)) {
     dot(g, p.x, p.y, "base", () => openBase(p.name), p.loose > 0, `${p.name} · open layout`);
@@ -297,7 +301,7 @@ function drawPlanet(g) {
   }
   issues(pts.filter(p => p.loose).map(p => ({ text: `${p.name}: ${p.loose} loose extractor${p.loose > 1 ? "s" : ""}`,
     go: () => openBase(p.name) })));
-  legend(["base", "exocraft", "settlement", "deposit"], []);
+  legend(["base", "exocraft", "settlement", "deposit"].filter(k => pts.some(p => p.kind === k)), []);
 }
 
 const POWER = { good: "✓", warning: "⚠", critical: "✕", none: "–" };
@@ -413,7 +417,7 @@ function legend(kinds, segs) {
 
 function crumbs() {
   const C = $("crumbs");
-  C.innerHTML = base ? `<a onclick="openPlanet()">${planet.bases.length === 1 ? "Planet" : planet.label}</a> › ${base}` : `${planet.bases.length} base${planet.bases.length === 1 ? "" : "s"} · radius ${fmtDist(planet.radius)}`;
+  C.innerHTML = base ? `<a onclick="openPlanet()">${planet.bases.length === 1 ? "Planet" : planet.label}</a> › ${base}` : `${planet.bases.length ? `${planet.bases.length} base${planet.bases.length === 1 ? "" : "s"}` : "No bases"} · radius ${fmtDist(planet.radius)}`;
 }
 
 function niceLen(target) {
@@ -576,13 +580,28 @@ function drawElevation() {
   if (!g) return;
   g.innerHTML = "";
   if (!showHeights || !elev || !elev.cells.length) return;
-  const c = elev.cell, lo = elev.min, span = Math.max(elev.max - elev.min, 1);
+  const c = elev.cell;
   for (const [i, j, h] of elev.cells) {
-    const step = Math.min(SEQ.length - 1, Math.floor((h - lo) / span * SEQ.length));
-    const r = el("rect", { x: i * c, y: -(j + 1) * c, width: c, height: c, fill: css(SEQ[step]), opacity: 0.85 }, g);
-    el("title", {}, r).textContent = `${Math.round(h)} m above sea level`;
+    const [fill, opacity] = heightColour(h);
+    const r = el("rect", { x: i * c, y: -(j + 1) * c, width: c, height: c, fill, opacity }, g);
+    el("title", {}, r).textContent = heightText(h);
   }
 }
+
+// Water planets: diverging around the water surface (4 opacity steps per arm). Dry planets: one-hue ramp.
+function heightColour(h) {
+  if (elev.water) {
+    if (Math.abs(h) < 1.5) return [css("--div-mid"), 1];
+    const top = Math.max(Math.abs(elev.min), Math.abs(elev.max), 2);
+    const step = Math.min(3, Math.floor(Math.abs(h) / top * 4));
+    return [css(h < 0 ? "--div-below" : "--div-above"), [0.4, 0.6, 0.8, 1][step]];
+  }
+  const step = Math.min(SEQ.length - 1, Math.floor((h - elev.min) / Math.max(elev.max - elev.min, 1) * SEQ.length));
+  return [css(SEQ[step]), 0.85];
+}
+const heightText = (h) => elev.water
+  ? (Math.abs(h) < 1.5 ? "at the water surface" : `${Math.round(Math.abs(h))} m ${h < 0 ? "below" : "above"} the water`)
+  : `${Math.round(h)} m above the planet's base radius (no sea)`;
 
 function legendHeights() {
   const L = $("legend");
@@ -592,8 +611,17 @@ function legendHeights() {
   span.className = "hlegend";
   if (!showHeights) span.textContent = "";
   else if (elev.error) span.textContent = `Heights: ${elev.error}`;
-  else span.innerHTML = `Height above sea level <i style="width:90px;height:8px;border-radius:2px;background:linear-gradient(90deg,${SEQ.map(v => css(v)).join(",")})"></i>`
-    + `${Math.round(elev.min)}–${Math.round(elev.max)} m · from ${elev.samples} steps on foot and ${elev.objects} built objects`;
+  else if (!elev.cells.length) span.textContent = "Heights: none yet. Walk around on foot to collect them";
+  else {
+    const grad = elev.water
+      ? `${css("--div-below")},${css("--div-mid")},${css("--div-above")}`
+      : SEQ.map(v => css(v)).join(",");
+    const range = elev.water
+      ? `${heightText(elev.min)} to ${heightText(elev.max)}`
+      : `${Math.round(elev.min)}–${Math.round(elev.max)} m above the planet's base radius · no sea`;
+    span.innerHTML = `${elev.water ? "Height vs water" : "Height"} <i style="width:90px;height:8px;border-radius:2px;background:linear-gradient(90deg,${grad})"></i>`
+      + `${range} · from ${elev.samples} steps on foot and ${elev.objects} built objects`;
+  }
   L.appendChild(span);
 }
 
@@ -726,7 +754,7 @@ function drawPill() {
 
 function drawNearby() {
   const N = $("nearby");
-  if (!onThisPlanet() || !live.nearby) { N.innerHTML = ""; return; }
+  if (!onThisPlanet() || !live.nearby || (!live.nearby.length && !live.target)) { N.innerHTML = ""; return; }
   const rows = [];
   const t = live.target;
   if (t) {
@@ -760,7 +788,13 @@ function toggleNearby() {
   if (follow) centreOnMe();
 }
 
-let polling = null, pollSeq = 0;
+let polling = null, pollSeq = 0, reloadedFor = null;
+async function reloadMap() {
+  data = await (await fetch("/api/map", { cache: "no-store" })).json();
+  const keep = planet && data.planets.findIndex(p => p.address === planet.address);
+  $("planet").innerHTML = data.planets.map((p, i) => `<option value="${i}">${p.label}${p.points.some(q => q.loose) ? " ⚠" : ""}</option>`).join("");
+  if (keep >= 0) { $("planet").value = keep; planet = data.planets[keep]; }
+}
 async function poll() {
   clearTimeout(polling);
   const seq = ++pollSeq;            // a newer poll (after a click) supersedes this one
@@ -775,6 +809,10 @@ async function poll() {
       live = got;
       // Show the player's planet the first time we see them on one (unless the URL chose a view),
       // and keep following them to other planets and bases while Centre is on.
+      if (live.on_planet && data && !data.planets.some(p => p.address === live.address) && reloadedFor !== live.address) {
+        reloadedFor = live.address;
+        await reloadMap();
+      }
       if (live.on_planet && data) {
         if (live.address !== planet.address && ((!placed && !userChose) || follow)) {
           if (goToMe()) { placed = true; if (!follow) setFollow(1); return poll(); }

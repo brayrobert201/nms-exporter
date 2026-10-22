@@ -73,7 +73,9 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/raw/bases":
                 return self._send(json.dumps(collector.raw_bases).encode(), "application/json")
             if path == "/api/map":
-                return self._send(json.dumps(maps.build(collector.raw_points, collector.raw_bases, collector.tables)).encode(),
+                m = maps.build(collector.raw_points, collector.raw_bases, collector.tables)
+                m["planets"] += live.visited_planets(collector.raw_bases)
+                return self._send(json.dumps(m).encode(),
                                   "application/json")
             if path == "/api/live":
                 return self._send(json.dumps(live.build(collector.raw_bases, unquote_plus(params.get("base", "")) or None,

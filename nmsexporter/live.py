@@ -123,11 +123,13 @@ def nav(rel, heading, w) -> dict:
 
 
 # Ground elevation from where the player has been. distance_from_planet is the
-# height above the planet's nominal (sea-level) radius: |rel| - distance_from_planet
-# is the same round number for every sample on a planet (130048 = 127 x 1024 on
-# Cobalt Oxygen's planet, 98304 = 96 x 1024 for another). On foot or in an exocraft
-# the player is on the ground; indoors (floors) and ships are not used. A cell keeps
-# its lowest sample, so jetpack jumps don't raise it.
+# height above the planet's nominal radius: |rel| - distance_from_planet is the
+# same round number for every sample on a planet (130048 = 127 x 1024, 98304 =
+# 96 x 1024). `sealevel` is where the water surface sits above that radius: 120 on
+# Activated Indium's water planet, 0 on every dry planet seen, so a planet with
+# sealevel 0 is taken to have no sea. On foot or in an exocraft the player is on
+# the ground; indoors (floors), caves, swimming and ships are not used. A cell
+# keeps its lowest sample, so jetpack jumps don't raise it.
 GROUND_LOCATIONS = {"PlanetOnFoot", "PlanetInVehicle"}
 # Built objects that stand on the ground give heights at bases too.
 GROUND_KINDS = {"extractor-mineral", "extractor-gas", "depot", "power", "computer", "teleporter"}
@@ -140,6 +142,9 @@ class Elevation:
     def __init__(self):
         self.samples: dict = {}     # address -> [rel]
         self.radius: dict = {}      # address -> nominal radius
+        self.water: dict = {}       # address -> water surface above the nominal radius (absent: no sea seen)
+        self.anchor: dict = {}      # address -> first surface sample: the centre of a base-less planet's map
+        self.visited: dict = {}     # address -> the mod's ua dict, for naming base-less planets
         self._pos: dict = {}
 
     def refresh(self):
@@ -160,14 +165,52 @@ class Elevation:
                     continue
                 if address is None:
                     continue
-                dfp = s.get("distance_from_planet")
-                if dfp is not None and dfp < 20000:
-                    self.radius[address] = round(math.hypot(*rel) - dfp)
-                if s.get("location") in GROUND_LOCATIONS:
-                    self.samples.setdefault(address, []).append(rel)
+                self.add(address, s)
+
+    def add(self, address, s):
+        """One sample (from a trail line, or the latest live.json)."""
+        rel = s["rel"]
+        dfp = s.get("distance_from_planet")
+        if dfp is not None and dfp < 20000:
+            self.radius[address] = round(math.hypot(*rel) - dfp)
+            self.anchor.setdefault(address, rel)
+            self.visited.setdefault(address, s.get("ua"))
+            if s.get("sealevel"):
+                self.water[address] = s["sealevel"]
+        if s.get("location") in GROUND_LOCATIONS:
+            self.samples.setdefault(address, []).append(rel)
+
+
+def _mine(bases, address):
+    return [b for b in bases if maps._addr(b.get("GalacticAddress")) == address and b.get("Position")
+            and (b.get("BaseType") or {}).get("PersistentBaseTypes") not in maps.SKIP_BASES]
 
 
 class Live:
+    def projection(self, bases, address):
+        """The planet map's projection: centred on the bases, or for a planet
+        without bases on where the player first arrived (stable across visits)."""
+        mine = _mine(bases, address)
+        if mine:
+            return maps.planet_projection(mine)
+        if address in self.elev.anchor and address in self.elev.radius:
+            return maps.Projection(self.elev.anchor[address], self.elev.radius[address])
+        return None
+
+    def visited_planets(self, bases) -> list:
+        """/api/map entries for planets visited with the mod that have no bases."""
+        self.elev.refresh()
+        with_bases = {maps._addr(b.get("GalacticAddress")) for b in bases}
+        out = []
+        for address, ua in self.elev.visited.items():
+            if address in with_bases or address not in self.elev.radius:
+                continue
+            ua = ua or {}
+            out.append({"address": f"0x{address:X}", "radius": self.elev.radius[address],
+                        "label": f"Planet {ua.get('planet', '?')} of system {ua.get('system', '?')} (no bases)",
+                        "bases": [], "points": [], "layouts": {}, "visited": True})
+        return out
+
     def __init__(self):
         self.trail = Trail()
         self.elev = Elevation()
@@ -214,7 +257,11 @@ class Live:
                         and (b.get("BaseType") or {}).get("PersistentBaseTypes") not in maps.SKIP_BASES]
         mine = [b for b in planet_bases if maps._addr(b.get("GalacticAddress")) == address]
         surface = sample.get("in_atmosphere") or sample.get("distance_from_planet", 1e9) <= 20000
-        if address is None or not mine or not rel or not at or not surface:
+        if address is not None and rel and surface:
+            self.elev.refresh()
+            self.elev.add(address, sample)        # the first moments on a new planet may not be in the trail yet
+        proj = self.projection(bases, address) if address is not None else None
+        if address is None or proj is None or not rel or not at or not surface:
             out["on_planet"] = False
             # bases elsewhere in this star system (same address with the planet bits cleared)
             system = None if address is None else address & ~(0xF << 52)
@@ -231,9 +278,9 @@ class Live:
                 out["why"] = "on a planet with no bases" + (f" · bases in this system: {', '.join(here)}" if here else "")
             return out
         out["on_planet"] = True
+        out["has_bases"] = bool(mine)
         up = _norm(rel)
         heading = heading_deg(up, at)
-        proj = maps.planet_projection(mine)
         x, y = proj.xy(rel)
         lat, lon = maps.latlon(rel)
         out["player"] = {"x": round(x, 1), "y": round(y, 1), "heading": None if heading is None else round(heading, 1),
@@ -296,16 +343,14 @@ class Live:
         """Ground height above sea level in square cells of `cell` metres, on the
         planet projection or (with `base`) the base's layout frame."""
         self.elev.refresh()
-        mine = [b for b in bases if maps._addr(b.get("GalacticAddress")) == address and b.get("Position")
-                and (b.get("BaseType") or {}).get("PersistentBaseTypes") not in maps.SKIP_BASES]
-        if not mine:
-            return {"error": "no bases on this planet", "cells": []}
+        mine = _mine(bases, address)
         radius = self.elev.radius.get(address)
         if radius is None:
-            return {"error": "sea level not known yet: visit this planet with the live_position mod running",
+            return {"error": "not known until you visit this planet with the live_position mod running",
                     "cells": []}
         trail = self.elev.samples.get(address, [])
-        key = (address, base, cell, len(trail), id(bases))
+        water = self.elev.water.get(address)
+        key = (address, base, cell, len(trail), id(bases), water)
         if key == self._grid_key:
             return self._grid
         if base:
@@ -315,8 +360,7 @@ class Live:
                 return {"error": f"no layout for {base}", "cells": []}
             to_xy = lambda w: frame[1](maps.world_to_local(b, frame[0], w))[:2]  # noqa: E731
         else:
-            proj = maps.planet_projection(mine)
-            to_xy = proj.xy
+            to_xy = self.projection(bases, address).xy
         objs = [o[4] for o in self._objects(bases).get(address, []) if o[2] in GROUND_KINDS]
         grid: dict = {}
         for w in list(trail) + objs:
@@ -325,8 +369,11 @@ class Live:
             h = math.hypot(*w) - radius
             if k not in grid or h < grid[k]:
                 grid[k] = h
+        # heights are from the water surface when the planet has one, else from the nominal radius
+        ref = water or 0.0
+        grid = {k: h - ref for k, h in grid.items()}
         hs = list(grid.values())
-        out = {"cell": cell, "radius": radius, "samples": len(trail), "objects": len(objs),
+        out = {"cell": cell, "radius": radius, "water": water, "samples": len(trail), "objects": len(objs),
                "min": round(min(hs), 1) if hs else None, "max": round(max(hs), 1) if hs else None,
                "cells": [[i, j, round(h, 1)] for (i, j), h in grid.items()], "error": None}
         self._grid_key, self._grid = key, out
