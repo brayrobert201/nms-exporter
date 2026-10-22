@@ -164,6 +164,7 @@ const KIND = {
   "hotspot-gas":       { label: "Gas hotspot",       colour: "--series-3", r: 1.6 },
   "hotspot-power":     { label: "Power hotspot",     colour: "--series-4", r: 1.6 },
   "deposit-find":      { label: "Resource deposit",  colour: "--ink-2",    r: 1.2 },
+  "mark":              { label: "Your mark",         colour: "--ink-1",    r: 1.2 },
 };
 const findKind = (k) => k === "deposit" ? "deposit-find" : k;
 const SEG = { pipe: { colour: "--ink-muted", w: 0.5, label: "Pipe" },
@@ -580,7 +581,7 @@ async function loadFinds() {
 function findPos(f) { return base ? (f.e === undefined ? null : [f.e, f.n]) : [f.x, f.y]; }
 function findTitle(f) {
   const k = (f.class ? `Class ${f.class} ` : "") + KIND[findKind(f.kind)].label.replace(/^./, c => f.class ? c.toLowerCase() : c);
-  return f.kind === "deposit" ? `${f.resource} deposit` : `${k}${f.resource ? ` · ${f.resource}` : ""}`;
+  return f.kind === "mark" ? `Your mark: ${f.name}` : f.kind === "deposit" ? `${f.resource} deposit` : `${k}${f.resource ? ` · ${f.resource}` : ""}`;
 }
 
 function drawFinds() {
@@ -594,6 +595,16 @@ function drawFinds() {
     const kind = findKind(f.kind), p = findPos(f);
     if (!p || hiddenKinds.has(kind)) continue;
     const c = css(KIND[kind].colour);
+    if (kind === "mark") {             // a flag on a pole, with its name (/mark in game chat)
+      el("path", { d: `M ${p[0]} ${-p[1]} v ${-16 * k} l ${10 * k} ${4 * k} l ${-10 * k} ${4 * k}`, fill: css("--ink-1"),
+        stroke: css("--page"), "stroke-width": 1.5 * k, "stroke-linejoin": "round" }, g);
+      const t = el("text", { x: p[0] + 12 * k, y: -p[1] - 8 * k, "font-size": 12 * k, fill: css("--ink-1"), stroke: css("--page"),
+        "stroke-width": 3 * k, "paint-order": "stroke", "data-x": p[0], "data-y": p[1] }, g);
+      t.textContent = f.name;
+      const hitm = el("circle", { cx: p[0], cy: -p[1] - 8 * k, r: 14 * k, fill: "transparent", cursor: "pointer" }, hits);
+      hitm.addEventListener("click", (ev) => { ev.stopPropagation(); showFind(f, p); });
+      continue;
+    }
     if (kind !== "deposit-find")      // the area an extractor must be inside to draw from the hotspot
       el("circle", { cx: p[0], cy: -p[1], r: reach(f), fill: "none", stroke: c, "stroke-width": 1.5 * k,
         "stroke-dasharray": `${6 * k} ${5 * k}`, opacity: 0.55 }, g);
@@ -620,7 +631,7 @@ function showFind(f, p) {
   const P = $("panel");
   selected = p; drawSel();
   const rows = [`<b>${findTitle(f)}</b>`];
-  if (f.kind !== "deposit") {
+  if (f.kind.startsWith("hotspot")) {
     if (f.kind !== "hotspot-power") {
       rows.push(f.resource ? `Resource: <b>${f.resource}</b>` : "Resource: not known yet");
       if (f.basis) rows.push(`<span style="color:var(--ink-muted)">${f.basis}</span>`);
@@ -924,7 +935,7 @@ function drawNearby() {
   if (collapsed) { N.innerHTML = rows.join(""); $("nearbyhead").onclick = toggleNearby; return; }
   for (const r of live.nearby) {
     const oneBase = planet && planet.bases.length === 1;
-    const isFind = r.kind.startsWith("hotspot") || r.kind === "deposit";
+    const isFind = r.kind.startsWith("hotspot") || r.kind === "deposit" || r.kind === "mark";
     const name = r.kind === "base" ? r.base : isFind ? `${KIND[findKind(r.kind)].label} <small>${r.base}</small>`
       : `${(KIND[r.kind] || {}).label || r.kind}${oneBase ? "" : ` <small>${r.base}</small>`}`;
     rows.push(`<div class="row${target && target.key === r.key ? " on" : ""}" data-key="${r.key.replace(/"/g, "&quot;")}" data-label="${(r.kind === "base" ? r.base : `${(KIND[isFind ? findKind(r.kind) : r.kind] || {}).label || r.kind} · ${r.base}`).replace(/"/g, "&quot;")}">`

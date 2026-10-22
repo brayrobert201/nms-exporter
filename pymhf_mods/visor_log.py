@@ -12,6 +12,13 @@ Hooks (all matched NMS.exe 181442 in the offline signature scan):
   cGcBinoculars::SetMarker             the player tagging something
   cGcMarkerList::TryAddMarker / RemoveMarker  every marker the game places or clears
   cGcPlayerEnvironment::Update         (1 s) where the player is, for context
+  cGcTextChatInput::ParseTextForCommands  chat commands (below)
+
+Chat commands (typed in the game's text chat; the line is replaced by a reply):
+  /hs S silver     what the visor says about the hotspot you stand on: class
+                   and/or resource, either may be left out. The exporter
+                   attaches it to the nearest hotspot within 50 m.
+  /mark Ammonia field   a named point at your position, shown on the map
 
 Reads only fields of the structs passed in; no pointer is followed. Marker
 positions are logged raw (cTkPhysRelVec3 local + offset) and as local + offset
@@ -178,6 +185,36 @@ class VisorLog(Mod):
             row["rel"] = [round(a - b, 2) for a, b in zip(w, self._player["planet_pos"])]
             row["dist_from_player"] = round(math.dist(w, self._player["pos"]), 1)
         self._write(kind, **row)
+
+    # --- chat commands ---
+    @nms.cGcTextChatInput.ParseTextForCommands.before
+    def on_chat(self, this, lMessageText):
+        def go():
+            msg = str(lMessageText.contents).strip()
+            low = msg.lower()
+            if not (low.startswith("/hs") or low.startswith("/mark")):
+                return
+            p = self._player
+            rel = [round(a - b, 2) for a, b in zip(p["pos"], p["planet_pos"])] if p else None
+            if low.startswith("/hs"):
+                words = msg.split()[1:]
+                cls = next((w.upper() for w in words if w.upper() in ("C", "B", "A", "S")), None)
+                res = " ".join(w for w in words if w.upper() not in ("C", "B", "A", "S")) or None
+                self._write("label", rel=rel, **{"class": cls, "resource": res})
+                reply = "Noted for the nearest hotspot: " + " ".join(x for x in (f"class {cls}" if cls else "", res or "") if x)
+            else:
+                name = msg[len("/mark"):].strip() or "mark"
+                self._write("mark", name=name, rel=rel)
+                reply = f"Marked {name!r} on the map"
+            if rel is None:
+                reply += " (position not known yet: try again in a second)"
+            lMessageText.contents.set(reply)
+        if lMessageText:
+            try:
+                go()
+            except Exception as e:
+                logger.exception("chat command failed")
+                self._write("chat_error", error=repr(e))
 
     @nms.cGcMarkerList.TryAddMarker.before
     def on_add_marker(self, this, lPoint, lbUpdateTime):

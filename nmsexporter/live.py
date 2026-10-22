@@ -340,7 +340,8 @@ class Live:
         hs = (tables.get("extraction") or {}).get("hotspots") or {}
         ranges = {"hotspot-mineral": (hs.get("Mineral1") or {}).get("range_m"), "hotspot-gas": (hs.get("Gas1") or {}).get("range_m"),
                   "hotspot-power": (hs.get("Power") or {}).get("range_m")}
-        return {"finds": out, "range_m": ranges["hotspot-mineral"], "ranges": ranges}
+        return {"finds": out, "range_m": ranges["hotspot-mineral"], "ranges": ranges,
+                "unmatched_labels": self.finds.chat_labels(address)[1]}
 
     def build(self, bases: list, base: str | None = None, target: str | None = None, trail_s: float = 6 * 3600,
               items: dict | None = None, tables: dict | None = None) -> dict:

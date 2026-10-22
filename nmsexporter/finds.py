@@ -17,7 +17,13 @@ Which substance a hotspot gives is not in the marker:
   The map lists the three until the player records which (POST /api/finds/class).
 The class (C/B/A/S) is not in the marker at all: a class B power and a class S
 gas marker differ only in position, label and type. The player records it
-from the visor (POST /api/finds/class), kept in LIVE_DIR/find_labels.json.
+from the visor, either on the map (POST /api/finds/class, kept in
+LIVE_DIR/find_labels.json) or in game with the chat command `/hs S silver`
+(visor_log writes a "label" event with the player's position; it applies to
+the nearest hotspot within CHAT_LABEL_M). Chat labels stay in the log and are
+never copied into find_labels.json; per field, the newer of the two wins, so
+a correction on the map is not undone by replaying an older chat label.
+`/mark name` adds a named point ("mark" finds).
 
 Planet facts (biome, substances) come from live.json's weather block and are
 kept in LIVE_DIR/planets.json so they outlive both the visit and an exporter
@@ -28,11 +34,13 @@ from __future__ import annotations
 import bisect
 import glob
 import json
+import math
 import os
 
 TYPES = {"MineralHotspot": "hotspot-mineral", "GasHotspot": "hotspot-gas", "PowerHotspot": "hotspot-power",
          "TerrainResource": "deposit"}
 MERGE_M = 5.0
+CHAT_LABEL_M = 50.0
 
 
 class Finds:
@@ -41,6 +49,7 @@ class Finds:
         self._pos: dict = {}
         self.rows: dict = {}          # (address, kind, rounded position) -> find
         self._pending: list = []      # marker rows seen before the trail covered their time
+        self.chat: list = []          # /hs labels: {"address", "rel", "t", "class", "resource"}
         self.planets: dict = {}       # address (int) -> planet facts
         self.labels: dict = {}        # find key -> {"class": "B"}
         try:
@@ -87,7 +96,8 @@ class Finds:
                     r = json.loads(line)
                 except ValueError:
                     continue
-                if r.get("event") == "marker_add" and r.get("type") in TYPES and r.get("rel"):
+                if (r.get("event") == "marker_add" and r.get("type") in TYPES and r.get("rel")) \
+                        or (r.get("event") in ("label", "mark") and r.get("rel")):
                     new.append(r)
         times = [t for t, _ in timeline]
         for r in new:
@@ -96,11 +106,15 @@ class Finds:
                 self._pending.append(r)
                 continue
             address = timeline[i][1]
-            kind = TYPES[r["type"]]
+            if r["event"] == "label":
+                self.chat.append({"address": address, "rel": r["rel"], "t": r["t"],
+                                  "class": r.get("class"), "resource": r.get("resource")})
+                continue
+            kind = "mark" if r["event"] == "mark" else TYPES[r["type"]]
             key = (address, kind) + tuple(round(c / MERGE_M) for c in r["rel"])
             f = self.rows.get(key)
             if f is None:
-                self.rows[key] = {"kind": kind, "name": r.get("name"), "w": r["rel"], "address": address,
+                self.rows[key] = {"kind": kind, "name": r.get("name"), "w": list(r["rel"]), "address": address,
                                   "first": r["t"], "last": r["t"], "raw": r.get("raw")}
             else:
                 f["last"] = max(f["last"], r["t"])
@@ -141,6 +155,8 @@ class Finds:
         name = lambda i: (items.get(i) or {}).get("name") or i  # noqa: E731
         planet = self.planets.get(f["address"]) or {}
         subs = planet.get("substances") or []
+        if f["kind"] == "mark":
+            return {"resource": f["name"], "basis": "your mark (/mark)"}
         if f["kind"] == "deposit":
             return {"resource": (f["name"] or "").replace(" Deposit", "") or None, "basis": "the deposit's name"}
         if f["kind"] == "hotspot-power":
@@ -158,17 +174,43 @@ class Finds:
                     "basis": "one of the planet's three resources; the visor says which"}
         return {"resource": None, "basis": "planet resources not known yet"}
 
+    def chat_labels(self, address: int) -> tuple[dict, list]:
+        """{find key: {field: (t, value)}} from /hs commands on this planet, and those
+        that found no hotspot within CHAT_LABEL_M."""
+        hotspots = [f for f in self.rows.values() if f["address"] == address and f["kind"].startswith("hotspot")]
+        out: dict = {}
+        unmatched = []
+        for c in self.chat:
+            if c["address"] != address:
+                continue
+            near = min(hotspots, key=lambda f: math.dist(f["w"], c["rel"]), default=None)
+            if near is None or math.dist(near["w"], c["rel"]) > CHAT_LABEL_M:
+                unmatched.append({"t": c["t"], "class": c["class"], "resource": c["resource"]})
+                continue
+            fields = out.setdefault(self.key(near), {})
+            for k in ("class", "resource"):
+                if c.get(k) and (k not in fields or fields[k][0] < c["t"]):
+                    fields[k] = (c["t"], c[k])
+        return out, unmatched
+
     def for_planet(self, address: int, tables: dict) -> list:
         ext = tables.get("extraction") or {}
         rate = ext.get("items_per_hour_by_class") or {}
         power = ((ext.get("hotspots") or {}).get("Power") or {}).get("class_strength") or {}
+        chat, _ = self.chat_labels(address)
         out = []
         for f in self.rows.values():
             if f["address"] != address:
                 continue
             key = self.key(f)
-            lab = self.labels.get(key) or {}
+            lab = dict(self.labels.get(key) or {})
             res = self.resource(f, tables)
+            for k, (t, v) in chat.get(key, {}).items():      # newer of map and chat wins, per field
+                if k not in lab or lab.get("t", 0) < t:
+                    if k == "resource":
+                        # "nit" -> Nitrogen: match what this hotspot can give
+                        v = next((o for o in res.get("options") or [] if o.lower().startswith(v.lower())), v.title())
+                    lab[k] = v
             if lab.get("resource"):
                 res.update(resource=lab["resource"], basis="recorded by you from the visor")
             out.append({"kind": f["kind"], "name": f["name"], "w": [round(c, 1) for c in f["w"]], "key": key,
