@@ -69,6 +69,11 @@ button.on { border-color: var(--ink-1); }
 .mapctl { position: absolute; left: 12px; top: 64px; display: flex; flex-direction: column; gap: 6px; }
 .mapctl button { width: 38px; height: 38px; padding: 0; font-size: 20px; line-height: 1; background: var(--surface-1); }
 .mapctl button:disabled { color: var(--ink-muted); cursor: default; }
+.away { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); max-width: min(560px, calc(100% - 120px));
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px;
+  color: var(--ink-2); font-size: 14px; text-align: center; z-index: 4; }
+.away b { color: var(--ink-1); }
+.away button { margin-left: 8px; padding: 3px 10px; }
 .tip { position: absolute; pointer-events: none; background: var(--surface-2); border: 1px solid var(--border);
   border-radius: 8px; padding: 4px 8px; font-size: 13px; color: var(--ink-1); white-space: nowrap; z-index: 5; }
 footer button.chip { background: none; border: 0; padding: 2px 4px; color: var(--ink-2); font-size: 13px; border-radius: 6px; }
@@ -107,6 +112,7 @@ text { font-family: system-ui, sans-serif; }
   <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
   <div class="panel" id="panel"></div>
   <div class="tip" id="tip" hidden></div>
+  <div class="away" id="away" hidden></div>
   <div class="mapctl"><button id="zin" title="Zoom in" aria-label="Zoom in">+</button><button id="zout" title="Zoom out" aria-label="Zoom out">−</button><button id="findme" title="Centre on you once" aria-label="Centre on you">◎</button></div>
   <div class="dock"><div class="issues" id="issues"></div><div class="power" id="power"></div><div class="nearby" id="nearby"></div></div>
 </main>
@@ -627,6 +633,29 @@ function rotate() {
     t.setAttribute("transform", r ? `rotate(${-r.a} ${t.dataset.x} ${-t.dataset.y})` : ""));
   drawScale();
 }
+function goToMe() {
+  const pi = data.planets.findIndex(p => p.address === live.address);
+  if (pi < 0) return false;
+  $("planet").value = pi; planet = data.planets[pi];
+  const near = (live.bases || [])[0];
+  base = near && near.dist < 300 ? near.base : planet.bases.length === 1 ? planet.bases[0] : null;
+  render();
+  return true;
+}
+window.showMe = () => { if (goToMe()) { setFollow(follow || 1); poll(); } };
+
+// Where the player is when the map can't show them: freighter, space, another planet.
+function drawAway() {
+  const A = $("away");
+  if (!live || live.state === "none" || !planet || onThisPlanet()) { A.hidden = true; return; }
+  const showing = base || planet.label;
+  const elsewhere = live.on_planet ? data.planets.find(p => p.address === live.address) : null;
+  A.innerHTML = live.on_planet
+    ? `You're on <b>${elsewhere ? elsewhere.label : "another planet"}</b>.<button onclick="showMe()">Show</button>`
+    : `You're <b>${locName(live.location).toLowerCase().replace(/^in /, "in ").replace(/^freighter$/, "on your freighter")}</b> · ${live.why}.<br>Showing ${showing} from the save.`;
+  A.hidden = false;
+}
+
 function setTarget(key, label) { target = key ? { key, label } : null; $("panel").style.display = "none"; poll(); }
 window.setTarget = setTarget;
 
@@ -744,19 +773,19 @@ async function poll() {
       const got = await r.json();
       if (seq !== pollSeq) return;
       live = got;
-      // first time we see the player on a planet with bases, show that planet (unless the URL chose one)
-      if (!placed && !userChose && live.on_planet && data) {
-        const pi = data.planets.findIndex(p => p.address === live.address);
-        if (pi >= 0) {
-          placed = true;
-          $("planet").value = pi; planet = data.planets[pi];
-          const near = (live.bases || [])[0];
-          base = near && near.dist < 300 ? near.base : planet.bases.length === 1 ? planet.bases[0] : null;
-          render(); setFollow(1);
-          return poll();
+      // Show the player's planet the first time we see them on one (unless the URL chose a view),
+      // and keep following them to other planets and bases while Centre is on.
+      if (live.on_planet && data) {
+        if (live.address !== planet.address && ((!placed && !userChose) || follow)) {
+          if (goToMe()) { placed = true; if (!follow) setFollow(1); return poll(); }
+        } else if (follow && onThisPlanet()) {
+          const near = (live.bases || [])[0], cur = (live.bases || []).find(b => b.base === base);
+          const want = near && near.dist < 300 ? near.base : base && cur && cur.dist > 1500 ? null : base;
+          if (want !== base) { base = want; render(); return poll(); }
         }
       }
       drawPill();
+      drawAway();
       $("findme").disabled = !me();
       if (follow) centreOnMe();
       drawLive();

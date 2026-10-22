@@ -210,12 +210,25 @@ class Live:
         address = ua_int(sample.get("ua"))
         out["address"] = f"0x{address:X}" if address is not None else None
         rel, at = sample.get("rel"), sample.get("at")
-        mine = [b for b in bases if maps._addr(b.get("GalacticAddress")) == address and b.get("Position")
-                and (b.get("BaseType") or {}).get("PersistentBaseTypes") not in maps.SKIP_BASES]
-        if not mine or not rel or not at or not sample.get("in_atmosphere") and sample.get("distance_from_planet", 1e9) > 20000:
+        planet_bases = [b for b in bases if b.get("Position")
+                        and (b.get("BaseType") or {}).get("PersistentBaseTypes") not in maps.SKIP_BASES]
+        mine = [b for b in planet_bases if maps._addr(b.get("GalacticAddress")) == address]
+        surface = sample.get("in_atmosphere") or sample.get("distance_from_planet", 1e9) <= 20000
+        if address is None or not mine or not rel or not at or not surface:
             out["on_planet"] = False
-            out["why"] = ("no address yet" if address is None else
-                          "no bases on this planet" if not mine else "not near the planet surface")
+            # bases elsewhere in this star system (same address with the planet bits cleared)
+            system = None if address is None else address & ~(0xF << 52)
+            here = sorted({b.get("Name") or "base" for b in planet_bases
+                           if system is not None and (maps._addr(b.get("GalacticAddress")) or 0) & ~(0xF << 52) == system})
+            out["system_bases"] = here
+            dfp = sample.get("distance_from_planet")
+            if address is None:
+                out["why"] = "waiting for the game to report where you are"
+            elif not surface:
+                out["why"] = (f"{dfp / 1000:.0f} km from the nearest planet" if dfp is not None else "in space") + (
+                    f" · bases in this system: {', '.join(here)}" if here else " · no bases in this system")
+            else:
+                out["why"] = "on a planet with no bases" + (f" · bases in this system: {', '.join(here)}" if here else "")
             return out
         out["on_planet"] = True
         up = _norm(rel)
