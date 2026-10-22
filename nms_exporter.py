@@ -139,6 +139,13 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(map_html(), "text/html; charset=utf-8")
             if path == "/healthz":
                 return self._send(b"ok", "text/plain")
+            if path == "/" and "text/html" in (self.headers.get("Accept") or ""):
+                # a browser at the bare hostname (nms-map.bobs.toys) gets the map
+                self.send_response(302)
+                self.send_header("Location", "/map")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
             if path == "/":
                 return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /map /api/map /api/live /api/elevation /api/finds /systems /api/systems /healthz\n", "text/plain")
             self._send(b"not found", "text/plain", 404)
