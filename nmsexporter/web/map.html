@@ -649,10 +649,27 @@ function drawFinds() {
   if (!finds) return;
   const k = px();
   const reach = (f) => ((finds.ranges || {})[f.kind] || finds.range_m || [190])[0];
+  // Zoomed out, finds closer than 26 screen px group under the most important one with a count
+  // (recorded hotspots, then other hotspots, then deposits); tapping a group zooms in. Marks stay single.
+  const pri = (f) => f.kind.startsWith("hotspot") ? (f.class ? 3 : 2) : 1;
+  const groups = [];
+  for (const f of [...finds.finds].sort((a, b) => pri(b) - pri(a))) {
+    const kind = findKind(f.kind), p = findPos(f);
+    if (!p || hiddenKinds.has(kind) || kind === "mark") continue;
+    const gp = groups.find(q => Math.hypot(q.p[0] - p[0], q.p[1] - p[1]) / k < 26);
+    if (gp) gp.members.push(p); else groups.push({ p, seed: f, members: [p] });
+  }
+  const groupOf = new Map(groups.map(gp => [gp.seed, gp]));
   for (const f of finds.finds) {
     const kind = findKind(f.kind), p = findPos(f);
     if (!p || hiddenKinds.has(kind)) continue;
     const c = css(KIND[kind].colour);
+    const gp = groupOf.get(f), member = kind !== "mark" && !gp;
+    if (member) {                     // drawn as part of a group: keep only a hotspot's reach ring
+      if (kind !== "deposit-find") el("circle", { cx: p[0], cy: -p[1], r: reach(f), fill: "none", stroke: c, "stroke-width": 1.5 * k,
+        "stroke-dasharray": `${6 * k} ${5 * k}`, opacity: 0.35 }, g);
+      continue;
+    }
     if (kind === "mark" && ICONS) {
       icon(g, p[0], p[1], "custommarker", 26);
       const t = el("text", { x: p[0] + 16 * k, y: -p[1] + 4 * k, "font-size": 12 * k, fill: css("--ink-1"), stroke: css("--page"),
@@ -682,6 +699,23 @@ function drawFinds() {
       el("path", { d: kind === "deposit-find" ? `M ${p[0] - s} ${-p[1] - s} h ${2 * s} v ${2 * s} h ${-2 * s} Z`
           : `M ${p[0]} ${-p[1] - s * 1.3} L ${p[0] + s} ${-p[1]} L ${p[0]} ${-p[1] + s * 1.3} L ${p[0] - s} ${-p[1]} Z`,
         fill: c, stroke: css("--page"), "stroke-width": 1.5 * k }, g);
+    }
+    if (gp && gp.members.length > 1) {    // count badge; tap to zoom to the group
+      const n = gp.members.length, bx = p[0] + 11 * k, by = -p[1] - 11 * k;
+      el("circle", { cx: bx, cy: by, r: 8.5 * k, fill: css("--ink-1"), stroke: css("--page"), "stroke-width": 1.5 * k }, g);
+      const t = el("text", { x: bx, y: by + 3.8 * k, "font-size": 10.5 * k, "font-weight": 700, "text-anchor": "middle", fill: css("--page") }, g);
+      t.textContent = n;
+      const xs = gp.members.map(m => m[0]), ys = gp.members.map(m => m[1]);
+      const hitg = el("circle", { cx: p[0], cy: -p[1], r: 16 * k, fill: "transparent", cursor: "zoom-in" }, hits);
+      hitg.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 40);
+        if (follow) setFollow(0);
+        zoomTo((Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2, span * 4);
+      });
+      hitg.addEventListener("pointerenter", (ev) => { if (ev.pointerType === "mouse") tip(`${n} finds here · tap to zoom in`, ev); });
+      hitg.addEventListener("pointerleave", () => { $("tip").hidden = true; });
+      continue;
     }
     if (kind !== "deposit-find") {
       // class and resource beside the diamond; data-x/y let facing-up mode keep it upright
@@ -858,8 +892,12 @@ function drawElevation() {
     img.data[4 * k + 2] = Math.min(255, rgb[2] * lit); img.data[4 * k + 3] = 235 * a[k];
   }
   ctx.putImageData(img, 0, 0);
-  el("image", { href: cv.toDataURL(), x: T.x0, y: -T.y1, width: W * res, height: H * res, preserveAspectRatio: "none",
-    style: "image-rendering:auto" }, g);
+  // upsample 3x with a light blur, so the surface reads as ground rather than tiles
+  const up = document.createElement("canvas"); up.width = W * 3; up.height = H * 3;
+  const u = up.getContext("2d");
+  u.imageSmoothingEnabled = true; u.imageSmoothingQuality = "high"; u.filter = "blur(2px)";
+  u.drawImage(cv, 0, 0, up.width, up.height);
+  el("image", { href: up.toDataURL(), x: T.x0, y: -T.y1, width: W * res, height: H * res, preserveAspectRatio: "none" }, g);
   drawContours(g, T);
 }
 
@@ -1135,8 +1173,10 @@ try { collapsed = localStorage.getItem("nms-nearby-collapsed") === "1"; } catch 
 function toggleNearby() {
   collapsed = !collapsed;
   try { localStorage.setItem("nms-nearby-collapsed", collapsed ? "1" : "0"); } catch (e) { /* not remembered */ }
+  const fitted = view === fittedView;
   drawNearby();
   if (follow) centreOnMe();
+  else if (fitted) { const p = $("panel").style.display; render(); $("panel").style.display = p; }   // the panel's space changed
 }
 
 let polling = null, pollSeq = 0, reloadedFor = null, reloadedAt = 0;
