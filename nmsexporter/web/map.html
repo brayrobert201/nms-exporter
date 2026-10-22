@@ -65,6 +65,14 @@ svg.dragging { cursor: grabbing; }
 .goto button { padding: 2px 8px; }
 .livepill { color: var(--ink-2); font-size: 13px; }
 button.on { border-color: var(--ink-1); }
+.viewmenu { position: relative; }
+.viewmenu summary { list-style: none; cursor: pointer; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 10px; }
+.viewmenu summary::-webkit-details-marker { display: none; }
+.viewmenu > div { position: absolute; z-index: 10; top: calc(100% + 4px); left: 0; background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: 10px; padding: 6px 4px; min-width: 200px; }
+.viewmenu label { display: flex; gap: 10px; align-items: center; padding: 7px 10px; cursor: pointer; color: var(--ink-1); }
+.viewmenu input { width: 18px; height: 18px; accent-color: var(--ink-2); }
 .issues div { cursor: pointer; padding: 3px 0; color: var(--ink-2); }
 .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 13px; font-weight: 600;
   background: var(--surface-2); border: 1px solid currentColor; margin-right: 6px; }
@@ -81,7 +89,7 @@ text { font-family: system-ui, sans-serif; }
   <select id="planet" aria-label="Planet"></select>
   <span class="crumbs" id="crumbs"></span>
   <button id="fit" title="Fit to screen">Fit</button>
-  <button id="heights" class="on" title="Ground height above sea level, from where you've walked">Heights</button>
+  <details class="viewmenu" id="viewmenu"><summary>Show ▾</summary><div id="viewopts"></div></details>
   <button id="follow" title="Centre on you: off, north up, facing up">Centre</button>
   <span class="livepill" id="livepill"></span>
   <span class="note" id="note"></span>
@@ -339,7 +347,8 @@ function drawScale() {
   const r = typeof rotation === "function" ? rotation() : null;
   const na = el("g", r ? { transform: `rotate(${r.a} ${ax} ${ay - 2 * k})` } : {}, s);
   el("path", { d: `M ${ax} ${ay - 18 * k} L ${ax - 6 * k} ${ay} L ${ax + 6 * k} ${ay} Z`, fill: css("--ink-2") }, na);
-  const n = el("text", { x: ax - 4 * k, y: ay + 16 * k, fill: css("--ink-2"), "font-size": 12 * k }, na);
+  const n = el("text", { x: ax - 4 * k, y: ay + 16 * k, fill: css("--ink-2"), "font-size": 12 * k,
+    ...(r ? { transform: `rotate(${-r.a} ${ax} ${ay + 12 * k})` } : {}) }, na);
   n.textContent = data && data.north_verified ? "N" : "N?";
 }
 
@@ -407,13 +416,32 @@ async function load() {
   base = want && planet.bases.includes(want) ? want : wantPlanet ? null : planet.bases.length === 1 ? planet.bases[0] : null;
   $("note").textContent = data.north_verified ? "" : "North and east/west not yet checked against the in-game compass";
   render();
+  applyView();
   poll();
 }
+
+// ---- what to show: remembered per device ----
+const VIEW = [["heights", "Heights"], ["trail", "Your trail"], ["power", "Power card"], ["nearby", "Nearby list"],
+  ["issues", "Problems list"], ["legend", "Legend"]];
+let shown = Object.fromEntries(VIEW.map(([k]) => [k, true]));
+try { Object.assign(shown, JSON.parse(localStorage.getItem("nms-map-show") || "{}")); } catch (e) { /* defaults */ }
+function applyView() {
+  $("power").hidden = !shown.power; $("nearby").hidden = !shown.nearby; $("issues").hidden = !shown.issues;
+  $("legend").hidden = !shown.legend;
+  showHeights = shown.heights;
+  drawElevation(); drawLive(); legendHeights();
+}
+$("viewopts").innerHTML = VIEW.map(([k, label]) => `<label><input type="checkbox" data-k="${k}"${shown[k] ? " checked" : ""}> ${label}</label>`).join("");
+$("viewopts").addEventListener("change", (e) => {
+  shown[e.target.dataset.k] = e.target.checked;
+  try { localStorage.setItem("nms-map-show", JSON.stringify(shown)); } catch (err) { /* not remembered */ }
+  applyView();
+});
+document.addEventListener("pointerdown", (e) => { if (!$("viewmenu").contains(e.target)) $("viewmenu").open = false; });
 
 // ---- ground heights (/api/elevation): lowest sample per cell, metres above sea level ----
 let elev = null, showHeights = true, elevTimer = null;
 const SEQ = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => `--seq-${i}`);
-$("heights").onclick = () => { showHeights = !showHeights; $("heights").classList.toggle("on", showHeights); drawElevation(); legendHeights(); };
 
 async function loadElevation() {
   clearTimeout(elevTimer);
@@ -515,7 +543,7 @@ function drawLive() {
   const m = me();
   if (!m) return;
   const k = px(), stale = live.state !== "live";
-  if (m.trail && m.trail.length > 1)
+  if (shown.trail && m.trail && m.trail.length > 1)
     el("polyline", { points: m.trail.map(p => `${p[0]},${-p[1]}`).join(" "), fill: "none", stroke: css("--ink-muted"),
       "stroke-width": 2 * k, "stroke-linejoin": "round", "stroke-linecap": "round", opacity: 0.8 }, g);
   const t = live.target;
