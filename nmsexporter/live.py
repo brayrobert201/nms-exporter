@@ -191,8 +191,8 @@ def _mine(bases, address):
 # Measured 2026-10-22 on an Extreme humid planet with StormFrequency Low: warning
 # 25.0 s, build-up 20.1 s, storm 315.0 s, clearing 20.0 s. 315 s is outside the
 # Low length (120-180) and inside High (150-320), so storm length excludes the
-# transitions and an Extreme planet appears to use the High length; its gap is
-# taken as ExtremeFallback (240-620 s) until the next storm confirms it.
+# transitions and an Extreme planet appears to use the High length. The next
+# storm came 359 s after the first cleared, fitting the ExtremeFallback gap.
 STORM_WARNING_S = 25
 STORM_TRANSITION_S = 20
 STORM_TIMING = {"Low": {"length": (120, 180), "between": (900, 2400)},

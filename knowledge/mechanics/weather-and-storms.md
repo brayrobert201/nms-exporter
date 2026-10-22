@@ -48,11 +48,16 @@ clearing 20.0 s. The storm length excludes the transitions, and 315 s fits the
 High range (150-320), not Low (120-180): an Extreme planet appears to use the
 High length.
 
+The next storm went from Inactive to Active 359 s after the first cleared,
+with no Warning or TransitionIn logged (the player was inside the corvette).
+A gap of 314-359 s fits ExtremeFallback (240-620 s) and not Low (900-2400 s).
+
 ## Scope and caveats
 
-- One storm. Whether Extreme planets also use the ExtremeFallback gap
-  (240-620 s) instead of Low (900-2400 s) is not established; the next gap
-  will tell.
+- Two storms on one planet. An Extreme planet appears to use the High storm
+  length and the ExtremeFallback gap whatever its StormFrequency.
+- A storm can reach Active without Warning or TransitionIn being reported
+  (seen once, from inside the corvette); why is not established.
 - The HUD's current hazard readings are not these table values alone: 18.6 C
   ambient against a table value of 20, and 8.9 toxicity / 0.9 radiation where
   the tables are zero.
