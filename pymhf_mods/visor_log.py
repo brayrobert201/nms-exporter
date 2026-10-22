@@ -19,6 +19,7 @@ Chat commands (typed in the game's text chat; the line is replaced by a reply):
                    and/or resource, either may be left out. The exporter
                    attaches it to the nearest hotspot within 50 m.
   /mark Ammonia field   a named point at your position, shown on the map
+  /help            the list of these commands (also /hs or /mark on their own)
 
 Reads only fields of the structs passed in; no pointer is followed. Marker
 positions are logged raw (cTkPhysRelVec3 local + offset) and as local + offset
@@ -51,6 +52,11 @@ VISOR_IDLE_S = 0.75         # no UpdateTarget for this long = visor closed
 # class is not in the marker (2026-10-22). Kept for checking other fields.
 RAW_TYPES = {"MineralHotspot", "GasHotspot", "PowerHotspot"}
 MARKER_SIZE = 0x2B0
+# The reply to /help, in the game's chat markup (<TITLE>...<> as nmspy's textChatManager uses).
+HELP = ("<TITLE>Map commands<> (nms-exporter)\n"
+        "<TITLE>/hs S silver<>  class and/or resource of the hotspot you stand on (either can be left out)\n"
+        "<TITLE>/mark Ammonia field<>  a named flag at your position on the map\n"
+        "<TITLE>/help<>  this list")
 # SpacePoi moves every frame (879 of the first 902 lines, 2026-10-22).
 QUIET_TYPES = {"NetworkPlayer", "NetworkPlayerShip", "NetworkPlayerVehicle", "NetworkPlayerFireTeam",
                "NetworkPlayerFireTeamShip", "NetworkPlayerFireTeamFreighter", "SpacePoi"}
@@ -192,12 +198,16 @@ class VisorLog(Mod):
         def go():
             msg = str(lMessageText.contents).strip()
             low = msg.lower()
-            if not (low.startswith("/hs") or low.startswith("/mark")):
+            words = msg.split()
+            if low in ("/help", "/hs", "/mark") or low.startswith("/help "):
+                lMessageText.contents.set(HELP)        # usage, nothing recorded
+                return
+            if not (words and words[0].lower() in ("/hs", "/mark")):
                 return
             p = self._player
             rel = [round(a - b, 2) for a, b in zip(p["pos"], p["planet_pos"])] if p else None
-            if low.startswith("/hs"):
-                words = msg.split()[1:]
+            if words[0].lower() == "/hs":
+                words = words[1:]
                 cls = next((w.upper() for w in words if w.upper() in ("C", "B", "A", "S")), None)
                 res = " ".join(w for w in words if w.upper() not in ("C", "B", "A", "S")) or None
                 self._write("label", rel=rel, **{"class": cls, "resource": res})
