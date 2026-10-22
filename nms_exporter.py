@@ -58,7 +58,7 @@ class Handler(BaseHTTPRequestHandler):
         path = path.rstrip("/") or "/"
         params = dict(p.split("=", 1) for p in query.split("&") if "=" in p)
         try:
-            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases", "/api/map", "/api/live", "/api/elevation"):
+            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases", "/api/map", "/api/live", "/api/elevation", "/api/finds"):
                 collector.refresh()
             if path == "/metrics":
                 return self._send(collector.metrics().encode(), "text/plain; version=0.0.4")
@@ -80,7 +80,11 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/live":
                 return self._send(json.dumps(live.build(collector.raw_bases, unquote_plus(params.get("base", "")) or None,
                                                         unquote_plus(params.get("target", "")) or None,
-                                                        items=collector.tables.get("items"))).encode(),
+                                                        items=collector.tables.get("items"), tables=collector.tables)).encode(),
+                                  "application/json")
+            if path == "/api/finds":
+                return self._send(json.dumps(live.finds_api(collector.raw_bases, maps._addr(unquote_plus(params.get("address", ""))),
+                                                            unquote_plus(params.get("base", "")) or None, collector.tables)).encode(),
                                   "application/json")
             if path == "/api/elevation":
                 try:
@@ -95,7 +99,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/healthz":
                 return self._send(b"ok", "text/plain")
             if path == "/":
-                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /map /api/map /api/live /api/elevation /healthz\n", "text/plain")
+                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /map /api/map /api/live /api/elevation /api/finds /healthz\n", "text/plain")
             self._send(b"not found", "text/plain", 404)
         except BrokenPipeError:
             pass

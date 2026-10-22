@@ -150,7 +150,13 @@ const KIND = {
   "computer":          { label: "Base computer",     colour: "--ink-1",    r: 2.2 },
   "plants":            { label: "Plants",            colour: "--series-3", r: 1.0 },
   "structure":         { label: "Structure",         colour: "--axis",     r: 1.0 },
+  // finds from the analysis visor (pymhf_mods/visor_log.py): diamonds and squares, not circles
+  "hotspot-mineral":   { label: "Mineral hotspot",   colour: "--series-1", r: 1.6 },
+  "hotspot-gas":       { label: "Gas hotspot",       colour: "--series-3", r: 1.6 },
+  "hotspot-power":     { label: "Power hotspot",     colour: "--series-4", r: 1.6 },
+  "deposit-find":      { label: "Resource deposit",  colour: "--ink-2",    r: 1.2 },
 };
+const findKind = (k) => k === "deposit" ? "deposit-find" : k;
 const SEG = { pipe: { colour: "--ink-muted", w: 0.5, label: "Pipe" },
               wire: { colour: "--series-4", w: 0.35, dash: "1.2 0.8", label: "Wire" },
               link: { colour: "--series-7", w: 0.35, dash: "0.5 1", label: "Wire teleport" } };
@@ -202,8 +208,10 @@ function render() {
   el("g", { id: "grid" }, world);
   el("g", { id: "elev" }, world);
   const g = el("g", { id: "content" }, world);
+  el("g", { id: "finds" }, world);
   el("g", { id: "sel" }, world);
   el("g", { id: "hits" }, world);
+  el("g", { id: "findhits" }, world);      // above built objects' targets: extractors sit on their hotspot
   el("g", { id: "live" }, world);
   el("g", { id: "scale" }, svg);
   drawPower();                 // before fitting, so fit() knows what the panels cover
@@ -212,6 +220,7 @@ function render() {
   drawScale();
   crumbs();
   loadElevation();
+  loadFinds();
 }
 
 function rescale() {
@@ -227,6 +236,7 @@ function rescale() {
     t.setAttribute("x", +t.dataset.x + 10 * k); t.setAttribute("y", -t.dataset.y + (4 + (+t.dataset.dy || 0)) * k);
   });
   drawSel();
+  if (typeof drawFinds === "function") drawFinds();
   drawLive();
   if (typeof rotate === "function") rotate();
 }
@@ -413,6 +423,7 @@ function legend(kinds, segs) {
     + `<span><i style="border-radius:0;height:3px;background:${css("--ink-muted")}"></i>Your trail</span>`;
   L.querySelectorAll("button.chip").forEach(b => b.onclick = () => toggleKind(b.dataset.kind));
   if (typeof legendHeights === "function") legendHeights();
+  if (typeof legendFinds === "function") legendFinds();
 }
 
 function crumbs() {
@@ -537,6 +548,83 @@ async function load() {
   render();
   applyView();
   poll();
+}
+
+// ---- finds: hotspots and deposits seen through the analysis visor (/api/finds) ----
+let finds = null, findsTimer = null;
+async function loadFinds() {
+  clearTimeout(findsTimer);
+  if (!planet) return;
+  const want = `${planet.address}|${base}`;
+  const q = new URLSearchParams({ address: planet.address });
+  if (base) q.set("base", base);
+  try {
+    const got = await (await fetch("/api/finds?" + q, { cache: "no-store" })).json();
+    if (want === `${planet.address}|${base}`) { finds = got; drawFinds(); legendFinds(); }
+  } catch (e) { /* the layer just stays empty */ }
+  findsTimer = setTimeout(loadFinds, 15000);
+}
+
+function findPos(f) { return base ? (f.e === undefined ? null : [f.e, f.n]) : [f.x, f.y]; }
+function findTitle(f) {
+  const k = KIND[findKind(f.kind)].label;
+  return f.kind === "deposit" ? `${f.resource} deposit` : `${k}${f.resource ? ` · ${f.likely ? "likely " : ""}${f.resource}` : ""}`;
+}
+
+function drawFinds() {
+  const g = $("finds"), hits = $("findhits");
+  if (!g) return;
+  g.innerHTML = ""; hits.innerHTML = "";
+  if (!finds) return;
+  const k = px(), range = (finds.range_m || [190])[0];
+  for (const f of finds.finds) {
+    const kind = findKind(f.kind), p = findPos(f);
+    if (!p || hiddenKinds.has(kind)) continue;
+    const c = css(KIND[kind].colour);
+    if (kind !== "deposit-find")      // the area an extractor must be inside to draw from the hotspot
+      el("circle", { cx: p[0], cy: -p[1], r: range, fill: "none", stroke: c, "stroke-width": 1.5 * k,
+        "stroke-dasharray": `${6 * k} ${5 * k}`, opacity: 0.55 }, g);
+    const s = (kind === "deposit-find" ? 5 : 8) * k;
+    el("path", { d: kind === "deposit-find" ? `M ${p[0] - s} ${-p[1] - s} h ${2 * s} v ${2 * s} h ${-2 * s} Z`
+        : `M ${p[0]} ${-p[1] - s * 1.3} L ${p[0] + s} ${-p[1]} L ${p[0]} ${-p[1] + s * 1.3} L ${p[0] - s} ${-p[1]} Z`,
+      fill: c, stroke: css("--page"), "stroke-width": 1.5 * k }, g);
+    const hit = el("circle", { cx: p[0], cy: -p[1], r: 14 * k, fill: "transparent", cursor: "pointer" }, hits);
+    hit.addEventListener("click", (ev) => { ev.stopPropagation(); showFind(f, p); });
+    hit.addEventListener("pointerenter", (ev) => { if (ev.pointerType === "mouse") tip(findTitle(f), ev); });
+    hit.addEventListener("pointerleave", () => { $("tip").hidden = true; });
+  }
+}
+
+function showFind(f, p) {
+  const P = $("panel");
+  selected = p; drawSel();
+  const rows = [`<b>${findTitle(f)}</b>`];
+  if (f.kind !== "deposit") {
+    rows.push(f.resource ? `Resource: ${f.likely ? "likely " : ""}<b>${f.resource}</b>` : "Resource: not known yet");
+    if (f.basis) rows.push(`<span style="color:var(--ink-muted)">${f.basis}</span>`);
+    rows.push(f.class ? `Class ${f.class} · ${f.rates[f.class]} items/h per extractor` : "Class: not readable yet (C/B/A/S give 250/375/500/625 items/h per extractor)");
+    rows.push(`Extractors must be within ${(finds.range_m || [190])[0]} m`);
+  }
+  if (f.e !== undefined) rows.push(`${fmtDist(Math.hypot(f.e, f.n))} ${compass(bearing(f.e, f.n))} of the base computer`);
+  rows.push(`First seen ${new Date(f.first * 1000).toLocaleString()}`);
+  rows.push(`<button onclick='setTarget(${JSON.stringify("w:" + f.w.join(","))}, ${JSON.stringify(findTitle(f)).replace(/'/g, "&#39;")})'>Go to</button>`);
+  P.innerHTML = `<button class="close" onclick="closePanel()">×</button>` + rows.join("<br>");
+  P.style.display = "block";
+}
+
+function legendFinds() {
+  const L = $("legend");
+  L.querySelectorAll(".findchip").forEach(e => e.remove());
+  if (!finds || !finds.finds.length) return;
+  const kinds = [...new Set(finds.finds.map(f => findKind(f.kind)))];
+  const hl = L.querySelector(".hlegend");
+  for (const k of kinds) {
+    const b = document.createElement("button");
+    b.className = `chip findchip${hiddenKinds.has(k) ? " off" : ""}`;
+    b.innerHTML = `<i style="border-radius:${k === "deposit-find" ? "1px" : "1px;transform:rotate(45deg) scale(.85)"};background:${css(KIND[k].colour)}"></i>${KIND[k].label}`;
+    b.onclick = () => toggleKind(k);
+    L.insertBefore(b, hl);
+  }
 }
 
 // ---- what to show: remembered per device ----
@@ -790,12 +878,14 @@ function drawNearby() {
     rows.push(t.error ? `<div class="goto"><span></span><span>${target.label}: ${t.error}</span><button onclick="setTarget(null)">×</button></div>`
       : `<div class="goto">${arrow(t.turn)}<span><b>${fmtDist(t.dist)}</b> ${turnWord(t.turn)} ${height(t.h)}<br><small>${target.label} · ${compass(t.bearing)} ${Math.round(t.bearing)}°</small></span><button onclick="setTarget(null)" title="Stop navigating">×</button></div>`);
   }
-  rows.push(`<h2 id="nearbyhead" title="Show or hide the list">${collapsed ? "▸" : "▾"} Nearby you built <span>${live.state === "live" ? "arrows are relative to your facing" : "stale"}</span></h2>`);
+  rows.push(`<h2 id="nearbyhead" title="Show or hide the list">${collapsed ? "▸" : "▾"} Nearby <span>${live.state === "live" ? "arrows are relative to your facing" : "stale"}</span></h2>`);
   if (collapsed) { N.innerHTML = rows.join(""); $("nearbyhead").onclick = toggleNearby; return; }
   for (const r of live.nearby) {
     const oneBase = planet && planet.bases.length === 1;
-    const name = r.kind === "base" ? r.base : `${(KIND[r.kind] || {}).label || r.kind}${oneBase ? "" : ` <small>${r.base}</small>`}`;
-    rows.push(`<div class="row${target && target.key === r.key ? " on" : ""}" data-key="${r.key.replace(/"/g, "&quot;")}" data-label="${(r.kind === "base" ? r.base : `${(KIND[r.kind] || {}).label || r.kind} · ${r.base}`).replace(/"/g, "&quot;")}">`
+    const isFind = r.kind.startsWith("hotspot") || r.kind === "deposit";
+    const name = r.kind === "base" ? r.base : isFind ? `${KIND[findKind(r.kind)].label} <small>${r.base}</small>`
+      : `${(KIND[r.kind] || {}).label || r.kind}${oneBase ? "" : ` <small>${r.base}</small>`}`;
+    rows.push(`<div class="row${target && target.key === r.key ? " on" : ""}" data-key="${r.key.replace(/"/g, "&quot;")}" data-label="${(r.kind === "base" ? r.base : `${(KIND[isFind ? findKind(r.kind) : r.kind] || {}).label || r.kind} · ${r.base}`).replace(/"/g, "&quot;")}">`
       + `${arrow(r.turn)}<span>${name}</span><span>${fmtDist(r.dist)} <small>${height(r.h)}</small></span></div>`);
   }
   const far = (live.bases || []).filter(b => !live.nearby.some(n => n.key === b.key));

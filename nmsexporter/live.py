@@ -22,6 +22,7 @@ import time
 from collections import deque
 
 from . import maps
+from .finds import Finds
 
 LIVE_DIR = os.environ.get("NMS_LIVE_DIR", os.path.expanduser(
     "~/.local/share/Steam/steamapps/compatdata/275850/pfx/drive_c/pymhf/mod_saves/live"))
@@ -145,6 +146,7 @@ class Elevation:
         self.water: dict = {}       # address -> water surface above the nominal radius (absent: no sea seen)
         self.anchor: dict = {}      # address -> first surface sample: the centre of a base-less planet's map
         self.visited: dict = {}     # address -> the mod's ua dict, for naming base-less planets
+        self.timeline: list = []    # [(t, address)] at each change of planet, for placing visor finds
         self._pos: dict = {}
 
     def refresh(self):
@@ -169,6 +171,8 @@ class Elevation:
 
     def add(self, address, s):
         """One sample (from a trail line, or the latest live.json)."""
+        if (not self.timeline or self.timeline[-1][1] != address) and s.get("t", 0) >= (self.timeline[-1][0] if self.timeline else 0):
+            self.timeline.append((s["t"], address))
         rel = s["rel"]
         dfp = s.get("distance_from_planet")
         if dfp is not None and dfp < 20000:
@@ -257,6 +261,7 @@ class Live:
     def __init__(self):
         self.trail = Trail()
         self.elev = Elevation()
+        self.finds = Finds(LIVE_DIR)
         self._grid_key = None
         self._grid = None
         self._objs_for = None
@@ -300,8 +305,29 @@ class Live:
         eta = storm_eta(w.get("storm"), p.get("storm_frequency"), sample.get("t", time.time()), p.get("intensity"))
         return {**w, "planet": p or None, "storm_eta": eta}
 
+    def finds_api(self, bases: list, address: int | None, base: str | None, tables: dict) -> dict:
+        """Hotspots and deposits on a planet, placed on its map (and a base layout)."""
+        self.elev.refresh()
+        self.finds.refresh(self.elev.timeline)
+        proj = self.projection(bases, address) if address is not None else None
+        if proj is None:
+            return {"finds": []}
+        frame = None
+        if base:
+            b = next((b for b in _mine(bases, address) if (b.get("Name") or "base") == base), None)
+            frame = (b, *maps.base_en(b)) if b and maps.base_en(b) else None
+        out = []
+        for f in self.finds.for_planet(address, tables):
+            x, y = proj.xy(f["w"])
+            f.update(x=round(x, 1), y=round(y, 1))
+            if frame:
+                e, n, h = frame[2](maps.world_to_local(frame[0], frame[1], f["w"]))
+                f.update(e=e, n=n, h=h)
+            out.append(f)
+        return {"finds": out, "range_m": (((tables.get("extraction") or {}).get("hotspots") or {}).get("Mineral1") or {}).get("range_m")}
+
     def build(self, bases: list, base: str | None = None, target: str | None = None, trail_s: float = 6 * 3600,
-              items: dict | None = None) -> dict:
+              items: dict | None = None, tables: dict | None = None) -> dict:
         sample, err = read_sample()
         if sample is None:
             return {"state": "none", "error": err}
@@ -318,6 +344,7 @@ class Live:
         if address is not None and rel and surface:
             self.elev.refresh()
             self.elev.add(address, sample)        # the first moments on a new planet may not be in the trail yet
+            self.finds.remember_planet(address, (sample.get("weather") or {}).get("planet"))
         proj = self.projection(bases, address) if address is not None else None
         if address is None or proj is None or not rel or not at or not surface:
             out["on_planet"] = False
@@ -366,6 +393,12 @@ class Live:
                 continue
             nv = nav(rel, heading, w)
             rows.append((nv["dist"], {"key": key, "base": bname, "kind": kind, "id": oid, **nv}))
+        self.finds.refresh(self.elev.timeline)
+        for f in self.finds.for_planet(address, tables or {}):
+            nv = nav(rel, heading, f["w"])
+            label = f.get("resource") or f["name"]
+            rows.append((nv["dist"], {"key": "w:" + ",".join(str(c) for c in f["w"]), "base": label or "",
+                                      "kind": f["kind"], "id": f["name"], **nv}))
         rows.sort(key=lambda r: r[0])
         per_kind: dict = {}
         near = []

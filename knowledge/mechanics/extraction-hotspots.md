@@ -45,6 +45,16 @@ are not in the data. Being in the extractable list says Ammonia *can* be a
 hotspot substance; which substance a given planet's Mineral hotspots roll is
 not in this table, and the save does not record it.
 
+## Live observations (2026-10-22, pymhf_mods/visor_log.py)
+
+- Reaching the point a survey leads to adds a `MineralHotspot` marker
+  (`UI_SURVEY_MINERALS_LABEL`) at the hotspot; type and position are in the
+  marker's mapped fields, the class is not. Deposits arrive as `TerrainResource`
+  markers named after their substance ("Cobalt Deposit").
+- On Activated Indium's planet (Lush; common / uncommon / rare = Activated
+  Indium, Paraffinium, Cobalt) the mineral hotspot under the farm gives
+  Activated Indium, the common substance: one case for Mineral1 = common.
+
 ## Open
 
 - [Which minerals a planet's hotspots can roll](../../research/questions/hotspot-minerals.md)
