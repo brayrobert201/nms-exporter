@@ -21,7 +21,7 @@ import os
 import time
 from collections import Counter, deque
 
-from . import maps
+from . import maps, sectors
 from .finds import Finds
 from .systems import Systems
 
@@ -157,6 +157,7 @@ class Elevation:
         self.visited: dict = {}     # address -> the mod's ua dict, for naming base-less planets
         self.timeline: list = []    # [(t, address)] at each change of planet, for placing visor finds
         self.by_centre: dict = {}   # rounded nearest-planet centre -> address, for samples that lack one
+        self.charted: dict = {}     # address -> {fine cell path: [first t, last t]} (sectors.py)
         self._pos: dict = {}
 
     def refresh(self):
@@ -197,6 +198,12 @@ class Elevation:
             self.visited.setdefault(address, s.get("ua"))
             if s.get("sealevel"):
                 self.water[address] = s["sealevel"]
+            if dfp < sectors.CHART_ALT_M:
+                path = sectors.locate(rel)
+                if path:
+                    c = self.charted.setdefault(address, {}).get(path)
+                    t = s.get("t", 0)
+                    self.charted[address][path] = [min(c[0], t), max(c[1], t)] if c else [t, t]
         if s.get("location") in GROUND_LOCATIONS:
             self.samples.setdefault(address, []).append(rel)
 
@@ -464,6 +471,37 @@ class Live:
                     out["target"].update(e=te, n=tn)
             else:
                 out["target"] = {"key": target, "error": "not on this planet"}
+        return out
+
+    def sectors(self, bases: list, address: int | None, tables: dict) -> dict:
+        """The planet's 32 sectors and the cells the trail has charted (sectors.py), with
+        flat-map coordinates for the cells and sector edges on this planet's projection."""
+        self.elev.refresh()
+        self.finds.refresh(self.elev.timeline)
+        radius = self.elev.radius.get(address)
+        if address is None or radius is None:
+            return {"error": "not known until you visit this planet with the live_position mod running", "sectors": [], "cells": []}
+        places = [("base", b.get("Name") or "base", b["Position"][:3]) for b in _mine(bases, address)]
+        places += [(f["kind"], f.get("name"), f["w"]) for f in self.finds.for_planet(address, tables)]
+        sample, _ = read_sample()
+        here = sample["rel"] if sample and ua_int(sample.get("ua")) == address and sample.get("rel") else None
+        out = sectors.describe(radius, self.elev.charted.get(address, {}), places, here)
+        proj = self.projection(bases, address)
+        if proj:
+            xy = lambda u: [round(v, 1) for v in proj.xy([c * radius for c in u])]  # noqa: E731
+            for c in out["cells"]:
+                c["xy"] = [xy(u) for u in c["corners"]]
+            for sec in out["sectors"]:
+                # edges as polylines, sampled along the great circles; far side of the planet left out
+                pts = []
+                cs = sec["corners"]
+                for a, b in zip(cs, cs[1:] + cs[:1]):
+                    for k in range(17):
+                        u = maps._norm([a[i] * (16 - k) / 16 + b[i] * k / 16 for i in range(3)])
+                        pts.append(xy(u) if maps._dot(u, proj.c) > 0 else None)
+                sec["edge_xy"] = pts
+                sec["centre_xy"] = xy(sec["centre"]) if maps._dot(sec["centre"], proj.c) > 0 else None
+        out["error"] = None
         return out
 
     def elevation(self, bases: list, address: int | None, base: str | None = None, cell: float = 25.0) -> dict:

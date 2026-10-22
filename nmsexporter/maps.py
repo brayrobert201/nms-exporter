@@ -278,7 +278,8 @@ def build(ps_points: dict, bases: list, tables: dict | None = None) -> dict:
         for d in ps_points.get("deposits", []):
             if _addr(d.get("GalacticAddress")) == key and near_planet(d.get("Position")):
                 x, y = proj.xy(d["Position"])
-                pts.append({"kind": "deposit", "name": "Drained deposit", "x": round(x, 1), "y": round(y, 1)})
+                pts.append({"kind": "deposit", "name": "Drained deposit", "x": round(x, 1), "y": round(y, 1),
+                            "w": [round(c, 1) for c in d["Position"][:3]]})
         for s in ps_points.get("settlements", []):
             if _addr(s.get("UniverseAddress")) == key and near_planet(s.get("Position")):
                 x, y = proj.xy(s["Position"])

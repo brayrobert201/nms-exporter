@@ -111,6 +111,44 @@ footer { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 8px 14px; borde
   color: var(--ink-2); font-size: 13px; }
 footer span i, footer button.chip i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
 text { font-family: system-ui, sans-serif; }
+/* Places / Sectors sheet: everything on the planet as a list, and how much of each sector you've charted */
+.sheet { position: absolute; right: 12px; top: 12px; bottom: 12px; width: min(400px, calc(100% - 24px)); z-index: 6;
+  border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; color: var(--ink-2);
+  background: color-mix(in srgb, var(--surface-1) 88%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35); }
+.sheet[hidden] { display: none; }
+.sheet .tabs { display: flex; gap: 6px; padding: 10px 10px 6px; align-items: center; }
+.sheet .tabs .close { margin-left: auto; padding: 2px 10px; }
+.sheet .ctl { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 10px 8px; border-bottom: 1px solid var(--axis); }
+.sheet .ctl select { padding: 4px 6px; font-size: 13px; }
+.sheet .ctl .count { color: var(--ink-muted); font-size: 13px; align-self: center; margin-left: auto; }
+.sheet .body { overflow: auto; padding: 4px 10px 10px; flex: 1; }
+.sheet .prow { display: grid; grid-template-columns: 22px 1fr auto auto; gap: 8px; align-items: center; padding: 6px 2px;
+  border-bottom: 1px solid var(--grid); cursor: pointer; }
+.sheet .prow:hover { background: var(--surface-2); }
+.sheet .prow.on { color: var(--ink-1); }
+.sheet .prow b { color: var(--ink-1); font-weight: 500; }
+.sheet .prow small { display: block; color: var(--ink-muted); font-size: 12px; }
+.sheet .prow .d { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-1); font-size: 13px; }
+.sheet .prow button { padding: 2px 8px; font-size: 13px; }
+.sheet .mk { width: 18px; height: 18px; display: block; }
+.sheet .mk i { display: block; width: 10px; height: 10px; border-radius: 50%; margin: 4px; }
+.sheet h3 { font-size: 13px; color: var(--ink-1); margin: 10px 0 2px; font-weight: 600; }
+.sheet h3 span { color: var(--ink-muted); font-weight: 400; }
+.sheet .srow { display: grid; grid-template-columns: 52px 1fr 92px; gap: 8px; align-items: center; padding: 4px 2px; cursor: pointer;
+  border-bottom: 1px solid var(--grid); font-size: 13px; }
+.sheet .srow:hover { background: var(--surface-2); }
+.sheet .srow .id { color: var(--ink-1); font-weight: 600; }
+.sheet .srow .bar { height: 6px; background: var(--grid); border-radius: 3px; overflow: hidden; margin-top: 3px; }
+.sheet .srow .bar i { display: block; height: 100%; background: var(--ink-2); border-radius: 3px; }
+.sheet .srow .v { text-align: right; color: var(--ink-1); font-variant-numeric: tabular-nums; }
+.sheet .srow.here .id::after { content: " ●"; color: var(--ink-1); }
+.sheet .sgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 6px 0; }
+.sheet .sgrid button, .sheet .sgrid span { padding: 4px 0; font-size: 12px; text-align: center; border-radius: 6px; }
+.sheet .sgrid span.done { color: var(--ink-1); border: 1px solid var(--ink-2); }
+.sheet .summary { padding: 8px 2px; font-size: 13px; }
+.sheet .summary b { color: var(--ink-1); font-size: 15px; }
+.sheet .empty { color: var(--ink-muted); padding: 12px 2px; }
 </style>
 </head>
 <body>
@@ -121,6 +159,7 @@ text { font-family: system-ui, sans-serif; }
   <a class="navlink" href="/systems">Systems</a>
   <button id="fit" title="Fit to screen">Fit</button>
   <button id="globebtn" title="Show the planet as a globe (true distances between far-apart bases)">Globe</button>
+  <button id="placesbtn" title="Everything on this planet as a list, and the sectors you've charted">Places</button>
   <details class="viewmenu" id="viewmenu"><summary>Show ▾</summary><div id="viewopts"></div></details>
   <button id="follow" title="Centre on you: off, north up, facing up">Centre</button>
   <span class="livepill" id="livepill"></span>
@@ -131,6 +170,11 @@ text { font-family: system-ui, sans-serif; }
   <canvas id="globe" hidden></canvas>
   <div class="panel" id="panel"></div>
   <div class="tip" id="tip" hidden></div>
+  <div class="sheet" id="sheet" hidden>
+    <div class="tabs"><button id="tabplaces" class="on">Places</button><button id="tabsectors">Sectors</button><button class="close" id="sheetclose" aria-label="Close">×</button></div>
+    <div class="ctl" id="sheetctl"></div>
+    <div class="body" id="sheetbody"></div>
+  </div>
   <div class="away" id="away" hidden></div>
   <div class="mapctl"><button id="zin" title="Zoom in" aria-label="Zoom in">+</button><button id="zout" title="Zoom out" aria-label="Zoom out">−</button><button id="findme" title="Centre on you once" aria-label="Centre on you">◎</button></div>
   <div class="dock"><div class="issues" id="issues"></div><div class="power" id="power"></div><div class="nearby" id="nearby"></div></div>
@@ -276,6 +320,7 @@ function render() {
   const world = el("g", { id: "world" }, svg);
   el("g", { id: "grid" }, world);
   el("g", { id: "elev" }, world);
+  el("g", { id: "sect" }, world);
   const g = el("g", { id: "content" }, world);
   el("g", { id: "finds" }, world);
   el("g", { id: "sel" }, world);
@@ -290,6 +335,7 @@ function render() {
   crumbs();
   loadElevation();
   loadFinds();
+  loadSectors();
   if (globeOn) { if (base) setGlobe(false); else setGlobe(true); }
 }
 
@@ -657,6 +703,8 @@ async function load() {
   render();
   const at = (q.get("at") || "").split(",").map(Number);       // ?at=east,north,width in metres: open zoomed there
   if (at.length === 3 && at.every(Number.isFinite)) zoomTo(at[0], at[1], at[2]);
+  if (["places", "sectors"].includes(q.get("sheet"))) { sheetTab = q.get("sheet"); openSheet(true); }   // ?sheet=places|sectors
+  if (q.get("globe") === "1") setGlobe(true);
   applyView();
   poll();
 }
@@ -826,8 +874,196 @@ function legendFinds() {
   }
 }
 
+// ---- sectors (/api/sectors, nmsexporter/sectors.py): the planet in 8 octants x 4, and the cells your trail has charted ----
+let sect = null, sectTimer = null;
+async function loadSectors() {
+  clearTimeout(sectTimer);
+  if (!planet) return;
+  const want = planet.address;
+  try {
+    const got = await (await fetch("/api/sectors?" + new URLSearchParams({ address: planet.address }), { cache: "no-store" })).json();
+    if (planet && want === planet.address) { sect = got; drawSectors(); if (globeOn) drawGlobe(); if (!$("sheet").hidden) drawSheet(); }
+  } catch (e) { /* the layer just stays empty */ }
+  sectTimer = setTimeout(loadSectors, onThisPlanet() ? 20000 : 120000);
+}
+const det3 = (a, b, c) => vdot(a, vcross(b, c));
+function inTri(t, u) {
+  const s = det3(...t) > 0 ? 1 : -1;
+  return Math.min(s * det3(t[0], t[1], u), s * det3(t[1], t[2], u), s * det3(t[2], t[0], u));
+}
+function sectorOf(w) {        // the sector a planet-frame position is in, or null
+  if (!sect || !sect.sectors || !sect.sectors.length || !w) return null;
+  const u = vnorm(w);
+  let best = null, m = -Infinity;
+  for (const s of sect.sectors) { const v = inTri(s.corners, u); if (v > m) { m = v; best = s; } }
+  return best;
+}
+const km2 = (cells) => cells * (sect.cell_km ** 2) * Math.sqrt(3) / 4;
+const fmtArea = (a) => a >= 100 ? `${Math.round(a)} km²` : a >= 1 ? `${a.toFixed(1)} km²` : `${Math.round(a * 1e6).toLocaleString()} m²`;
+const fmtPct = (p) => p === 0 ? "0%" : p < 0.01 ? "<0.01%" : p < 1 ? `${p.toFixed(2)}%` : `${p.toFixed(1)}%`;
+
+function drawSectors() {      // flat planet view: charted cells, then sector edges and names
+  const g = $("sect");
+  if (!g) return;
+  g.innerHTML = "";
+  if (base || !shown.sectors || !sect || sect.error || !sect.sectors) return;
+  for (const c of sect.cells) if (c.xy)
+    el("polygon", { points: c.xy.map(([x, y]) => `${x},${-y}`).join(" "), fill: css("--ink-2"), "fill-opacity": 0.16,
+      stroke: css("--ink-2"), "stroke-opacity": 0.35, "data-w": 0.6 }, g);
+  const here = sect.you;
+  for (const s of sect.sectors) {
+    if (!s.edge_xy) continue;
+    let d = "", pen = false;
+    for (const p of s.edge_xy) { if (!p) { pen = false; continue; } d += `${pen ? "L" : "M"}${p[0]},${-p[1]}`; pen = true; }
+    if (d) el("path", { d, fill: "none", stroke: css("--ink-muted"), "stroke-opacity": 0.7, "data-w": 1.2, "data-dash": "3 3" }, g);
+    if (s.centre_xy) label(g, s.centre_xy[0], s.centre_xy[1], `${s.id}${s.id === here ? " · you" : ""}${s.charted ? ` · ${fmtPct(s.pct)}` : ""}`, "--ink-muted", 13, 1);
+  }
+  rescale();
+}
+
+function globeSectors(ctx, toScreen) {
+  if (!shown.sectors || !sect || sect.error || !sect.sectors) return;
+  const arc = (a, b, n = 24) => { const out = []; for (let k = 0; k <= n; k++) out.push(vnorm(a.map((x, i) => x * (n - k) / n + b[i] * k / n))); return out; };
+  ctx.fillStyle = css("--ink-2"); ctx.globalAlpha = 0.35;
+  for (const c of sect.cells) {
+    const p = c.corners.map(toScreen);
+    if (p.some(q => q[2] <= 0)) continue;
+    ctx.beginPath(); p.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.fill();
+    if (Math.hypot(p[0][0] - p[1][0], p[0][1] - p[1][1]) < 3) { ctx.beginPath(); ctx.arc(p[0][0], p[0][1], 2, 0, 2 * Math.PI); ctx.fill(); }   // too small to see: a dot
+  }
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = css("--ink-muted"); ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+  for (const s of sect.sectors) {
+    const c = s.corners;
+    for (const [a, b] of [[c[0], c[1]], [c[1], c[2]], [c[2], c[0]]]) {
+      ctx.beginPath(); let on = false;
+      for (const u of arc(a, b)) { const [x, y, d] = toScreen(u); if (d > 0) { on ? ctx.lineTo(x, y) : ctx.moveTo(x, y); on = true; } else on = false; }
+      ctx.stroke();
+    }
+  }
+  ctx.setLineDash([]);
+  ctx.font = "12px system-ui, sans-serif"; ctx.textAlign = "center";
+  for (const s of sect.sectors) {
+    const [x, y, d] = toScreen(s.centre);
+    if (d < 0.25) continue;
+    const t = s.charted ? `${s.id} ${fmtPct(s.pct)}` : s.id;
+    ctx.strokeStyle = css("--page"); ctx.lineWidth = 3; ctx.strokeText(t, x, y);
+    ctx.fillStyle = css(s.id === sect.you ? "--ink-1" : "--ink-muted"); ctx.fillText(t, x, y);
+  }
+  ctx.textAlign = "start";
+}
+
+// ---- Places / Sectors sheet ----
+let sheetTab = "places", placeSort = "dist", placeKind = "", placeSector = "";
+const CLASS_RANK = { S: 0, A: 1, B: 2, C: 3 };
+function places() {
+  const out = [];
+  for (const p of planet.points) {
+    if (!p.w) continue;
+    out.push({ kind: p.kind, title: p.kind === "base" ? p.name : p.name || (KIND[p.kind] || {}).label, sub: (KIND[p.kind] || {}).label,
+      w: p.w, x: p.x, y: p.y, key: p.kind === "base" ? `b:${p.name}` : `w:${p.w.join(",")}`, open: () => show(p) });
+  }
+  if (finds) for (const f of finds.finds) {
+    const k = findKind(f.kind);
+    out.push({ kind: k, title: findTitle(f), sub: KIND[k].label + (f.kind.startsWith("hotspot") && !f.class ? " · class not set" : ""),
+      cls: f.class, w: f.w, x: f.x, y: f.y, key: `w:${f.w.join(",")}`, open: () => showFind(f, base ? null : [f.x, f.y]) });
+  }
+  const meW = onThisPlanet() ? live.player.w : null;
+  for (const q of out) {
+    const s = sectorOf(q.w);
+    q.sector = s ? s.id : "";
+    if (meW) {
+      const a = vnorm(q.w), b = vnorm(meW);
+      q.dist = Math.acos(Math.max(-1, Math.min(1, vdot(a, b)))) * planet.radius;
+      const [n, e] = (() => { const d = b[1], nn = vnorm([-d * b[0], 1 - d * b[1], -d * b[2]]); return [nn, vnorm(vcross(nn, b))]; })();
+      q.brg = bearing(vdot(a, e), vdot(a, n));
+    } else { q.dist = Math.hypot(q.x, q.y); q.brg = bearing(q.x, q.y); }
+  }
+  return { list: out, fromYou: !!meW };
+}
+function drawSheet() {
+  const C = $("sheetctl"), B = $("sheetbody");
+  $("tabplaces").classList.toggle("on", sheetTab === "places"); $("tabsectors").classList.toggle("on", sheetTab === "sectors");
+  if (!planet) { B.innerHTML = ""; return; }
+  if (sheetTab === "places") {
+    const { list, fromYou } = places();
+    const kinds = [...new Set(list.map(q => q.kind))];
+    const secs = [...new Set(list.map(q => q.sector).filter(Boolean))].sort();
+    if (placeKind && !kinds.includes(placeKind)) placeKind = "";
+    if (placeSector && !secs.includes(placeSector)) placeSector = "";
+    C.innerHTML = `<select id="psort" aria-label="Sort by">${[["dist", fromYou ? "Nearest you" : "Nearest the map centre"], ["kind", "Type"], ["class", "Class (S first)"], ["name", "Name"], ["sector", "Sector"]]
+      .map(([v, l]) => `<option value="${v}"${placeSort === v ? " selected" : ""}>${l}</option>`).join("")}</select>`
+      + `<select id="pkind" aria-label="Type"><option value="">All types</option>${kinds.map(k => `<option value="${k}"${placeKind === k ? " selected" : ""}>${(KIND[k] || {}).label || k}</option>`).join("")}</select>`
+      + (secs.length > 1 ? `<select id="psector" aria-label="Sector"><option value="">All sectors</option>${secs.map(k => `<option${placeSector === k ? " selected" : ""}>${k}</option>`).join("")}</select>` : "");
+    let rows = list.filter(q => (!placeKind || q.kind === placeKind) && (!placeSector || q.sector === placeSector));
+    const by = { dist: (a, b) => a.dist - b.dist, name: (a, b) => a.title.localeCompare(b.title),
+      kind: (a, b) => ((KIND[a.kind] || {}).label || "").localeCompare((KIND[b.kind] || {}).label || "") || a.dist - b.dist,
+      class: (a, b) => (CLASS_RANK[a.cls] ?? 9) - (CLASS_RANK[b.cls] ?? 9) || a.dist - b.dist,
+      sector: (a, b) => a.sector.localeCompare(b.sector) || a.dist - b.dist }[placeSort];
+    rows.sort(by);
+    C.insertAdjacentHTML("beforeend", `<span class="count">${rows.length} of ${list.length}</span>`);
+    B.innerHTML = rows.length ? rows.map((q, i) => {
+      const ic = iconOf(q.kind, q.cls);
+      const mk = ic ? `<img class="mk" src="/icon/${ic}.png" alt="">` : `<span class="mk"><i style="background:${css((KIND[q.kind] || KIND.structure).colour)}"></i></span>`;
+      return `<div class="prow${target && target.key === q.key ? " on" : ""}" data-i="${i}">${mk}<span><b>${q.title}</b><small>${q.sub}${q.sector ? ` · ${q.sector}` : ""}</small></span>`
+        + `<span class="d">${fmtDist(q.dist)}<small>${compass(q.brg)}</small></span><button data-go="${i}" title="Navigate here (arrow and distance in the Nearby card)">Go</button></div>`;
+    }).join("") : `<div class="empty">Nothing recorded on this planet yet.</div>`;
+    $("psort").onchange = (e) => { placeSort = e.target.value; drawSheet(); };
+    $("pkind").onchange = (e) => { placeKind = e.target.value; drawSheet(); };
+    if ($("psector")) $("psector").onchange = (e) => { placeSector = e.target.value; drawSheet(); };
+    B.querySelectorAll(".prow").forEach(d => d.onclick = (ev) => {
+      const q = rows[+d.dataset.i];
+      if (ev.target.dataset.go !== undefined) { setTarget(q.key, q.title); drawSheet(); return; }
+      if (globeOn) { gc = vnorm(q.w); drawGlobe(); }
+      else { if (base) { base = null; userChose = true; if (follow) setFollow(0); render(); } zoomTo(q.x, q.y, 600); }
+      q.open();
+    });
+    return;
+  }
+  // sectors
+  C.innerHTML = "";
+  if (!sect || sect.error) { B.innerHTML = `<div class="empty">${sect ? sect.error : "Loading…"}</div>`; return; }
+  const tot = sect.total;
+  const rows = [`<div class="summary">Charted <b>${fmtArea(km2(tot.charted))}</b> · ${fmtPct(tot.pct)} of the planet<br>`
+    + `<span style="color:var(--ink-muted)">${tot.charted.toLocaleString()} of ${tot.cells.toLocaleString()} cells about ${sect.cell_km} km across, from your trail since live tracking began. `
+    + `A cell counts once you've been in it on foot, in an exocraft or flying below 2 km.</span>`
+    + (sect.you ? `<br>You're in <b>${sect.you}</b>.` : "") + `</div>`];
+  const top = Math.max(...sect.sectors.map(s => s.pct), 0);
+  const busy = (s) => s.charted || s.bases.length || s.finds || s.id === sect.you;
+  for (let o = 0; o < 8; o++) {
+    const ss = sect.sectors.slice(o * 4, o * 4 + 4).filter(busy);
+    if (!ss.length) continue;
+    rows.push(`<h3>${o < 4 ? "North" : "South"} ${o % 4 + 1} <span>${sect.sectors[o * 4].quadrant}</span></h3>`);
+    for (const s of ss) {
+      const w = s.pct > 0 ? Math.max(3, 100 * s.pct / top) : 0;
+      const what = [s.bases.length ? s.bases.join(", ") : "", s.finds ? `${s.finds} find${s.finds > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
+      rows.push(`<div class="srow${s.id === sect.you ? " here" : ""}" data-id="${s.id}"><span class="id">${s.id}</span>`
+        + `<span>${s.name.split(" ")[1]}${what ? ` <small style="color:var(--ink-muted)">· ${what}</small>` : ""}<div class="bar"><i style="width:${w}%"></i></div></span>`
+        + `<span class="v">${s.charted ? fmtArea(km2(s.charted)) : "—"}<br><small style="color:var(--ink-muted)">${fmtPct(s.pct)}</small></span></div>`);
+    }
+  }
+  const rest = sect.sectors.filter(s => !busy(s));
+  if (rest.length) {
+    rows.push(`<h3>Not charted yet <span>${rest.length} of 32</span></h3><div class="sgrid">`
+      + sect.sectors.map(s => busy(s) ? `<span class="done" title="${s.name}: charted">${s.id}</span>` : `<button data-id="${s.id}" title="${s.name} · ${s.quadrant}">${s.id}</button>`).join("") + `</div>`);
+  }
+  rows.push(`<div class="empty">Bars are relative to your most-charted sector. Tap a sector to turn the globe to it.<br>`
+    + `Sectors: N/S hemisphere, 1–4 by longitude (1 = 0–90°E, 2 = 90–180°E, 3 = 90–180°W, 4 = 0–90°W), then each octant's polar, west, east or centre quarter.</div>`);
+  B.innerHTML = rows.join("");
+  B.querySelectorAll(".srow, .sgrid button").forEach(d => d.onclick = () => {
+    const s = sect.sectors.find(x => x.id === d.dataset.id);
+    if (!globeOn) setGlobe(true);
+    gc = vnorm(s.centre); gzoom = Math.max(gzoom, 1.6); drawGlobe();
+  });
+}
+function openSheet(on) { $("sheet").hidden = !on; $("placesbtn").classList.toggle("on", on); if (on) drawSheet(); if (globeOn) drawGlobe(); }
+$("placesbtn").onclick = () => openSheet($("sheet").hidden);
+$("sheetclose").onclick = () => openSheet(false);
+$("tabplaces").onclick = () => { sheetTab = "places"; drawSheet(); };
+$("tabsectors").onclick = () => { sheetTab = "sectors"; drawSheet(); };
+
 // ---- what to show: remembered per device ----
-const VIEW = [["shapes", "Building shapes"], ["heights", "Heights"], ["trail", "Your trail"], ["power", "Power card"], ["nearby", "Nearby list"],
+const VIEW = [["shapes", "Building shapes"], ["sectors", "Sectors and charted ground"], ["heights", "Heights"], ["trail", "Your trail"], ["power", "Power card"], ["nearby", "Nearby list"],
   ["issues", "Problems list"], ["legend", "Legend"]];
 let shown = Object.fromEntries(VIEW.map(([k]) => [k, true]));
 try { Object.assign(shown, JSON.parse(localStorage.getItem("nms-map-show") || "{}")); } catch (e) { /* defaults */ }
@@ -835,7 +1071,8 @@ function applyView() {
   $("power").hidden = !shown.power; $("nearby").hidden = !shown.nearby; $("issues").hidden = !shown.issues;
   $("legend").hidden = !shown.legend;
   showHeights = shown.heights;
-  drawElevation(); drawLive(); legendHeights();
+  drawElevation(); drawLive(); legendHeights(); drawSectors();
+  if (globeOn) drawGlobe();
 }
 $("viewopts").innerHTML = VIEW.map(([k, label]) => `<label><input type="checkbox" data-k="${k}"${shown[k] ? " checked" : ""}> ${label}</label>`).join("");
 $("viewopts").addEventListener("change", (e) => {
@@ -1047,7 +1284,9 @@ function drawGlobe() {
   const cv = $("globe"), box = $("main").getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
   cv.width = box.width * dpr; cv.height = box.height * dpr;
   const ctx = cv.getContext("2d"); ctx.scale(dpr, dpr);
-  const cx = box.width / 2, cy = (box.height - coveredBottom()) / 2, R = Math.min(box.width, box.height - coveredBottom()) * 0.42 * gzoom;
+  // with the sheet open on a wide screen, the globe sits in the space left of it
+  const right = !$("sheet").hidden && box.width > 760 ? $("sheet").getBoundingClientRect().width + 24 : 0;
+  const cx = (box.width - right) / 2, cy = (box.height - coveredBottom()) / 2, R = Math.min(box.width - right, box.height - coveredBottom()) * 0.42 * gzoom;
   const [n, e] = gframe();
   const toScreen = (u) => [cx + R * vdot(u, e), cy - R * vdot(u, n), vdot(u, gc)];
   // sphere, lit from the upper left
@@ -1066,6 +1305,7 @@ function drawGlobe() {
     ctx.stroke(); };
   for (let lat = -60; lat <= 60; lat += 30) { const a = lat * Math.PI / 180; line(t => [Math.cos(a) * Math.sin(t), Math.sin(a), Math.cos(a) * Math.cos(t)]); }
   for (let lon = 0; lon < 180; lon += 30) { const b = lon * Math.PI / 180; line(t => [Math.sin(t) * Math.sin(b), Math.cos(t), Math.sin(t) * Math.cos(b)]); }
+  globeSectors(ctx, toScreen);
   // things on the planet; labels skip if they would overlap
   const boxes = [];
   globe.hits = [];
@@ -1395,6 +1635,7 @@ async function poll() {
       rotate();
       drawNearby();
       if (globeOn) drawGlobe();
+      if (!$("sheet").hidden && sheetTab === "places" && !$("sheetctl").contains(document.activeElement) && Date.now() - (poll.sheetAt || 0) > 2000) { poll.sheetAt = Date.now(); drawSheet(); }
     }
   } catch (e) {
     if (seq !== pollSeq) return;

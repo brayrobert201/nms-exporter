@@ -65,7 +65,7 @@ class Handler(BaseHTTPRequestHandler):
         path = path.rstrip("/") or "/"
         params = dict(p.split("=", 1) for p in query.split("&") if "=" in p)
         try:
-            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases", "/api/map", "/api/live", "/api/elevation", "/api/finds", "/api/systems"):
+            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases", "/api/map", "/api/live", "/api/elevation", "/api/finds", "/api/systems", "/api/sectors"):
                 collector.refresh()
             if path == "/metrics":
                 return self._send(collector.metrics().encode(), "text/plain; version=0.0.4")
@@ -127,6 +127,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(json.dumps(live.finds_api(collector.raw_bases, maps._addr(unquote_plus(params.get("address", ""))),
                                                             unquote_plus(params.get("base", "")) or None, collector.tables)).encode(),
                                   "application/json")
+            if path == "/api/sectors":
+                return self._send(json.dumps(live.sectors(collector.raw_bases, maps._addr(unquote_plus(params.get("address", ""))),
+                                                          collector.tables)).encode(), "application/json")
             if path == "/api/elevation":
                 try:
                     cell = min(max(float(params.get("cell", "25")), 2.0), 500.0)
@@ -147,7 +150,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 return
             if path == "/":
-                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /map /api/map /api/live /api/elevation /api/finds /systems /api/systems /healthz\n", "text/plain")
+                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /map /api/map /api/live /api/elevation /api/finds /api/sectors /systems /api/systems /healthz\n", "text/plain")
             self._send(b"not found", "text/plain", 404)
         except BrokenPipeError:
             pass
