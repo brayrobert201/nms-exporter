@@ -32,7 +32,8 @@ Compass north is the planet's +Y axis and east = north x up, checked against
 the in-game compass on 2026-10-22 (one planet), so latitude, longitude and
 bearings derived from these frames are right, not mirrored. The live player
 position (cGcPlayerEnvironment mPlayerTM.pos minus mNearestPlanetPos) is in
-the same planet-centred frame; mPlayerTM.at points behind the player.
+the same planet-centred frame; mPlayerTM.at points behind the player on
+foot and ahead of the ship when flying (trail: cos -0.94 vs +0.99).
 cGcPlayerEnvironment's distance-from-planet is |position| minus a round nominal
 radius (130048 = 127 x 1024, 98304 = 96 x 1024), and its sea-level field is the
 water surface above that radius: 120 on a water planet, 0 on every dry planet

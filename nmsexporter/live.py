@@ -99,9 +99,16 @@ def _dot(a, b):
     return sum(x * y for x, y in zip(a, b))
 
 
-def heading_deg(up, at) -> float | None:
+# mPlayerTM.at points behind the player on foot but ahead in a ship: over the trail,
+# movement vs at averaged cos -0.94 on foot (304 steps) and +0.99 flying or landed
+# in the ship (1042 steps, locations PlanetInShip and Default). The corvette
+# interior ("Freighter") and Underwater were mixed and stay with the on-foot sign.
+SHIP_LOCATIONS = {"PlanetInShip", "Default", "SpaceInShip", "PlanetInAtmoShip"}
+
+
+def heading_deg(up, at, location: str | None = None) -> float | None:
     north, east = maps.tangent_frame(up)
-    face = [-x for x in at]
+    face = list(at) if location in SHIP_LOCATIONS else [-x for x in at]
     d = _dot(face, up)
     f = _norm([face[i] - d * up[i] for i in range(3)])
     if not f:
@@ -378,7 +385,7 @@ class Live:
         out["on_planet"] = True
         out["has_bases"] = bool(mine)
         up = _norm(rel)
-        heading = heading_deg(up, at)
+        heading = heading_deg(up, at, sample.get("location"))
         x, y = proj.xy(rel)
         lat, lon = maps.latlon(rel)
         out["player"] = {"x": round(x, 1), "y": round(y, 1), "heading": None if heading is None else round(heading, 1),
