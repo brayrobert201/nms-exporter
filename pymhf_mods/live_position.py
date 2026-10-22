@@ -1,4 +1,4 @@
-"""pyMHF mod: write the player's position about once a second.
+"""pyMHF mod: write the player's position four times a second.
 
 Runs inside NMS.exe (Windows Python in the game's Proton prefix). Installed by
 `scripts/nms-hook`, which copies this directory to C:\\pymhf\\mods before
@@ -9,13 +9,13 @@ game passes in, plus the current galactic address when NMS.py has found the
 application object (it may not have when attached mid-game; `ua` is then null).
 
 Output, in C:\\pymhf\\mod_saves\\live (host: pfx/drive_c/pymhf/mod_saves/live):
-  live.json          latest sample, replaced atomically every second
+  live.json          latest sample, replaced atomically every 0.25 s
   trail-YYYYMMDD.jsonl  one sample per line whenever the player moved > 2 m
                         or changed planet/location
 
-`rel` is player position minus nearest planet centre, which should be the
-frame the save uses for base positions (knowledge/mechanics/save-coordinates.md).
-Unverified until compared against a base.
+`rel` is player position minus nearest planet centre: the frame the save uses
+for base positions. `at` points behind the player (facing is -at). Both checked
+in game: research/sources/measurements/2026-10-22-live-position-compass.md.
 """
 import json
 import logging
@@ -31,7 +31,7 @@ from nmspy.common import gameData
 logger = logging.getLogger("live_position")
 
 OUT_DIR = r"C:\pymhf\mod_saves\live"
-INTERVAL = 1.0
+INTERVAL = 0.25
 MIN_MOVE = 2.0
 
 
@@ -55,7 +55,7 @@ def _address():
 @no_gui
 class LivePosition(Mod):
     __author__ = "nms-exporter"
-    __description__ = "Write the player's position to mod_saves/live once a second"
+    __description__ = "Write the player's position to mod_saves/live four times a second"
     __version__ = "0.1"
 
     def __init__(self):

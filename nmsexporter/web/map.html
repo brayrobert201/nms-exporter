@@ -72,7 +72,7 @@ text { font-family: system-ui, sans-serif; }
   <select id="planet" aria-label="Planet"></select>
   <span class="crumbs" id="crumbs"></span>
   <button id="fit" title="Fit to screen">Fit</button>
-  <button id="follow" title="Keep the map centred on you">Follow</button>
+  <button id="follow" title="Centre on you: off, north up, facing up">Centre</button>
   <span class="livepill" id="livepill"></span>
   <span class="note" id="note"></span>
 </header>
@@ -144,8 +144,9 @@ function px() { return view.w / Math.max($("main").getBoundingClientRect().width
 function render() {
   const svg = $("svg");
   svg.innerHTML = "";
-  const g = el("g", { id: "content" }, svg);
-  el("g", { id: "live" }, svg);
+  const world = el("g", { id: "world" }, svg);
+  const g = el("g", { id: "content" }, world);
+  el("g", { id: "live" }, world);
   el("g", { id: "scale" }, svg);
   base ? drawBase(g) : drawPlanet(g);
   rescale();
@@ -166,6 +167,7 @@ function rescale() {
     t.setAttribute("x", +t.dataset.x + 10 * k); t.setAttribute("y", -t.dataset.y + (4 + (+t.dataset.dy || 0)) * k);
   });
   drawLive();
+  if (typeof rotate === "function") rotate();
 }
 
 function dot(g, x, y, kind, onclick, problems) {
@@ -299,8 +301,10 @@ function drawScale() {
   t.textContent = fmtDist(len);
   // north arrow, top left
   const ax = view.x + 24 * k, ay = -view.y - view.h + 40 * k;
-  el("path", { d: `M ${ax} ${ay - 18 * k} L ${ax - 6 * k} ${ay} L ${ax + 6 * k} ${ay} Z`, fill: css("--ink-2") }, s);
-  const n = el("text", { x: ax - 4 * k, y: ay + 16 * k, fill: css("--ink-2"), "font-size": 12 * k }, s);
+  const r = typeof rotation === "function" ? rotation() : null;
+  const na = el("g", r ? { transform: `rotate(${r.a} ${ax} ${ay - 2 * k})` } : {}, s);
+  el("path", { d: `M ${ax} ${ay - 18 * k} L ${ax - 6 * k} ${ay} L ${ax + 6 * k} ${ay} Z`, fill: css("--ink-2") }, na);
+  const n = el("text", { x: ax - 4 * k, y: ay + 16 * k, fill: css("--ink-2"), "font-size": 12 * k }, na);
   n.textContent = data && data.north_verified ? "N" : "N?";
 }
 
@@ -318,12 +322,17 @@ window.openBase = openBase; window.openPlanet = openPlanet;
     return [view.x + (cx - b.left) / b.width * view.w, view.y + (1 - (cy - b.top) / b.height) * view.h];
   };
   const zoom = (f, cx, cy) => {
+    if (follow) {                         // zoom about you, not the cursor (the map may be rotated)
+      setView({ x: view.x + view.w * (1 - f) / 2, y: view.y + view.h * (1 - f) / 2, w: view.w * f, h: view.h * f });
+      centreOnMe(); rescale();
+      return;
+    }
     const [mx, my] = toMap(cx, cy);
     setView({ x: mx - (mx - view.x) * f, y: my - (my - view.y) * f, w: view.w * f, h: view.h * f });
     rescale();
   };
   svg.addEventListener("wheel", (e) => { e.preventDefault(); zoom(Math.exp(e.deltaY * 0.0015), e.clientX, e.clientY); }, { passive: false });
-  svg.addEventListener("pointerdown", (e) => { setFollow(false); svg.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, e); last = e; svg.classList.add("dragging"); });
+  svg.addEventListener("pointerdown", (e) => { if (e.isPrimary && follow) setFollow(0); svg.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, e); last = e; svg.classList.add("dragging"); });
   svg.addEventListener("pointermove", (e) => {
     if (!ptrs.has(e.pointerId)) return;
     ptrs.set(e.pointerId, e);
@@ -367,7 +376,7 @@ async function load() {
 }
 
 // ---- live position (pymhf_mods/live_position.py via /api/live) ----
-let live = null, target = null, follow = false, placed = false, userChose = false;
+let live = null, target = null, follow = 0, placed = false, userChose = false;   // follow: 0 off, 1 north up, 2 facing up
 const LOC = { FreighterInternals: "Freighter", IndoorInBase: "In a base", PlanetOnFoot: "On foot", PlanetInVehicle: "In exocraft",
   PlanetInShip: "In ship (landed)", SpaceInShip: "In space", PlanetInAtmoShip: "Flying", SpaceStation: "Space station" };
 const locName = (l) => LOC[l] || (l || "").replace(/([a-z])([A-Z])/g, "$1 $2");
@@ -378,8 +387,30 @@ const arrow = (t, cls = "turn") => t === null || t === undefined ? `<span class=
 const height = (h) => Math.abs(h) < 2 ? "" : `${h > 0 ? "↑" : "↓"} ${Math.round(Math.abs(h))} m`;
 const onThisPlanet = () => live && live.on_planet && planet && live.address === planet.address;
 
-function setFollow(on) { follow = on; $("follow").classList.toggle("on", on); if (on) centreOnMe(); }
-$("follow").onclick = () => setFollow(!follow);
+const FOLLOW = ["Centre", "Centre · N up", "Centre · facing up"];
+function setFollow(mode) {
+  follow = +mode;
+  $("follow").classList.toggle("on", follow > 0);
+  $("follow").textContent = FOLLOW[follow];
+  if (follow) centreOnMe();
+  rotate();
+}
+$("follow").onclick = () => setFollow((follow + 1) % 3);
+
+// Facing-up: turn the world about the player by -heading; labels turn back so they stay upright.
+function rotation() {
+  const m = me();
+  return follow === 2 && m && live.player.heading !== null ? { a: -live.player.heading, x: m.x, y: -m.y } : null;
+}
+function rotate() {
+  const w = $("world");
+  if (!w) return;
+  const r = rotation();
+  w.setAttribute("transform", r ? `rotate(${r.a} ${r.x} ${r.y})` : "");
+  document.querySelectorAll("#world text[data-x]").forEach(t =>
+    t.setAttribute("transform", r ? `rotate(${-r.a} ${t.dataset.x} ${-t.dataset.y})` : ""));
+  drawScale();
+}
 function setTarget(key, label) { target = key ? { key, label } : null; $("panel").style.display = "none"; poll(); }
 window.setTarget = setTarget;
 
@@ -489,13 +520,14 @@ async function poll() {
           $("planet").value = pi; planet = data.planets[pi];
           const near = (live.bases || [])[0];
           base = near && near.dist < 300 ? near.base : planet.bases.length === 1 ? planet.bases[0] : null;
-          render(); setFollow(true);
+          render(); setFollow(1);
           return poll();
         }
       }
       drawPill();
       if (follow) centreOnMe();
       drawLive();
+      rotate();
       drawNearby();
     }
   } catch (e) {
@@ -503,7 +535,7 @@ async function poll() {
     live = { state: "none", error: String(e) };
     drawPill();
   }
-  polling = setTimeout(poll, 1000);
+  polling = setTimeout(poll, 500);
 }
 load();
 </script>
