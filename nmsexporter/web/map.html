@@ -50,7 +50,7 @@ svg.dragging { cursor: grabbing; }
 .power td { padding: 1px 0; } .power td + td { text-align: right; color: var(--ink-1); font-variant-numeric: tabular-nums; }
 .pill.none { color: var(--ink-muted); }
 .nearby { width: min(380px, 100%); max-height: 46vh; overflow: auto; color: var(--ink-2); }
-@media (max-width: 700px) { .dock > div { font-size: 13px; } .issues { max-height: 22vh; } .nearby { max-height: 34vh; } }
+@media (max-width: 700px) { .dock > div { font-size: 13px; } .issues { max-height: 22vh; } .nearby { max-height: 26vh; } }
 .nearby h2 { cursor: pointer; font-size: 14px; margin: 0 0 4px; color: var(--ink-1); font-weight: 600; display: flex; gap: 8px; align-items: baseline; }
 .nearby h2 span { color: var(--ink-muted); font-weight: 400; font-size: 13px; }
 .nearby .row { display: grid; grid-template-columns: 22px 1fr auto; gap: 6px; align-items: center; padding: 3px 0;
@@ -66,6 +66,15 @@ svg.dragging { cursor: grabbing; }
 .livepill { color: var(--ink-2); font-size: 13px; }
 button.on { border-color: var(--ink-1); }
 .viewmenu { position: relative; }
+.mapctl { position: absolute; left: 12px; top: 64px; display: flex; flex-direction: column; gap: 6px; }
+.mapctl button { width: 38px; height: 38px; padding: 0; font-size: 20px; line-height: 1; background: var(--surface-1); }
+.mapctl button:disabled { color: var(--ink-muted); cursor: default; }
+.tip { position: absolute; pointer-events: none; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 4px 8px; font-size: 13px; color: var(--ink-1); white-space: nowrap; z-index: 5; }
+footer button.chip { background: none; border: 0; padding: 2px 4px; color: var(--ink-2); font-size: 13px; border-radius: 6px; }
+footer button.chip:hover { background: var(--surface-2); }
+footer button.chip.off { color: var(--ink-muted); text-decoration: line-through; }
+footer button.chip.off i { opacity: 0.3; }
 .viewmenu summary { list-style: none; cursor: pointer; background: var(--surface-2); border: 1px solid var(--border);
   border-radius: 8px; padding: 6px 10px; }
 .viewmenu summary::-webkit-details-marker { display: none; }
@@ -79,7 +88,7 @@ button.on { border-color: var(--ink-1); }
 .pill.critical { color: var(--critical); } .pill.warning { color: var(--warning); } .pill.good { color: var(--good); }
 footer { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 8px 14px; border-top: 1px solid var(--axis);
   color: var(--ink-2); font-size: 13px; }
-footer span i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+footer span i, footer button.chip i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
 text { font-family: system-ui, sans-serif; }
 </style>
 </head>
@@ -97,6 +106,8 @@ text { font-family: system-ui, sans-serif; }
 <main id="main">
   <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
   <div class="panel" id="panel"></div>
+  <div class="tip" id="tip" hidden></div>
+  <div class="mapctl"><button id="zin" title="Zoom in" aria-label="Zoom in">+</button><button id="zout" title="Zoom out" aria-label="Zoom out">−</button><button id="findme" title="Centre on you once" aria-label="Centre on you">◎</button></div>
   <div class="dock"><div class="issues" id="issues"></div><div class="power" id="power"></div><div class="nearby" id="nearby"></div></div>
 </main>
 <footer id="legend"></footer>
@@ -144,17 +155,33 @@ function setView(v) {
   drawScale();
 }
 
+// Height (px) of the map hidden by dock panels that reach into its middle third; 0 if they would leave too little.
+function coveredBottom() {
+  const main = $("main").getBoundingClientRect();
+  let h = 0;
+  for (const d of document.querySelectorAll(".dock > div")) {
+    if (d.hidden || !d.innerHTML) continue;
+    const r = d.getBoundingClientRect();
+    if (r.width && r.right > main.left + main.width / 3 && r.left < main.right - main.width / 3) h = Math.max(h, main.bottom - r.top);
+  }
+  return h < main.height * 0.6 ? h : 0;
+}
+
 function fit(points, pad = 0.12, minSize = 40) {
   const box = $("main").getBoundingClientRect();
+  const cov = coveredBottom(), bh = Math.max(box.height - cov, 1);
   const xs = points.map(p => p[0]), ys = points.map(p => p[1]);
   let minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
   let w = Math.max(maxx - minx, minSize), h = Math.max(maxy - miny, minSize);
   const cx = (minx + maxx) / 2, cy = (miny + maxy) / 2;
   w *= 1 + 2 * pad; h *= 1 + 2 * pad;
-  const aspect = box.width / Math.max(box.height, 1);
+  const aspect = box.width / bh;
   if (w / h > aspect) h = w / aspect; else w = h * aspect;
-  setView({ x: cx - w / 2, y: cy - h / 2, w, h });
+  const H = h * box.height / bh;              // full viewBox height; the content sits in the uncovered part
+  setView({ x: cx - w / 2, y: cy - h / 2 - (H - h), w, h: H });
+  fittedView = view;
 }
+let fittedView = null;
 
 // Marks are drawn in screen pixels: they stay the same size while zooming.
 function px() { return view.w / Math.max($("main").getBoundingClientRect().width, 1); }
@@ -163,12 +190,15 @@ function render() {
   const svg = $("svg");
   svg.innerHTML = "";
   const world = el("g", { id: "world" }, svg);
+  el("g", { id: "grid" }, world);
   el("g", { id: "elev" }, world);
   const g = el("g", { id: "content" }, world);
+  el("g", { id: "sel" }, world);
+  el("g", { id: "hits" }, world);
   el("g", { id: "live" }, world);
   el("g", { id: "scale" }, svg);
+  drawPower();                 // before fitting, so fit() knows what the panels cover
   base ? drawBase(g) : drawPlanet(g);
-  drawPower();
   rescale();
   drawScale();
   crumbs();
@@ -187,32 +217,72 @@ function rescale() {
     t.setAttribute("font-size", t.dataset.fs * k);
     t.setAttribute("x", +t.dataset.x + 10 * k); t.setAttribute("y", -t.dataset.y + (4 + (+t.dataset.dy || 0)) * k);
   });
+  drawSel();
   drawLive();
   if (typeof rotate === "function") rotate();
 }
 
-function dot(g, x, y, kind, onclick, problems) {
+// Kinds and segment types switched off in the legend; remembered per device.
+let hiddenKinds = new Set();
+try { hiddenKinds = new Set(JSON.parse(localStorage.getItem("nms-map-hidden-kinds") || "[]")); } catch (e) { /* none hidden */ }
+function toggleKind(k) {
+  hiddenKinds.has(k) ? hiddenKinds.delete(k) : hiddenKinds.add(k);
+  try { localStorage.setItem("nms-map-hidden-kinds", JSON.stringify([...hiddenKinds])); } catch (e) { /* not remembered */ }
+  const v = { ...view };
+  render(); setView(v); rescale();          // keep the current view
+}
+
+function dot(g, x, y, kind, onclick, problems, tipText) {
+  if (hiddenKinds.has(kind) && !problems) return null;
   const k = KIND[kind] || KIND.structure;
-  const r = kind.startsWith("extractor") || kind === "computer" ? 5 : kind === "base" ? 8 : kind === "structure" ? 3 : 4;
+  const r = kind.startsWith("extractor") || kind === "computer" ? 5 : kind === "base" ? 8 : kind === "structure" ? 2.5 : 4;
   const c = el("circle", { cx: x, cy: -y, "data-r": problems ? r + 2 : r, fill: css(k.colour),
-    stroke: problems ? css("--critical") : css("--page"), "data-w": problems ? 3 : 1, cursor: "pointer" }, g);
-  if (onclick) c.addEventListener("click", (ev) => { ev.stopPropagation(); onclick(); });
+    stroke: problems ? css("--critical") : css("--page"), "data-w": problems ? 3 : 1,
+    ...(kind === "structure" ? { opacity: 0.7 } : {}) }, g);
+  if (onclick) {
+    // a finger-sized invisible target above every mark; the mark itself stays small
+    const hit = el("circle", { cx: x, cy: -y, "data-r": Math.max(r + 6, 14), fill: "transparent", cursor: "pointer" }, $("hits"));
+    hit.addEventListener("click", (ev) => { ev.stopPropagation(); onclick(); });
+    const text = tipText || (KIND[kind] || {}).label || kind;
+    hit.addEventListener("pointerenter", (ev) => { if (ev.pointerType === "mouse") tip(text, ev); });
+    hit.addEventListener("pointermove", (ev) => { if (ev.pointerType === "mouse") tip(text, ev); });
+    hit.addEventListener("pointerleave", () => { $("tip").hidden = true; });
+  }
   return c;
 }
 
+function tip(text, ev) {
+  const T = $("tip"), m = $("main").getBoundingClientRect();
+  T.textContent = text;
+  T.hidden = false;
+  const x = Math.min(ev.clientX - m.left + 14, m.width - T.offsetWidth - 8);
+  T.style.left = `${Math.max(8, x)}px`;
+  T.style.top = `${Math.max(8, ev.clientY - m.top - 34)}px`;
+}
+
+let selected = null;      // [x, y] of the item whose details are open
+function drawSel() {
+  const g = $("sel");
+  if (!g) return;
+  g.innerHTML = "";
+  if (selected) el("circle", { cx: selected[0], cy: -selected[1], r: 13 * px(), fill: "none", stroke: css("--ink-1"), "stroke-width": 2 * px() }, g);
+}
+
 function label(g, x, y, text, colour = "--ink-2", fs = 13) {
-  const t = el("text", { "data-x": x, "data-y": y, "data-fs": fs, fill: css(colour) }, g);
+  // dark outline under the glyphs keeps labels readable over height cells and lines
+  const t = el("text", { "data-x": x, "data-y": y, "data-fs": fs, fill: css(colour), stroke: css("--page"),
+    "data-w": 3, "paint-order": "stroke", "stroke-linejoin": "round" }, g);
   t.textContent = text;
   return t;
 }
 
 function drawPlanet(g) {
   const pts = planet.points;
-  for (const p of pts.filter(p => p.kind !== "base")) dot(g, p.x, p.y, p.kind, () => show(p));
+  for (const p of pts.filter(p => p.kind !== "base")) dot(g, p.x, p.y, p.kind, () => show(p), false, p.name);
   fit(pts.map(p => [p.x, p.y]), 0.25, 3000);
   const k = px(), placed = [];
   for (const p of pts.filter(p => p.kind === "base").sort((a, b) => b.y - a.y)) {
-    dot(g, p.x, p.y, "base", () => openBase(p.name), p.loose > 0);
+    dot(g, p.x, p.y, "base", () => openBase(p.name), p.loose > 0, `${p.name} · open layout`);
     // stack labels of bases that sit within a label's height of each other
     const dy = placed.filter(q => Math.abs(q.x - p.x) < 160 * k && Math.abs(q.y - p.y) < 18 * k).length;
     placed.push(p);
@@ -248,13 +318,15 @@ function drawBase(g) {
   const lay = planet.layouts[base];
   if (!lay) { label(g, 0, 0, "No layout for this base"); return; }
   for (const s of lay.segments) {
+    if (hiddenKinds.has(s.kind)) continue;
     const st = SEG[s.kind];
     el("line", { x1: s.a[0], y1: -s.a[1], x2: s.b[0], y2: -s.b[1], stroke: css(st.colour), "data-w": st.w * 4,
       ...(st.dash ? { "data-dash": st.dash } : {}), "stroke-linecap": "round" }, g);
   }
   const order = ["structure", "plants", "depot", "power", "refiner", "teleporter", "extractor-mineral", "extractor-gas", "computer"];
   const items = [...lay.items].sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || !!a.problems - !!b.problems);
-  for (const it of items) dot(g, it.e, it.n, it.kind, () => show(it), !!it.problems);
+  for (const it of items) dot(g, it.e, it.n, it.kind, () => show(it), !!it.problems,
+    (KIND[it.kind] || {}).label + (Math.hypot(it.e, it.n) < 2 ? "" : ` · ${fmtDist(Math.hypot(it.e, it.n))} ${compass(bearing(it.e, it.n))} of the computer`));
   const loose = lay.items.filter(i => i.problems);
   for (const it of loose) label(g, it.e, it.n, "⚠ " + it.problems.join(", "), "--critical", 13);
   fit(lay.items.map(i => [i.e, i.n]), 0.06);
@@ -277,9 +349,12 @@ function zoomTo(x, y, w) {
 function show(p) {
   const P = $("panel");
   const rows = [];
-  if (p.kind === "base") rows.push(`<b>${p.name}</b>`, `${p.objects} objects`, `lat ${p.lat}°, lon ${p.lon}°`);
-  if (p.kind === "base" && p.power && p.power !== "none") rows.push(`Power: <span class="pill ${p.power}">${POWER[p.power]} ${p.power_headline}</span>`);
-  else if (p.name) rows.push(`<b>${p.name}</b>`);
+  selected = p.e !== undefined ? [p.e, p.n] : [p.x, p.y];
+  drawSel();
+  if (p.kind === "base") {
+    rows.push(`<b>${p.name}</b>`, `${p.objects} objects`, `lat ${p.lat}°, lon ${p.lon}°`);
+    if (p.power && p.power !== "none") rows.push(`Power: <span class="pill ${p.power}">${POWER[p.power]} ${p.power_headline}</span>`);
+  } else if (p.name) rows.push(`<b>${p.name}</b>`);
   else rows.push(`<b>${(KIND[p.kind] || {}).label || p.kind}</b> <span style="color:var(--ink-muted)">${p.id || ""}</span>`);
   if (p.e !== undefined) {
     const d = Math.hypot(p.e, p.n);
@@ -300,9 +375,12 @@ function show(p) {
     btns.push(`<button onclick='setTarget(${JSON.stringify(key).replace(/'/g, "&#39;")}, ${JSON.stringify(lbl).replace(/'/g, "&#39;")})'>Go to</button>`);
   }
   if (btns.length) rows.push(btns.join(" "));
-  P.innerHTML = `<button class="close" onclick="this.parentNode.style.display='none'">×</button>` + rows.join("<br>");
+  P.innerHTML = `<button class="close" onclick="closePanel()">×</button>` + rows.join("<br>");
   P.style.display = "block";
 }
+
+function closePanel() { $("panel").style.display = "none"; selected = null; drawSel(); }
+window.closePanel = closePanel;
 
 function issues(list) {
   const I = $("issues");
@@ -317,27 +395,47 @@ function issues(list) {
 
 function legend(kinds, segs) {
   const L = $("legend");
-  L.innerHTML = kinds.map(k => `<span><i style="background:${css(KIND[k].colour)}"></i>${KIND[k].label}</span>`).join("")
-    + segs.map(s => `<span><i style="border-radius:0;height:3px;background:${css(SEG[s].colour)}"></i>${SEG[s].label}</span>`).join("")
+  const chip = (key, swatch, text) => `<button class="chip${hiddenKinds.has(key) ? " off" : ""}" data-kind="${key}" title="Show or hide">${swatch}${text}</button>`;
+  L.innerHTML = kinds.map(k => chip(k, `<i style="background:${css(KIND[k].colour)}"></i>`, KIND[k].label)).join("")
+    + segs.map(s => chip(s, `<i style="border-radius:0;height:3px;background:${css(SEG[s].colour)}"></i>`, SEG[s].label)).join("")
     + `<span><i style="background:transparent;border:2px solid ${css("--critical")}"></i>⚠ problem</span>`
     + `<span><i style="border-radius:0;clip-path:polygon(50% 0,100% 100%,50% 75%,0 100%);background:${css("--ink-1")}"></i>You</span>`
     + `<span><i style="border-radius:0;height:3px;background:${css("--ink-muted")}"></i>Your trail</span>`;
+  L.querySelectorAll("button.chip").forEach(b => b.onclick = () => toggleKind(b.dataset.kind));
   if (typeof legendHeights === "function") legendHeights();
 }
 
 function crumbs() {
   const C = $("crumbs");
-  C.innerHTML = base ? `<a onclick="openPlanet()">${planet.label}</a> › ${base}` : `${planet.bases.length} base${planet.bases.length === 1 ? "" : "s"} · radius ${fmtDist(planet.radius)}`;
+  C.innerHTML = base ? `<a onclick="openPlanet()">${planet.bases.length === 1 ? "Planet" : planet.label}</a> › ${base}` : `${planet.bases.length} base${planet.bases.length === 1 ? "" : "s"} · radius ${fmtDist(planet.radius)}`;
+}
+
+function niceLen(target) {
+  const pow = Math.pow(10, Math.floor(Math.log10(target)));
+  return [1, 2, 5, 10].map(m => m * pow).filter(v => v <= target).pop() || pow;
+}
+
+// Recessive grid at the scale-bar spacing; drawn wide enough to cover the view when it is rotated.
+function drawGrid() {
+  const g = $("grid");
+  if (!g) return;
+  g.innerHTML = "";
+  const k = px(), step = niceLen(120 * k), r = Math.hypot(view.w, view.h);
+  const cx = view.x + view.w / 2, cy = view.y + view.h / 2;
+  const x0 = Math.floor((cx - r) / step) * step, y0 = Math.floor((cy - r) / step) * step;
+  const d = [];
+  for (let x = x0; x <= cx + r; x += step) d.push(`M ${x} ${-(cy + r)} V ${-(cy - r)}`);
+  for (let y = y0; y <= cy + r; y += step) d.push(`M ${cx - r} ${-y} H ${cx + r}`);
+  el("path", { d: d.join(" "), stroke: css("--grid"), "stroke-width": k, fill: "none" }, g);
 }
 
 function drawScale() {
   const s = $("scale");
   if (!s) return;
   s.innerHTML = "";
+  drawGrid();
   const k = px();
-  const target = 120 * k;
-  const pow = Math.pow(10, Math.floor(Math.log10(target)));
-  const len = [1, 2, 5, 10].map(m => m * pow).filter(v => v <= target).pop() || pow;
+  const len = niceLen(120 * k);
   const x0 = view.x + view.w - len - 16 * k, y0 = -view.y - 22 * k;
   el("line", { x1: x0, y1: y0, x2: x0 + len, y2: y0, stroke: css("--ink-2"), "stroke-width": 2 * k }, s);
   const t = el("text", { x: x0, y: y0 - 6 * k, fill: css("--ink-2"), "font-size": 12 * k }, s);
@@ -375,8 +473,14 @@ window.openBase = openBase; window.openPlanet = openPlanet;
     setView({ x: mx - (mx - view.x) * f, y: my - (my - view.y) * f, w: view.w * f, h: view.h * f });
     rescale();
   };
+  const centre = () => { const b = svg.getBoundingClientRect(); return [b.left + b.width / 2, b.top + (b.height - coveredBottom()) / 2]; };
+  $("zin").onclick = () => zoom(1 / 1.6, ...centre());
+  $("zout").onclick = () => zoom(1.6, ...centre());
+  $("findme").onclick = () => { const m = me(); if (m) { setView({ ...view, x: m.x - view.w / 2, y: m.y - view.h / 2 - coveredBottom() / 2 * px() }); rescale(); } };
   svg.addEventListener("wheel", (e) => { e.preventDefault(); zoom(Math.exp(e.deltaY * 0.0015), e.clientX, e.clientY); }, { passive: false });
-  svg.addEventListener("pointerdown", (e) => { if (e.isPrimary && follow) setFollow(0); svg.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, e); last = e; svg.classList.add("dragging"); });
+  let moved = 0;
+  // capture only once a drag starts: capturing on press would steal the click from the mark under a tap
+  svg.addEventListener("pointerdown", (e) => { moved = 0; ptrs.set(e.pointerId, e); last = e; svg.classList.add("dragging"); });
   svg.addEventListener("pointermove", (e) => {
     if (!ptrs.has(e.pointerId)) return;
     ptrs.set(e.pointerId, e);
@@ -388,6 +492,11 @@ window.openBase = openBase; window.openPlanet = openPlanet;
       return;
     }
     const b = svg.getBoundingClientRect();
+    moved += Math.hypot(e.clientX - last.clientX, e.clientY - last.clientY);
+    if (moved > 4 && !svg.hasPointerCapture(e.pointerId)) svg.setPointerCapture(e.pointerId);
+    if (follow && moved < 8) return;            // a tap, not a drag: keep centring
+    if (follow) setFollow(0);
+    cancelAnimationFrame(glide);
     const dx = (e.clientX - last.clientX) / b.width * view.w, dy = (e.clientY - last.clientY) / b.height * view.h;
     setView({ ...view, x: view.x - dx, y: view.y + dy });
     last = e;
@@ -530,10 +639,23 @@ function me() {
 function centreOnMe() {
   const m = me();
   if (!m) return;
-  // on a phone the nearby panel spans the bottom: centre on the map above it
-  const box = $("nearby").getBoundingClientRect(), main = $("main").getBoundingClientRect();
-  const covered = box.width > main.width * 0.6 ? Math.max(0, main.bottom - box.top) : 0;
-  setView({ ...view, x: m.x - view.w / 2, y: m.y - view.h / 2 - covered / 2 * px() });
+  // centre on the part of the map the panels leave visible
+  glideTo(m.x - view.w / 2, m.y - view.h / 2 - coveredBottom() / 2 * px());
+}
+
+// Glide the view to (x, y) over ~0.4 s so following looks like movement, not jumps.
+let glide = null;
+function glideTo(x, y) {
+  cancelAnimationFrame(glide);
+  const from = { x: view.x, y: view.y }, t0 = performance.now(), T = 400;
+  if (Math.hypot(x - from.x, y - from.y) > view.w * 2) { setView({ ...view, x, y }); rotate(); return; }   // far: jump
+  const step = (t) => {
+    const a = Math.min(1, (t - t0) / T), e = a * (2 - a);
+    setView({ ...view, x: from.x + (x - from.x) * e, y: from.y + (y - from.y) * e });
+    rotate();
+    if (a < 1) glide = requestAnimationFrame(step);
+  };
+  glide = requestAnimationFrame(step);
 }
 
 function drawLive() {
@@ -585,14 +707,17 @@ function drawNearby() {
   rows.push(`<h2 id="nearbyhead" title="Show or hide the list">${collapsed ? "▸" : "▾"} Nearby you built <span>${live.state === "live" ? "arrows are relative to your facing" : "stale"}</span></h2>`);
   if (collapsed) { N.innerHTML = rows.join(""); $("nearbyhead").onclick = toggleNearby; return; }
   for (const r of live.nearby) {
-    const name = r.kind === "base" ? r.base : `${(KIND[r.kind] || {}).label || r.kind} <small>${r.base}</small>`;
+    const oneBase = planet && planet.bases.length === 1;
+    const name = r.kind === "base" ? r.base : `${(KIND[r.kind] || {}).label || r.kind}${oneBase ? "" : ` <small>${r.base}</small>`}`;
     rows.push(`<div class="row${target && target.key === r.key ? " on" : ""}" data-key="${r.key.replace(/"/g, "&quot;")}" data-label="${(r.kind === "base" ? r.base : `${(KIND[r.kind] || {}).label || r.kind} · ${r.base}`).replace(/"/g, "&quot;")}">`
       + `${arrow(r.turn)}<span>${name}</span><span>${fmtDist(r.dist)} <small>${height(r.h)}</small></span></div>`);
   }
   const far = (live.bases || []).filter(b => !live.nearby.some(n => n.key === b.key));
   if (far.length) rows.push(`<h2 style="margin-top:6px">Other bases here</h2>` + far.map(r =>
     `<div class="row" data-key="${r.key.replace(/"/g, "&quot;")}" data-label="${r.base.replace(/"/g, "&quot;")}">${arrow(r.turn)}<span>${r.base}</span><span>${fmtDist(r.dist)}</span></div>`).join(""));
+  const appeared = !N.innerHTML;
   N.innerHTML = rows.join("");
+  if (appeared && !follow && view === fittedView && coveredBottom()) { const p = $("panel").style.display; render(); $("panel").style.display = p; }
   N.querySelectorAll(".row").forEach(d => d.onclick = () => setTarget(d.dataset.key, d.dataset.label));
   $("nearbyhead").onclick = toggleNearby;
 }
@@ -632,6 +757,7 @@ async function poll() {
         }
       }
       drawPill();
+      $("findme").disabled = !me();
       if (follow) centreOnMe();
       drawLive();
       rotate();
