@@ -627,8 +627,10 @@ function legendHeights() {
 
 // ---- live position (pymhf_mods/live_position.py via /api/live) ----
 let live = null, target = null, follow = 0, placed = false, userChose = false;   // follow: 0 off, 1 north up, 2 facing up
-const LOC = { FreighterInternals: "Freighter", IndoorInBase: "In a base", PlanetOnFoot: "On foot", PlanetInVehicle: "In exocraft",
-  PlanetInShip: "In ship (landed)", SpaceInShip: "In space", PlanetInAtmoShip: "Flying", SpaceStation: "Space station" };
+// cGcPlayerEnvironment locations as seen: the corvette interior reports "Freighter" (9), the capital freighter "FreighterInternals" (10)
+const LOC = { FreighterInternals: "Freighter", Freighter: "In your corvette", IndoorInBase: "In a base", PlanetOnFoot: "On foot",
+  PlanetInVehicle: "In exocraft", PlanetInShip: "In ship (landed)", SpaceInShip: "In space", PlanetInAtmoShip: "Flying",
+  SpaceStation: "Space station", Underwater: "Underwater", Cave: "In a cave" };
 const locName = (l) => LOC[l] || (l || "").replace(/([a-z])([A-Z])/g, "$1 $2");
 const turnWord = (t) => t === null || t === undefined ? "" : Math.abs(t) < 10 ? "ahead" : Math.abs(t) > 170 ? "behind" : `${Math.round(Math.abs(t))}° ${t < 0 ? "left" : "right"}`;
 // direction relative to the player's facing: up = straight ahead
