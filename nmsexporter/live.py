@@ -19,7 +19,7 @@ import json
 import math
 import os
 import time
-from collections import deque
+from collections import Counter, deque
 
 from . import maps
 from .finds import Finds
@@ -150,7 +150,8 @@ class Elevation:
 
     def __init__(self):
         self.samples: dict = {}     # address -> [rel]
-        self.radius: dict = {}      # address -> nominal radius
+        self.radius: dict = {}      # address -> nominal radius (the value most samples agree on)
+        self._radii: dict = {}      # address -> Counter of |rel| - distance_from_planet
         self.water: dict = {}       # address -> water surface above the nominal radius (absent: no sea seen)
         self.anchor: dict = {}      # address -> first surface sample: the centre of a base-less planet's map
         self.visited: dict = {}     # address -> the mod's ua dict, for naming base-less planets
@@ -184,7 +185,11 @@ class Elevation:
         rel = s["rel"]
         dfp = s.get("distance_from_planet")
         if dfp is not None and dfp < 20000 and (address >> 52) & 0xF:
-            self.radius[address] = round(math.hypot(*rel) - dfp)
+            # 818 of 1,002 samples on Pondal IX gave 98304; a few (ship, underwater) gave 98280-98303,
+            # so the most common value is the planet's, not the latest one
+            c = self._radii.setdefault(address, Counter())
+            c[round(math.hypot(*rel) - dfp)] += 1
+            self.radius[address] = c.most_common(1)[0][0]
             self.anchor.setdefault(address, rel)
             self.visited.setdefault(address, s.get("ua"))
             if s.get("sealevel"):

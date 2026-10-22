@@ -28,6 +28,7 @@ from nmsexporter.nms import Collector  # noqa: E402
 HOST = os.environ.get("NMS_EXPORTER_HOST", "0.0.0.0")
 PORT = int(os.environ.get("NMS_EXPORTER_PORT", "9877"))
 
+ICON_DIR = os.environ.get("NMS_ICON_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "icons"))
 GLYPH_DIR = os.environ.get("NMS_GLYPH_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "glyphs"))
 collector = Collector()
 live = Live()
@@ -99,6 +100,16 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(json.dumps({"systems": live.systems.listing(maps._addr(unquote_plus(params.get("from", ""))),
                                                                               collector.raw_bases, runes),
                                               "known_runes": runes, "ly_per_voxel": 400}).encode(), "application/json")
+            if path.startswith("/icon/") and path.endswith(".png"):
+                # the game's HUD icons, extracted by scripts/nms-icons (not in the repo)
+                n = path[len("/icon/"):-len(".png")]
+                if n and all(c.isalnum() or c in "._" for c in n) and ".." not in n:
+                    try:
+                        with open(os.path.join(ICON_DIR, f"{n}.png"), "rb") as f:
+                            return self._send(f.read(), "image/png")
+                    except OSError:
+                        pass
+                return self._send(b"no icon (run scripts/nms-icons)", "text/plain", 404)
             if path.startswith("/glyph/") and path.endswith(".png"):
                 # portal glyph icons extracted from the game by scripts/nms-glyphs (not in the repo)
                 h = path[len("/glyph/"):-len(".png")].lower()

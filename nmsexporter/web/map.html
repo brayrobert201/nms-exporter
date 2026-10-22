@@ -167,6 +167,24 @@ const KIND = {
   "mark":              { label: "Your mark",         colour: "--ink-1",    r: 1.2 },
 };
 const findKind = (k) => k === "deposit" ? "deposit-find" : k;
+
+// The game's own HUD icons (scripts/nms-icons, served at /icon/<name>.png). Hotspots use the
+// survey icon with its class letter, like the visor. Without the icons the map keeps its shapes.
+let ICONS = false;
+const ICON = { base: "base", exocraft: "vehicle", settlement: "settlement", deposit: "pickup.terrain",
+  "deposit-find": "pickup.mineral", mark: "custommarker" };
+const SURVEY = { "hotspot-mineral": "minerals", "hotspot-gas": "gas", "hotspot-power": "power" };
+function iconOf(kind, cls) {
+  if (!ICONS) return null;
+  if (SURVEY[kind]) return `surveying.${SURVEY[kind]}${cls ? cls.toLowerCase() : ""}`;
+  return ICON[kind] || null;
+}
+// an icon of `size` screen pixels at (x, y) in map units; rescale() keeps it that size
+function icon(g, x, y, name, size) {
+  const k = px();
+  return el("image", { href: `/icon/${name}.png`, x: x - size * k / 2, y: -y - size * k / 2, width: size * k, height: size * k,
+    "data-icon": size, "data-cx": x, "data-cy": y }, g);
+}
 const SEG = { pipe: { colour: "--ink-muted", w: 0.5, label: "Pipe" },
               wire: { colour: "--series-4", w: 0.35, dash: "1.2 0.8", label: "Wire" },
               link: { colour: "--series-7", w: 0.35, dash: "0.5 1", label: "Wire teleport" } };
@@ -245,6 +263,11 @@ function rescale() {
     t.setAttribute("font-size", t.dataset.fs * k);
     t.setAttribute("x", +t.dataset.x + 10 * k); t.setAttribute("y", -t.dataset.y + (4 + (+t.dataset.dy || 0)) * k);
   });
+  document.querySelectorAll("[data-icon]").forEach(i => {
+    const s = i.dataset.icon * k;
+    i.setAttribute("width", s); i.setAttribute("height", s);
+    i.setAttribute("x", i.dataset.cx - s / 2); i.setAttribute("y", -i.dataset.cy - s / 2);
+  });
   drawSel();
   if (typeof drawFinds === "function") drawFinds();
   drawLive();
@@ -265,9 +288,12 @@ function dot(g, x, y, kind, onclick, problems, tipText) {
   if (hiddenKinds.has(kind) && !problems) return null;
   const k = KIND[kind] || KIND.structure;
   const r = kind.startsWith("extractor") || kind === "computer" ? 5 : kind === "base" ? 8 : kind === "structure" ? 2.5 : 4;
-  const c = el("circle", { cx: x, cy: -y, "data-r": problems ? r + 2 : r, fill: css(k.colour),
-    stroke: problems ? css("--critical") : css("--page"), "data-w": problems ? 3 : 1,
-    ...(kind === "structure" ? { opacity: 0.7 } : {}) }, g);
+  const ic = iconOf(kind);
+  const c = ic ? icon(g, x, y, ic, kind === "base" ? 30 : 24)
+    : el("circle", { cx: x, cy: -y, "data-r": problems ? r + 2 : r, fill: css(k.colour),
+      stroke: problems ? css("--critical") : css("--page"), "data-w": problems ? 3 : 1,
+      ...(kind === "structure" ? { opacity: 0.7 } : {}) }, g);
+  if (ic && problems) el("circle", { cx: x, cy: -y, "data-r": 18, fill: "none", stroke: css("--critical"), "data-w": 3 }, g);
   if (onclick) {
     // a finger-sized invisible target above every mark; the mark itself stays small
     const hit = el("circle", { cx: x, cy: -y, "data-r": Math.max(r + 6, 14), fill: "transparent", cursor: "pointer" }, $("hits"));
@@ -426,8 +452,9 @@ function issues(list) {
 
 function legend(kinds, segs) {
   const L = $("legend");
+  const sw = (k, fallback) => iconOf(k) ? `<img src="/icon/${iconOf(k)}.png" width="16" height="16" style="vertical-align:-3px;margin-right:4px">` : fallback;
   const chip = (key, swatch, text) => `<button class="chip${hiddenKinds.has(key) ? " off" : ""}" data-kind="${key}" title="Show or hide">${swatch}${text}</button>`;
-  L.innerHTML = kinds.map(k => chip(k, `<i style="background:${css(KIND[k].colour)}"></i>`, KIND[k].label)).join("")
+  L.innerHTML = kinds.map(k => chip(k, sw(k, `<i style="background:${css(KIND[k].colour)}"></i>`), KIND[k].label)).join("")
     + segs.map(s => chip(s, `<i style="border-radius:0;height:3px;background:${css(SEG[s].colour)}"></i>`, SEG[s].label)).join("")
     + `<span><i style="background:transparent;border:2px solid ${css("--critical")}"></i>⚠ problem</span>`
     + `<span><i style="border-radius:0;clip-path:polygon(50% 0,100% 100%,50% 75%,0 100%);background:${css("--ink-1")}"></i>You</span>`
@@ -510,6 +537,13 @@ window.openBase = openBase; window.openPlanet = openPlanet;
   $("zin").onclick = () => zoom(1 / 1.6, ...centre());
   $("zout").onclick = () => zoom(1.6, ...centre());
   $("findme").onclick = () => { const m = me(); if (m) { setView({ ...view, x: m.x - view.w / 2, y: m.y - view.h / 2 - coveredBottom() / 2 * px() }); rescale(); } };
+  svg.addEventListener("pointermove", (e) => {
+    if (e.pointerType !== "mouse" || e.target.closest("#hits, #findhits") || !terrain || rotation()) return;
+    const [mx, my] = toMap(e.clientX, e.clientY), h = heightAt(mx, my);
+    if (h === null) { $("tip").hidden = true; return; }
+    tip(heightText(h), e);
+  });
+  svg.addEventListener("pointerleave", () => { $("tip").hidden = true; });
   svg.addEventListener("wheel", (e) => { e.preventDefault(); zoom(Math.exp(e.deltaY * 0.0015), e.clientX, e.clientY); }, { passive: false });
   let moved = 0;
   // capture only once a drag starts: capturing on press would steal the click from the mark under a tap
@@ -544,6 +578,7 @@ let resizeTimer = null;
 window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
 
 async function load() {
+  try { ICONS = (await fetch("/icon/base.png", { method: "HEAD" })).ok; } catch (e) { ICONS = false; }
   const r = await fetch("/api/map", { cache: "no-store" });
   data = await r.json();
   const sel = $("planet");
@@ -595,6 +630,15 @@ function drawFinds() {
     const kind = findKind(f.kind), p = findPos(f);
     if (!p || hiddenKinds.has(kind)) continue;
     const c = css(KIND[kind].colour);
+    if (kind === "mark" && ICONS) {
+      icon(g, p[0], p[1], "custommarker", 26);
+      const t = el("text", { x: p[0] + 16 * k, y: -p[1] + 4 * k, "font-size": 12 * k, fill: css("--ink-1"), stroke: css("--page"),
+        "stroke-width": 3 * k, "paint-order": "stroke", "data-x": p[0], "data-y": p[1] }, g);
+      t.textContent = f.name;
+      const hitm = el("circle", { cx: p[0], cy: -p[1], r: 15 * k, fill: "transparent", cursor: "pointer" }, hits);
+      hitm.addEventListener("click", (ev) => { ev.stopPropagation(); showFind(f, p); });
+      continue;
+    }
     if (kind === "mark") {             // a flag on a pole, with its name (/mark in game chat)
       el("path", { d: `M ${p[0]} ${-p[1]} v ${-16 * k} l ${10 * k} ${4 * k} l ${-10 * k} ${4 * k}`, fill: css("--ink-1"),
         stroke: css("--page"), "stroke-width": 1.5 * k, "stroke-linejoin": "round" }, g);
@@ -608,17 +652,23 @@ function drawFinds() {
     if (kind !== "deposit-find")      // the area an extractor must be inside to draw from the hotspot
       el("circle", { cx: p[0], cy: -p[1], r: reach(f), fill: "none", stroke: c, "stroke-width": 1.5 * k,
         "stroke-dasharray": `${6 * k} ${5 * k}`, opacity: 0.55 }, g);
-    const s = (kind === "deposit-find" ? 5 : 8) * k;
-    el("path", { d: kind === "deposit-find" ? `M ${p[0] - s} ${-p[1] - s} h ${2 * s} v ${2 * s} h ${-2 * s} Z`
-        : `M ${p[0]} ${-p[1] - s * 1.3} L ${p[0] + s} ${-p[1]} L ${p[0]} ${-p[1] + s * 1.3} L ${p[0] - s} ${-p[1]} Z`,
-      fill: c, stroke: css("--page"), "stroke-width": 1.5 * k }, g);
+    const ic = iconOf(kind, f.class);
+    if (ic) icon(g, p[0], p[1], ic, kind === "deposit-find" ? 20 : 30);
+    else {
+      const s = (kind === "deposit-find" ? 5 : 8) * k;
+      el("path", { d: kind === "deposit-find" ? `M ${p[0] - s} ${-p[1] - s} h ${2 * s} v ${2 * s} h ${-2 * s} Z`
+          : `M ${p[0]} ${-p[1] - s * 1.3} L ${p[0] + s} ${-p[1]} L ${p[0]} ${-p[1] + s * 1.3} L ${p[0] - s} ${-p[1]} Z`,
+        fill: c, stroke: css("--page"), "stroke-width": 1.5 * k }, g);
+    }
     if (kind !== "deposit-find") {
       // class and resource beside the diamond; data-x/y let facing-up mode keep it upright
       const res = f.options && f.basis !== "recorded by you from the visor" ? "?" : (f.resource || "?");
-      const t = el("text", { x: p[0] + 11 * k, y: -p[1] + 4 * k, "font-size": 12 * k, fill: css(f.class ? "--ink-1" : "--ink-2"),
+      const t = el("text", { x: p[0] + (ic ? 17 : 11) * k, y: -p[1] + 4 * k, "font-size": 12 * k, fill: css(f.class ? "--ink-1" : "--ink-2"),
         stroke: css("--page"), "stroke-width": 3 * k, "paint-order": "stroke", "stroke-linejoin": "round",
         "data-x": p[0], "data-y": p[1] }, g);
-      t.textContent = `${f.class || "?"} ${kind === "hotspot-power" ? `${f.class ? f.rates[f.class] + " kP" : "power"}` : res}`;
+      // with icons the class letter is in the icon itself
+      const cls = ic ? "" : `${f.class || "?"} `;
+      t.textContent = `${cls}${kind === "hotspot-power" ? `${f.class ? f.rates[f.class] + " kP" : "power"}` : res}`;
     }
     const hit = el("circle", { cx: p[0], cy: -p[1], r: 14 * k, fill: "transparent", cursor: "pointer" }, hits);
     hit.addEventListener("click", (ev) => { ev.stopPropagation(); showFind(f, p); });
@@ -669,7 +719,9 @@ function legendFinds() {
   for (const k of kinds) {
     const b = document.createElement("button");
     b.className = `chip findchip${hiddenKinds.has(k) ? " off" : ""}`;
-    b.innerHTML = `<i style="border-radius:${k === "deposit-find" ? "1px" : "1px;transform:rotate(45deg) scale(.85)"};background:${css(KIND[k].colour)}"></i>${KIND[k].label}`;
+    const ic = iconOf(k);
+    b.innerHTML = (ic ? `<img src="/icon/${ic}.png" width="16" height="16" style="vertical-align:-3px;margin-right:4px">`
+      : `<i style="border-radius:${k === "deposit-find" ? "1px" : "1px;transform:rotate(45deg) scale(.85)"};background:${css(KIND[k].colour)}"></i>`) + KIND[k].label;
     b.onclick = () => toggleKind(k);
     L.insertBefore(b, hl);
   }
@@ -711,17 +763,119 @@ async function loadElevation() {
   elevTimer = setTimeout(loadElevation, 15000);
 }
 
+// ---- terrain surface: the height samples interpolated (inverse-distance weighting) into a raster,
+// coloured by height, hill-shaded from the north-west, with contour lines (marching squares).
+// Only ground near a sample is drawn, fading out at its edge: where you have never been stays dark.
+let terrain = null;      // {x0, y1, res, W, H, z: Float32Array (NaN = unknown)} in map units, for hover readout
+const hexRgb = (h) => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+function heightRgb(h) {
+  if (elev.water) {                           // diverging about the water surface, gray at the line
+    const top = Math.max(Math.abs(elev.min), Math.abs(elev.max), 2), t = Math.min(1, Math.abs(h) / top);
+    const mid = hexRgb(css("--div-mid")), end = hexRgb(css(h < 0 ? "--div-below" : "--div-above"));
+    return mid.map((m, i) => m + (end[i] - m) * Math.sqrt(t));
+  }
+  const ramp = SEQ.map(v => hexRgb(css(v)));
+  const t = Math.max(0, Math.min(1, (h - elev.min) / Math.max(elev.max - elev.min, 1))) * (ramp.length - 1);
+  const i = Math.min(ramp.length - 2, Math.floor(t)), f = t - i;
+  return ramp[i].map((a, k) => a + (ramp[i + 1][k] - a) * f);
+}
+
+function buildTerrain() {
+  const c = elev.cell, res = c / 2, R = 3.5 * c, near = 1.2 * c;
+  const pts = new Map();
+  let i0 = Infinity, i1 = -Infinity, j0 = Infinity, j1 = -Infinity;
+  for (const [i, j, h] of elev.cells) {
+    pts.set(`${i},${j}`, h);
+    i0 = Math.min(i0, i); i1 = Math.max(i1, i); j0 = Math.min(j0, j); j1 = Math.max(j1, j);
+  }
+  const M = 4, x0 = (i0 - M) * c, y0 = (j0 - M) * c;
+  const W = Math.round((i1 - i0 + 1 + 2 * M) * c / res), H = Math.round((j1 - j0 + 1 + 2 * M) * c / res);
+  const z = new Float32Array(W * H).fill(NaN), a = new Float32Array(W * H);
+  for (let py = 0; py < H; py++) for (let qx = 0; qx < W; qx++) {
+    const x = x0 + (qx + 0.5) * res, y = y0 + (H - py - 0.5) * res;       // row 0 is the north edge
+    const ci = Math.floor(x / c), cj = Math.floor(y / c);
+    let ws = 0, zs = 0, dmin = Infinity;
+    for (let di = -4; di <= 4; di++) for (let dj = -4; dj <= 4; dj++) {
+      const h = pts.get(`${ci + di},${cj + dj}`);
+      if (h === undefined) continue;
+      const d = Math.hypot(x - (ci + di + 0.5) * c, y - (cj + dj + 0.5) * c);
+      if (d > R) continue;
+      dmin = Math.min(dmin, d);
+      const w = 1 / Math.max(d * d, 1);
+      ws += w; zs += w * h;
+    }
+    if (!ws) continue;
+    z[py * W + qx] = zs / ws;
+    a[py * W + qx] = dmin <= near ? 1 : Math.max(0, 1 - (dmin - near) / (R - near));
+  }
+  return { x0, y1: y0 + H * res, res, W, H, z, a };
+}
+
 function drawElevation() {
   const g = $("elev");
   if (!g) return;
   g.innerHTML = "";
+  terrain = null;
   if (!showHeights || !elev || !elev.cells.length) return;
-  const c = elev.cell;
-  for (const [i, j, h] of elev.cells) {
-    const [fill, opacity] = heightColour(h);
-    const r = el("rect", { x: i * c, y: -(j + 1) * c, width: c, height: c, fill, opacity }, g);
-    el("title", {}, r).textContent = heightText(h);
+  const T = terrain = buildTerrain(), { W, H, z, a, res } = T;
+  // colour x hillshade (sun from the north-west, 45 degrees up), exaggerated so gentle ground still reads
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const ctx = cv.getContext("2d"), img = ctx.createImageData(W, H);
+  const ex = 3, sun = [-Math.SQRT1_2 * Math.SQRT1_2, Math.SQRT1_2 * Math.SQRT1_2, Math.SQRT1_2];   // (east, north, up)
+  const at = (qx, py) => { const v = z[Math.max(0, Math.min(H - 1, py)) * W + Math.max(0, Math.min(W - 1, qx))]; return v; };
+  for (let py = 0; py < H; py++) for (let qx = 0; qx < W; qx++) {
+    const k = py * W + qx, h = z[k];
+    if (Number.isNaN(h)) continue;
+    const e = (at(qx + 1, py) - at(qx - 1, py)), n = (at(qx, py - 1) - at(qx, py + 1));   // per 2 px
+    const dzdx = (Number.isNaN(e) ? 0 : e) * ex / (2 * res), dzdy = (Number.isNaN(n) ? 0 : n) * ex / (2 * res);
+    const len = Math.hypot(dzdx, dzdy, 1), shade = Math.max(0, (-dzdx * sun[0] - dzdy * sun[1] + sun[2]) / len);
+    const rgb = heightRgb(h), lit = 0.45 + 0.75 * shade;
+    img.data[4 * k] = Math.min(255, rgb[0] * lit); img.data[4 * k + 1] = Math.min(255, rgb[1] * lit);
+    img.data[4 * k + 2] = Math.min(255, rgb[2] * lit); img.data[4 * k + 3] = 235 * a[k];
   }
+  ctx.putImageData(img, 0, 0);
+  el("image", { href: cv.toDataURL(), x: T.x0, y: -T.y1, width: W * res, height: H * res, preserveAspectRatio: "none",
+    style: "image-rendering:auto" }, g);
+  drawContours(g, T);
+}
+
+// Marching squares over the raster; every fifth level is an index contour.
+function drawContours(g, T) {
+  const { W, H, z, a, res, x0, y1 } = T, span = elev.max - elev.min;
+  if (span < 4) return;
+  const step = [1, 2, 5, 10, 20, 25, 50, 100, 200].find(s => span / s <= 12) || 500;
+  const ref = elev.water ? 0 : 0;
+  const X = (qx) => x0 + (qx + 0.5) * res, Y = (py) => -(y1 - (py + 0.5) * res);   // svg y is -north
+  const minor = [], major = [];
+  for (let lv = Math.ceil((elev.min - ref) / step) * step + ref; lv <= elev.max; lv += step) {
+    const out = Math.round((lv - ref) / step) % 5 === 0 ? major : minor;
+    for (let py = 0; py < H - 1; py++) for (let qx = 0; qx < W - 1; qx++) {
+      const k = py * W + qx, v = [z[k], z[k + 1], z[k + W + 1], z[k + W]];
+      if (v.some(Number.isNaN) || Math.min(a[k], a[k + 1], a[k + W], a[k + W + 1]) < 0.5) continue;
+      const idx = (v[0] > lv) | (v[1] > lv) << 1 | (v[2] > lv) << 2 | (v[3] > lv) << 3;
+      if (idx === 0 || idx === 15) continue;
+      const lerp = (p, q, vp, vq) => [p[0] + (q[0] - p[0]) * (lv - vp) / (vq - vp), p[1] + (q[1] - p[1]) * (lv - vp) / (vq - vp)];
+      const c0 = [X(qx), Y(py)], c1 = [X(qx + 1), Y(py)], c2 = [X(qx + 1), Y(py + 1)], c3 = [X(qx), Y(py + 1)];
+      const e = [lerp(c0, c1, v[0], v[1]), lerp(c1, c2, v[1], v[2]), lerp(c3, c2, v[3], v[2]), lerp(c0, c3, v[0], v[3])];
+      const segs = { 1: [[3, 0]], 2: [[0, 1]], 3: [[3, 1]], 4: [[1, 2]], 5: [[3, 0], [1, 2]], 6: [[0, 2]], 7: [[3, 2]],
+        8: [[2, 3]], 9: [[0, 2]], 10: [[0, 1], [2, 3]], 11: [[1, 2]], 12: [[1, 3]], 13: [[0, 1]], 14: [[0, 3]] }[idx];
+      for (const [p, q] of segs) out.push(`M${e[p][0].toFixed(1)} ${e[p][1].toFixed(1)}L${e[q][0].toFixed(1)} ${e[q][1].toFixed(1)}`);
+    }
+  }
+  const k = px();
+  if (minor.length) el("path", { d: minor.join(""), fill: "none", stroke: css("--ink-1"), "stroke-opacity": 0.18, "data-w": 0.8, "stroke-width": 0.8 * k }, g);
+  if (major.length) el("path", { d: major.join(""), fill: "none", stroke: css("--ink-1"), "stroke-opacity": 0.38, "data-w": 1.3, "stroke-width": 1.3 * k }, g);
+  T.step = step;
+}
+
+// height under the mouse, from the terrain raster
+function heightAt(mx, my) {
+  const T = terrain;
+  if (!T) return null;
+  const qx = Math.floor((mx - T.x0) / T.res), py = Math.floor((T.y1 - my) / T.res);
+  if (qx < 0 || py < 0 || qx >= T.W || py >= T.H) return null;
+  const k = py * T.W + qx;
+  return Number.isNaN(T.z[k]) || T.a[k] < 0.3 ? null : T.z[k];
 }
 
 // Water planets: diverging around the water surface (4 opacity steps per arm). Dry planets: one-hue ramp.
@@ -756,7 +910,7 @@ function legendHeights() {
       ? `${heightText(elev.min)} to ${heightText(elev.max)}`
       : `${Math.round(elev.min)}–${Math.round(elev.max)} m above the planet's base radius · no sea`;
     span.innerHTML = `${elev.water ? "Height vs water" : "Height"} <i style="width:90px;height:8px;border-radius:2px;background:linear-gradient(90deg,${grad})"></i>`
-      + `${range} · from ${elev.samples} steps on foot and ${elev.objects} built objects`;
+      + `${range}${terrain && terrain.step ? ` · contours every ${terrain.step} m` : ""} · from ${elev.samples} steps on foot and ${elev.objects} built objects`;
   }
   L.appendChild(span);
 }

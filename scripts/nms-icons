@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Extract the game's HUD map icons as PNGs for /map (served at /icon/<name>.png).
+#
+#   scripts/nms-icons        # writes data/icons/<name>.png (gitignored: game art)
+#
+# From NMSARC.TexUI.pak textures/ui/hud/icons/{scanning,player}/: the survey
+# hotspot icons with their class letter (surveying.<minerals|gas|power><a|b|c|s>,
+# and without a letter for an unknown class), and the place markers the map uses.
+# Needs scripts/nms-pak (and its /opt/nmstools) and ImageMagick's convert.
+set -eu
+HERE=$(cd "$(dirname "$0")/.." && pwd)
+OUT=$HERE/data/icons
+mkdir -p "$OUT"
+NAMES="scanning/surveying.minerals scanning/surveying.gas scanning/surveying.power"
+for t in minerals gas power; do for c in a b c s; do NAMES="$NAMES scanning/surveying.$t$c"; done; done
+NAMES="$NAMES scanning/pickup.mineral scanning/building.portal scanning/pickup.terrain
+  player/base player/vehicle player/settlement player/custommarker player/ship player/corvette player/freighter player/playerlocation"
+re=$(for n in $NAMES; do printf '%s|' "${n//./\\.}"; done); re=${re%|}
+list=$("$HERE/scripts/nms-pak" get "textures/ui/hud/icons/($re)\\.dds\$" --all)
+n=0
+for name in $NAMES; do
+  src=$(grep -E "/${name//./\\.}\.dds$" <<<"$list" | head -1)
+  [ -n "$src" ] || { echo "nms-icons: $name not found in the game files" >&2; continue; }
+  convert "$src" -resize 64x64 "$OUT/$(basename "$name").png" && n=$((n + 1))
+done
+echo "wrote $n icons to $OUT"
