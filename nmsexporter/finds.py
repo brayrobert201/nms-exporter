@@ -66,7 +66,7 @@ class Finds:
     def remember_planet(self, address: int | None, planet: dict | None):
         if address is None or not planet or not planet.get("substances"):
             return
-        keep = {k: planet.get(k) for k in ("substances", "biome", "weather", "storm_frequency", "intensity")}
+        keep = {k: planet.get(k) for k in ("substances", "biome", "weather", "storm_frequency", "intensity", "tile_colours")}
         if self.planets.get(address) == keep:
             return
         self.planets[address] = keep

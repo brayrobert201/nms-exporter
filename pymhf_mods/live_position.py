@@ -81,6 +81,9 @@ def _planet_info(p):
         # inline enums of cGcPlanetGenerationIntermediateData; the biome picks the Gas1 hotspot substance
         "biome": _name(data.GenerationData.Biome), "biome_subtype": _name(data.GenerationData.BiomeSubType),
         "planet_class": _name(data.GenerationData.Class), "size": _name(data.GenerationData.Size),
+        # the planet's 23 terrain tile colours (inline cTkColour floats), for tinting its map
+        "tile_colours": [[round(min(max(c.r, 0.0), 1.0), 3), round(min(max(c.g, 0.0), 1.0), 3), round(min(max(c.b, 0.0), 1.0), 3)]
+                         for c in list(data.TileColours)],
     }
 
 
@@ -101,7 +104,7 @@ def _address():
 class LivePosition(Mod):
     __author__ = "nms-exporter"
     __description__ = "Write the player's position to mod_saves/live four times a second"
-    __version__ = "0.3"
+    __version__ = "0.4"
 
     def __init__(self):
         super().__init__()

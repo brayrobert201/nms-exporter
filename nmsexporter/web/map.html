@@ -255,7 +255,22 @@ let fittedView = null;
 // Marks are drawn in screen pixels: they stay the same size while zooming.
 function px() { return view.w / Math.max($("main").getBoundingClientRect().width, 1); }
 
+// The planet's own terrain colours (live_position 0.4) tint the map's backdrop and the globe faintly:
+// ambience only, nothing is encoded in them. Average of the 23 tile colours.
+function planetTint() {
+  const tc = planet && planet.tile_colours;
+  if (!tc || !tc.length) return null;
+  const avg = [0, 1, 2].map(i => tc.reduce((a, c) => a + c[i], 0) / tc.length);
+  return `rgb(${avg.map(v => Math.round(v * 255)).join(",")})`;
+}
+function applyTint() {
+  const t = planetTint();
+  $("main").style.background = t
+    ? `radial-gradient(ellipse at 50% 42%, color-mix(in srgb, ${t} 22%, var(--surface-1)) 0%, var(--page) 74%)` : "";
+}
+
 function render() {
+  applyTint();
   const svg = $("svg");
   svg.innerHTML = "";
   const world = el("g", { id: "world" }, svg);
@@ -1017,7 +1032,10 @@ function drawGlobe() {
   const toScreen = (u) => [cx + R * vdot(u, e), cy - R * vdot(u, n), vdot(u, gc)];
   // sphere, lit from the upper left
   const gr = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.4, R * 0.1, cx, cy, R);
-  gr.addColorStop(0, css("--surface-2")); gr.addColorStop(1, css("--page"));
+  const tint = planetTint();
+  const mix = (a, b, t) => { const A = a.match(/\d+/g).map(Number), B = hexRgb(b); return `rgb(${A.map((v, i) => Math.round(v * t + B[i] * (1 - t))).join(",")})`; };
+  gr.addColorStop(0, tint ? mix(tint, css("--surface-2"), 0.45) : css("--surface-2"));
+  gr.addColorStop(1, tint ? mix(tint, css("--page"), 0.12) : css("--page"));
   ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.fill();
   ctx.strokeStyle = css("--axis"); ctx.lineWidth = 1.5; ctx.stroke();
   // graticule every 30 degrees, front side only

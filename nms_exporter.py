@@ -87,6 +87,7 @@ class Handler(BaseHTTPRequestHandler):
                     a = maps._addr(pl.get("address"))
                     pl["planet_name"], pl["system_name"] = live.systems.planet_name(a), live.systems.system_name(a)
                     pl["portal"] = portal(a) if a is not None else None
+                    pl["tile_colours"] = (live.finds.planets.get(a) or {}).get("tile_colours") if a is not None else None
                 return self._send(json.dumps(m).encode(),
                                   "application/json")
             if path == "/api/live":
