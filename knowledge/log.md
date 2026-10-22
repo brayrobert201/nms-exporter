@@ -2,6 +2,12 @@
 
 Newest first. One entry per change to the bundle: what landed, from where.
 
+## 2026-10-23 - Harvest All radius mod
+
+- `scripts/nms-mod-harvest-all` builds and installs the freighter Hydroponic Room
+  Harvest All radius as a loose-file mod (radius 300 installed); data-location
+  steps verified. Behaviour test pending (research/questions/harvest-all-behaviour.md).
+
 ## 2026-10-22 - hotspots seen live
 
 - Hotspot markers carry type and position but not the class (B vs S markers

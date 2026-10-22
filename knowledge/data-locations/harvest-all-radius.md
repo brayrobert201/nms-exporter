@@ -30,6 +30,12 @@ verified: []
 3. Place the MBIN at the same path, upper-cased, under
    `GAMEDATA/MODS/<ModName>/` (loose-file mods).
 
+`scripts/nms-mod-harvest-all install --radius N` does these steps (and `remove`
+undoes them). Done 2026-10-23 for Bob's freighter with radius 300: the
+recompiled MBIN differs from the original only in MBINCompiler's 5 header
+bytes, and the installed file decompiles to the stock MXML with just the
+Radius changed.
+
 Another mod that ships this file conflicts with yours. Rebuild after any game
 update that changes the file (`scripts/nms-pak find` and compare).
 

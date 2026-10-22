@@ -1,0 +1,152 @@
+#!/usr/bin/env python3
+"""Freighter Harvest All radius mod: one Harvest All reaches the whole farm.
+
+    nms-mod-harvest-all install [--radius 300]   # build from the installed game and install
+    nms-mod-harvest-all status                   # installed? which radius? built for which build?
+    nms-mod-harvest-all remove                   # delete the mod folder (the game is untouched otherwise)
+
+The freighter Hydroponic Room's floor entity runs GcHarvestPlantAction with
+Radius 6.0 (knowledge/data-locations/harvest-all-radius.md). This unpacks that
+file from the game's own paks (scripts/nms-pak), changes that one value,
+compiles it back with MBINCompiler and installs it as a loose-file mod under
+GAMEDATA/MODS/HarvestAllFreighter. Nothing in the game's own files changes;
+`remove` undoes it completely.
+
+Bob's farm (2026-10-22): 1,549 plants over 156 x 163 m on two floors 8 m
+apart; the farthest plant from any planter slot is 223 m, so 300 covers the
+farm from anywhere in it. How the game applies the radius (sphere or
+cylinder, through floors) was not observed before this mod.
+
+After a game update: `status` warns if the build changed; reinstall to rebuild
+from the new files. Refuses to run while NMS.exe is running. Standard library only.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+GAME = os.path.expanduser(os.environ.get("NMS_GAME_DIR", "~/.local/share/Steam/steamapps/common/No Man's Sky"))
+MOD = os.path.join(GAME, "GAMEDATA", "MODS", "HarvestAllFreighter")
+PAK_PATH = "models/planets/biomes/common/buildings/parts/buildableparts/freighterbase/rooms/plantroom/parts/floor0/entities/interaction.entity.mbin"
+TOOLS = "/opt/nmstools"
+STEAM_MANIFEST = os.path.join(os.path.dirname(os.path.dirname(GAME)), "appmanifest_275850.acf")
+
+
+def die(msg):
+    print(f"nms-mod-harvest-all: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+
+def game_running() -> bool:
+    for d in os.listdir("/proc"):
+        if d.isdigit():
+            try:
+                if open(f"/proc/{d}/comm").read().strip() == "NMS.exe":
+                    return True
+            except OSError:
+                pass
+    return False
+
+
+def build_id() -> str | None:
+    try:
+        m = re.search(r'"buildid"\s+"(\d+)"', open(STEAM_MANIFEST).read())
+        return m.group(1) if m else None
+    except OSError:
+        return None
+
+
+def install(radius: float):
+    if game_running():
+        die("No Man's Sky is running; quit it first (mods load at start-up).")
+    out = subprocess.run([os.path.join(HERE, "nms-pak"), "get", re.escape(PAK_PATH) + "$"],
+                         capture_output=True, text=True)
+    mxml = next((l.strip() for l in out.stdout.splitlines() if l.strip().lower().endswith(".mxml")), None)
+    if out.returncode or not mxml:
+        die(f"could not unpack {PAK_PATH}: {out.stderr.strip() or out.stdout.strip()}")
+    text = open(mxml).read()
+    # exactly one GcHarvestPlantAction with a Radius, and it must still be the stock 6.0
+    pat = re.compile(r'(<Property name="GcHarvestPlantAction">\s*<Property name="Radius" value=")([0-9.]+)(" />)')
+    found = pat.findall(text)
+    if len(found) != 1:
+        die(f"expected one GcHarvestPlantAction Radius in {mxml}, found {len(found)}: the file changed; not installing")
+    if abs(float(found[0][1]) - 6.0) > 1e-6:
+        die(f"stock Radius is {found[0][1]}, not 6.0: the game changed it; check before installing")
+    work = os.path.join(os.path.dirname(mxml), "harvest-all-mod")
+    os.makedirs(work, exist_ok=True)
+    src = os.path.join(work, "interaction.entity.MXML")
+    with open(src, "w") as f:
+        f.write(pat.sub(lambda m: f"{m.group(1)}{radius:.6f}{m.group(3)}", text))
+    env = dict(os.environ, DOTNET_ROOT=os.path.join(TOOLS, "dotnet8"))
+    r = subprocess.run([os.path.join(TOOLS, "MBINCompiler-linux"), "convert", "-y", "--force", "-q", src],
+                       cwd=work, env=env, capture_output=True, text=True)
+    mbin = os.path.join(work, "interaction.entity.MBIN")
+    if r.returncode or not os.path.exists(mbin):
+        die(f"MBINCompiler failed: {r.stdout.strip()} {r.stderr.strip()}")
+    dest = os.path.join(MOD, *PAK_PATH.upper().split("/"))
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    shutil.copyfile(mbin, dest)
+    with open(os.path.join(MOD, "nms-exporter-mod.json"), "w") as f:
+        json.dump({"what": "Freighter Hydroponic Room Harvest All radius", "radius": radius, "stock_radius": 6.0,
+                   "file": PAK_PATH, "game_build": build_id(), "made_by": "nms-exporter/scripts/nms-mod-harvest-all"}, f, indent=1)
+    print(f"installed: Harvest All radius {radius:g} (stock 6) -> {dest}")
+    print("Start the game; it shows a 'mods installed' notice. `remove` undoes it.")
+
+
+def status():
+    info = os.path.join(MOD, "nms-exporter-mod.json")
+    if not os.path.isdir(MOD):
+        print("not installed")
+        return
+    try:
+        meta = json.load(open(info))
+    except (OSError, ValueError):
+        print(f"{MOD} exists but has no nms-exporter-mod.json (not made by this script?)")
+        return
+    now = build_id()
+    print(f"installed: radius {meta.get('radius')} for game build {meta.get('game_build')}")
+    if now and meta.get("game_build") and now != meta["game_build"]:
+        print(f"WARNING: the game is now build {now}; reinstall to rebuild from the new files (or remove)")
+
+
+def remove():
+    if game_running():
+        die("No Man's Sky is running; quit it first.")
+    if not os.path.isdir(MOD):
+        print("not installed")
+        return
+    if not os.path.exists(os.path.join(MOD, "nms-exporter-mod.json")):
+        die(f"{MOD} was not made by this script; not deleting it")
+    shutil.rmtree(MOD)
+    print(f"removed {MOD}")
+    mods = os.path.dirname(MOD)
+    if os.path.isdir(mods) and not os.listdir(mods):
+        os.rmdir(mods)
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    i = sub.add_parser("install")
+    i.add_argument("--radius", type=float, default=300.0)
+    sub.add_parser("status")
+    sub.add_parser("remove")
+    a = ap.parse_args()
+    if a.cmd == "install":
+        if not 6 <= a.radius <= 2000:
+            die("radius should be between 6 (stock) and 2000")
+        install(a.radius)
+    elif a.cmd == "status":
+        status()
+    else:
+        remove()
+
+
+if __name__ == "__main__":
+    main()
