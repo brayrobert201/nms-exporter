@@ -78,6 +78,9 @@ def _planet_info(p):
         "substances": [_tkid(data.CommonSubstanceID), _tkid(data.UncommonSubstanceID), _tkid(data.RareSubstanceID)],
         "life": _name(data.Life), "creature_life": _name(data.CreatureLife),
         "race": _name(data.InhabitingRace), "buildings": _name(data.BuildingLevel),
+        # inline enums of cGcPlanetGenerationIntermediateData; the biome picks the Gas1 hotspot substance
+        "biome": _name(data.GenerationData.Biome), "biome_subtype": _name(data.GenerationData.BiomeSubType),
+        "planet_class": _name(data.GenerationData.Class), "size": _name(data.GenerationData.Size),
     }
 
 
@@ -98,7 +101,7 @@ def _address():
 class LivePosition(Mod):
     __author__ = "nms-exporter"
     __description__ = "Write the player's position to mod_saves/live four times a second"
-    __version__ = "0.2"
+    __version__ = "0.3"
 
     def __init__(self):
         super().__init__()
