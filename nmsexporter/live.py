@@ -417,6 +417,8 @@ class Live:
         for f in self.finds.for_planet(address, tables or {}):
             nv = nav(rel, heading, f["w"])
             label = f.get("resource") or f["name"]
+            if f.get("class"):
+                label = f"class {f['class']} · {label}"
             rows.append((nv["dist"], {"key": "w:" + ",".join(str(c) for c in f["w"]), "base": label or "",
                                       "kind": f["kind"], "id": f["name"], **nv}))
         rows.sort(key=lambda r: r[0])
