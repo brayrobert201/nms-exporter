@@ -12,6 +12,12 @@ Frames (see knowledge/mechanics/save-coordinates.md):
 - North is the planet's +Y axis and east = north x up, checked against the
   in-game compass (research/sources/measurements/2026-10-22-live-position-compass.md).
 
+Footprints: data/part_footprints.json (scripts/nms-footprints, from the game's
+placement collision shapes) gives each object's box in its own frame (x right,
+y up, z = its At). An object's Up/At are base-local, so its ground rectangle is
+Position + right*x + at*z at the box's x/z corners. Without the file the layout
+is dots only.
+
 Planet view: azimuthal equidistant projection centred on the planet's bases,
 so distances and bearings from the centre are true. Base view: top-down, metres
 from the base computer, rotated so north is up.
@@ -20,13 +26,18 @@ Standard library only.
 """
 from __future__ import annotations
 
+import json
 import math
+import os
 
 from .farmcheck import EXTRACTORS, check_base
 from .power import base_power
 
 NORTH_AXIS = (0.0, 1.0, 0.0)
 SKIP_BASES = {"FreighterBase", "PlayerShipBase", "PlayerSpaceBase"}
+FOOTPRINTS = os.environ.get("NMS_FOOTPRINTS", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                                          "data", "part_footprints.json"))
+_footprints: dict = {}
 EXOCRAFT = ["Roamer", "Nomad", "Colossus", "Pilgrim", "Exocraft 5", "Nautilon", "Minotaur", "Exocraft 8"]
 
 
@@ -155,6 +166,34 @@ def planet_projection(bs) -> Projection:
     return Projection(centre, radius)
 
 
+def footprints() -> dict:
+    """Object ID (no ^) -> [minx, miny, minz, maxx, maxy, maxz]; {} if not extracted. Reloaded when the file changes."""
+    try:
+        mtime = os.path.getmtime(FOOTPRINTS)
+        if _footprints.get("mtime") != mtime:
+            with open(FOOTPRINTS) as f:
+                _footprints.update(mtime=mtime, boxes=json.load(f).get("footprints") or {})
+    except (OSError, ValueError):
+        _footprints.clear()
+    return _footprints.get("boxes") or {}
+
+
+def footprint(o, box, en):
+    """Ground rectangle [[e, n] x 4] of object o, and the height of its top, or None."""
+    p, up, at = o.get("Position"), _norm(o.get("Up") or [0, 1, 0]), o.get("At")
+    if not (p and up and at):
+        return None
+    d = _dot(at, up)
+    f = _norm([at[i] - d * up[i] for i in range(3)])
+    if not f:
+        return None
+    r = _cross(up, f)
+    x0, y0, z0, x1, y1, z1 = box
+    corners = [en([p[i] + r[i] * x + f[i] * z for i in range(3)])[:2] for x, z in ((x0, z0), (x1, z0), (x1, z1), (x0, z1))]
+    top = en([p[i] + up[i] * y1 for i in range(3)])[2]
+    return corners, top
+
+
 def base_layout(b) -> dict | None:
     frame = base_en(b)
     if not frame:
@@ -167,6 +206,7 @@ def base_layout(b) -> dict | None:
         if row["problems"]:
             flags[tuple(row["pos"])] = row
     items, segs = [], []
+    boxes = footprints()
     for i, o in enumerate(objs):
         oid = o.get("ObjectID") or ""
         p = o.get("Position")
@@ -179,6 +219,10 @@ def base_layout(b) -> dict | None:
             continue
         e, n, h = en(p)
         item = {"kind": _kind(oid), "id": oid.lstrip("^"), "e": e, "n": n, "h": h, "i": i}
+        box = boxes.get(oid.lstrip("^"))
+        fp = footprint(o, box, en) if box else None
+        if fp:
+            item["poly"], item["top"] = fp
         row = flags.get(tuple(p))
         if row:
             item["problems"] = row["problems"]
@@ -188,7 +232,8 @@ def base_layout(b) -> dict | None:
             if nn:
                 item["near"] = f"{nn[0]:.0f} m from a {nn[1]} network of {nn[2]}"
         items.append(item)
-    return {"items": items, "segments": segs, "loose": sum(1 for i in items if i.get("problems"))}
+    return {"items": items, "segments": segs, "loose": sum(1 for i in items if i.get("problems")),
+            "footprints": bool(boxes)}
 
 
 def build(ps_points: dict, bases: list, tables: dict | None = None) -> dict:

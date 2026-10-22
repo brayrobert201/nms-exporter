@@ -3,3 +3,4 @@ __pycache__/
 .venv/
 data/glyphs/
 data/icons/
+data/part_footprints.json

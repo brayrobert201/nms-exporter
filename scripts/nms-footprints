@@ -1,0 +1,208 @@
+#!/usr/bin/env python3
+"""Base part footprints from the installed game, for drawing bases from above.
+
+    nms-footprints            # writes data/part_footprints.json
+
+Every base-building object (metadata/reality/tables/basebuildingobjectstable)
+names a PlacementScene, the ghost model shown while placing it. Each mesh in a
+scene carries its bounding box as AABBMIN/MAX X/Y/Z attributes, so the union of
+those is the object's extent in its own frame (x right, y up, z forward;
+metres). A placement scene that only references other scenes is followed one
+level after level (up to three; their paths use backslashes). Objects whose
+placement scene has no geometry fall back to the parts table
+(basebuildingpartstable): the model of part `_ID`, else the union of parts
+named `_ID_...` (CUBEROOM_FLOOR, CUBEROOM_WALL, ...). The result maps object ID -> [minx, miny, minz, maxx, maxy, maxz], plus
+the scene each came from. Numbers only; no game art is stored.
+
+Seen: CUBEROOM_FLOOR is -2..2 by -2..2 (a 4 m square). Uses scripts/nms-pak.
+Standard library only.
+"""
+from __future__ import annotations
+
+import json
+import math
+import os
+import re
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PAK = os.path.join(HERE, "nms-pak")
+OUT = os.path.join(HERE, "..", "data", "part_footprints.json")
+TABLE = "metadata/reality/tables/basebuildingobjectstable.mbin"
+PARTS = "metadata/reality/tables/basebuildingpartstable.mbin"
+
+
+def get(paths: list[str]) -> dict:
+    """Unpack game files (lower-case pak paths) to MXML; returns path -> MXML file."""
+    found = {}
+    for i in range(0, len(paths), 80):
+        chunk = paths[i:i + 80]
+        rx = "^(" + "|".join(re.escape(p) for p in chunk) + ")$"
+        r = subprocess.run([PAK, "get", rx, "--all"], capture_output=True, text=True)
+        for line in r.stdout.splitlines():
+            line = line.strip()
+            if line.lower().endswith(".mxml"):
+                key = line.split("/files/", 1)[-1].lower().replace(".mxml", ".mbin")
+                found[key] = line
+        print(f"  unpacked {min(i + 80, len(paths))}/{len(paths)}", file=sys.stderr)
+    return found
+
+
+def _attrs(node: str) -> dict:
+    return dict(re.findall(r'name="Name" value="([A-Z]+)" />\s*(?:<Property name="AltID"[^>]*/>\s*)?<Property name="Value" value="([^"]*)"', node))
+
+
+def _corners(lo, hi, rot):
+    """Corners of box lo..hi rotated by Euler degrees rot (X, then Y, then Z)."""
+    rx, ry, rz = (math.radians(a) for a in rot)
+    out = []
+    for x in (lo[0], hi[0]):
+        for y in (lo[1], hi[1]):
+            for z in (lo[2], hi[2]):
+                y, z = y * math.cos(rx) - z * math.sin(rx), y * math.sin(rx) + z * math.cos(rx)
+                x, z = x * math.cos(ry) + z * math.sin(ry), -x * math.sin(ry) + z * math.cos(ry)
+                x, y = x * math.cos(rz) - y * math.sin(rz), x * math.sin(rz) + y * math.cos(rz)
+                out.append((x, y, z))
+    return out
+
+
+def union(boxes):
+    boxes = [b for b in boxes if b]
+    return [round(min(b[k] for b in boxes), 3) for k in range(3)] + \
+        [round(max(b[k] for b in boxes), 3) for k in range(3, 6)] if boxes else None
+
+
+def scene(text: str) -> dict:
+    """A scene MXML's own shapes: {"collision": box, "mesh": box, "refs": [scene paths]}.
+
+    Collision shapes (Box WIDTH/HEIGHT/DEPTH, Cylinder/Capsule RADIUS/HEIGHT,
+    Sphere RADIUS) are centred on their node's translation; that is the solid
+    the game uses, so it wins over mesh AABBs. Node transforms are taken one
+    level deep (collision nodes sit directly under the root). Snap-point scenes
+    (tiny locator meshes) are not references worth following."""
+    coll, mesh, refs = [], [], []
+    for node in text.split('value="TkSceneNodeData"')[1:]:
+        typ = re.search(r'name="Type" value="([A-Z]+)"', node)
+        typ = typ.group(1) if typ else ""
+        a = _attrs(node)
+        if typ == "COLLISION":
+            t = [float(re.search(fr'name="{k}" value="([^"]+)"', node).group(1)) for k in
+                 ("TransX", "TransY", "TransZ", "RotX", "RotY", "RotZ", "ScaleX", "ScaleY", "ScaleZ")]
+            try:
+                shape = a.get("TYPE")
+                if shape == "Box":
+                    h = [float(a["WIDTH"]) / 2, float(a["HEIGHT"]) / 2, float(a["DEPTH"]) / 2]
+                elif shape in ("Cylinder", "Capsule"):
+                    r, hh = float(a["RADIUS"]), float(a["HEIGHT"]) / 2
+                    h = [r, hh + (r if shape == "Capsule" else 0), r]
+                elif shape == "Sphere":
+                    h = [float(a["RADIUS"])] * 3
+                else:
+                    continue              # Mesh collision: no size in the scene
+            except (KeyError, ValueError):
+                continue
+            h = [h[k] * t[6 + k] for k in range(3)]
+            pts = _corners([-v for v in h], h, t[3:6])
+            coll.append([min(p[k] for p in pts) + t[k] for k in range(3)] + [max(p[k] for p in pts) + t[k] for k in range(3)])
+        elif "AABBMINX" in a and "AABBMAXX" in a:
+            try:
+                mesh.append([float(a["AABBMIN" + k]) for k in "XYZ"] + [float(a["AABBMAX" + k]) for k in "XYZ"])
+            except (KeyError, ValueError):
+                pass
+        if a.get("SCENEGRAPH", "").upper().startswith("MODELS") and "SNAPPOINT" not in a["SCENEGRAPH"].upper():
+            refs.append(a["SCENEGRAPH"].replace("\\", "/").lower())
+    # a tiny box is a placement arrow, locator or snap trigger, not the object
+    big = lambda b: max(b[3] - b[0], b[4] - b[1], b[5] - b[2]) > 0.6  # noqa: E731
+    coll, mesh = [b for b in coll if big(b)], [b for b in mesh if big(b)]
+    return {"collision": union(coll), "mesh": union(mesh), "refs": refs}
+
+
+def main():
+    table = get([TABLE]).get(TABLE)
+    if not table:
+        sys.exit("nms-footprints: could not unpack the objects table")
+    x = open(table).read()
+    scenes = {}
+    for blk in x.split('value="GcBaseBuildingEntry" _id="')[1:]:
+        oid = blk[:blk.index('"')]
+        m = re.search(r'name="PlacementScene" value="TkModelResource">\s*<Property name="Filename" value="([^"]*)"', blk)
+        if m and m.group(1):
+            scenes[oid] = m.group(1).lower()
+    print(f"{len(scenes)} objects, {len(set(scenes.values()))} placement scenes", file=sys.stderr)
+    # the parts table: part ID -> model scene (style None, else the first style)
+    ptab = open(get([PARTS])[PARTS]).read()
+    part_model = {}
+    for blk in ptab.split('value="GcBaseBuildingPart" _id="_')[1:]:
+        pid = blk[:blk.index('"')]
+        m = re.search(r'name="Model" value="TkModelResource">\s*<Property name="Filename" value="([^"]+)"', blk)
+        if m:
+            part_model[pid] = m.group(1).lower()
+    info, loaded = {}, set()
+
+    def load(paths):
+        todo = sorted(set(paths) - loaded)
+        for depth in range(3):                 # follow references a few levels down
+            if not todo:
+                break
+            files = get(todo)
+            loaded.update(todo)
+            nxt = []
+            for path in todo:
+                f = files.get(path)
+                info[path] = scene(open(f).read() if f else "")
+                nxt += info[path]["refs"]
+            todo = sorted(set(nxt) - loaded)
+
+    def extent(path, kind, depth=0):
+        """The scene's own box of this kind, else the union over its references."""
+        i = info.get(path) or {}
+        if i.get(kind) or depth > 3:
+            return i.get(kind)
+        return union([extent(r, kind, depth + 1) for r in i.get("refs", [])])
+
+    def best(paths):
+        """Collision shape, unless the meshes cover far more ground (a dome whose
+        collision is only its door frame, say)."""
+        c, m = (union([extent(p, kind) for p in paths]) for kind in ("collision", "mesh"))
+        area = lambda b: (b[3] - b[0]) * (b[5] - b[2])  # noqa: E731
+        if c and not (m and area(m) > 4 * area(c)):
+            return c, "collision"
+        return (m, "mesh") if m else (None, None)
+
+    load(scenes.values())
+    out, via, missing = {}, {}, []
+    pending = {}
+    for oid, path in sorted(scenes.items()):
+        b, kind = best([path])
+        own = [part_model[p] for p in part_model if p == oid] or [part_model[p] for p in part_model if p.startswith(oid + "_")]
+        if b and kind == "collision":
+            out[oid], via[oid] = b, "placement collision"
+        elif own:
+            pending[oid] = (own, b)
+        elif b:
+            out[oid], via[oid] = b, "placement mesh"
+        else:
+            missing.append(oid)
+    if pending:
+        print(f"{len(pending)} objects also checked against their part models", file=sys.stderr)
+        load([s for own, _ in pending.values() for s in own])
+        for oid, (own, fallback) in pending.items():
+            b, kind = best(own)
+            if b:
+                out[oid], via[oid] = b, f"part {kind}"
+            elif fallback:
+                out[oid], via[oid] = fallback, "placement mesh"
+            else:
+                missing.append(oid)
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    with open(OUT, "w") as f:
+        json.dump({"source": "basebuildingobjectstable PlacementScene collision shapes / mesh AABBs (scripts/nms-footprints)",
+                   "frame": "object local: x right, y up, z forward; metres; [minx, miny, minz, maxx, maxy, maxz]",
+                   "footprints": out, "via": via}, f, separators=(",", ":"))
+    print(f"wrote {len(out)} footprints to {os.path.normpath(OUT)}; {len(missing)} without a box", file=sys.stderr)
+    return missing
+
+
+if __name__ == "__main__":
+    main()

@@ -416,6 +416,24 @@ let powerOpen = window.innerWidth > 700;     // a phone starts with the one-line
 function drawBase(g) {
   const lay = planet.layouts[base];
   if (!lay) { label(g, 0, 0, "No layout for this base"); return; }
+  // Building shapes: each object's ground rectangle from the game's collision boxes, lowest first so
+  // upper floors and roofs lie over what is under them. Overlapping storeys build up the fill.
+  const shapes = shown.shapes && lay.items.some(i => i.poly);
+  if (shapes) {
+    for (const it of [...lay.items].filter(i => i.poly && !hiddenKinds.has(i.kind)).sort((a, b) => a.top - b.top)) {
+      const st = it.kind === "structure", c = css(st ? "--ink-2" : (KIND[it.kind] || {}).colour || "--ink-2");
+      const poly = el("polygon", { points: it.poly.map(([e, n]) => `${e},${-n}`).join(" "), fill: c,
+        "fill-opacity": st ? 0.13 : 0.32, stroke: c, "stroke-opacity": st ? 0.4 : 0.85, "data-w": st ? 0.6 : 1,
+        "stroke-linejoin": "round" }, g);
+      if (st) {
+        poly.style.cursor = "pointer";
+        const text = `${it.id.replace(/_/g, " ").toLowerCase()} · top ${it.top >= 0 ? "+" : ""}${it.top} m`;
+        poly.addEventListener("click", (ev) => { ev.stopPropagation(); show(it); });
+        poly.addEventListener("pointermove", (ev) => { if (ev.pointerType === "mouse") tip(text, ev); });
+        poly.addEventListener("pointerleave", () => { $("tip").hidden = true; });
+      }
+    }
+  }
   for (const s of lay.segments) {
     if (hiddenKinds.has(s.kind)) continue;
     const st = SEG[s.kind];
@@ -424,7 +442,7 @@ function drawBase(g) {
   }
   const order = ["structure", "plants", "depot", "power", "refiner", "teleporter", "extractor-mineral", "extractor-gas", "computer"];
   const items = [...lay.items].sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || !!a.problems - !!b.problems);
-  for (const it of items) dot(g, it.e, it.n, it.kind, () => show(it), !!it.problems,
+  for (const it of items) if (!(shapes && it.kind === "structure" && it.poly)) dot(g, it.e, it.n, it.kind, () => show(it), !!it.problems,
     (KIND[it.kind] || {}).label + (Math.hypot(it.e, it.n) < 2 ? "" : ` · ${fmtDist(Math.hypot(it.e, it.n))} ${compass(bearing(it.e, it.n))} of the computer`));
   const loose = lay.items.filter(i => i.problems);
   for (const it of loose) label(g, it.e, it.n, "⚠ " + it.problems.join(", "), "--critical", 13, 5);
@@ -637,6 +655,8 @@ async function load() {
   base = want && planet.bases.includes(want) ? want : wantPlanet ? null : planet.bases.length === 1 ? planet.bases[0] : null;
   $("note").textContent = data.north_verified ? "" : "North and east/west not yet checked against the in-game compass";
   render();
+  const at = (q.get("at") || "").split(",").map(Number);       // ?at=east,north,width in metres: open zoomed there
+  if (at.length === 3 && at.every(Number.isFinite)) zoomTo(at[0], at[1], at[2]);
   applyView();
   poll();
 }
@@ -807,7 +827,7 @@ function legendFinds() {
 }
 
 // ---- what to show: remembered per device ----
-const VIEW = [["heights", "Heights"], ["trail", "Your trail"], ["power", "Power card"], ["nearby", "Nearby list"],
+const VIEW = [["shapes", "Building shapes"], ["heights", "Heights"], ["trail", "Your trail"], ["power", "Power card"], ["nearby", "Nearby list"],
   ["issues", "Problems list"], ["legend", "Legend"]];
 let shown = Object.fromEntries(VIEW.map(([k]) => [k, true]));
 try { Object.assign(shown, JSON.parse(localStorage.getItem("nms-map-show") || "{}")); } catch (e) { /* defaults */ }
@@ -821,6 +841,7 @@ $("viewopts").innerHTML = VIEW.map(([k, label]) => `<label><input type="checkbox
 $("viewopts").addEventListener("change", (e) => {
   shown[e.target.dataset.k] = e.target.checked;
   try { localStorage.setItem("nms-map-show", JSON.stringify(shown)); } catch (err) { /* not remembered */ }
+  if (e.target.dataset.k === "shapes" && base) { const v = { ...view }; render(); setView(v); rescale(); }
   applyView();
 });
 document.addEventListener("pointerdown", (e) => { if (!$("viewmenu").contains(e.target)) $("viewmenu").open = false; });
