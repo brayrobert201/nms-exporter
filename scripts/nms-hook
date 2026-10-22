@@ -4,6 +4,7 @@
 #   scripts/nms-hook --check   # run every pre-flight check, inject nothing
 #   scripts/nms-hook           # pre-flight, ask "saved?", then inject
 #   scripts/nms-hook --yes     # same without the question
+#   scripts/nms-hook --detach  # kill pyMHF's host side, leave the game running
 #
 # WHAT IT DOES: runs `python -m pymhf run nmspy` with the Windows Python that
 # lives in the game's own Wine prefix (C:\pymhf\python), using the same Proton
@@ -25,7 +26,15 @@
 #   - Start NMS from Steam first and wait for the main menu (or load a save).
 #   - Run this from a real terminal: pyMHF's prompts need a console (a tty).
 #     Two extra windows appear: the pyMHF log console and the DearPyGui GUI.
-#     Ctrl+C here detaches pyMHF (attach mode leaves the game running).
+#
+# DETACHING: do not Ctrl+C. In pymhf 0.2.5 Ctrl+C ends the injected code, and
+# when that ends close_callback (main.py) SIGTERMs NMS.exe, attach mode or not.
+# The same callback fires on any injected-side error: on 2026-10-22 a second
+# attach into an already-injected game failed and took the game down. Instead,
+# from another terminal run `scripts/nms-hook --detach`: it SIGKILLs the host
+# side so no callback runs. The injected code stays in the game, idle, holding
+# 127.0.0.1:6770 until the game exits, so restart the game before attaching
+# again (this script refuses while that port is held).
 #
 # Overrides: NMS_HOOK_PROTON (Proton dir), WINEDEBUG.
 set -u
@@ -38,18 +47,30 @@ PY_HOST=$PREFIX/drive_c/pymhf/python/python.exe
 PY_WIN='C:\pymhf\python\python.exe'
 LOCAL_CFG=$PREFIX/drive_c/users/steamuser/AppData/Roaming/pymhf/nmspy/pymhf.local.toml
 
-CHECK=0; YES=0
+CHECK=0; YES=0; DETACH=0
 for a in "$@"; do
   case "$a" in
     --check) CHECK=1 ;;
     --yes|-y) YES=1 ;;
-    -h|--help) sed -n '2,33p' "$0"; exit 0 ;;
+    --detach) DETACH=1 ;;
+    -h|--help) sed -n '2,39p' "$0"; exit 0 ;;
     *) echo "nms-hook: unknown argument: $a" >&2; exit 2 ;;
   esac
 done
 
 die() { echo "nms-hook: $*" >&2; exit 1; }
 warn() { echo "nms-hook: warning: $*" >&2; }
+
+# Every host-side pyMHF process (launcher python, start.exe, log console) runs
+# from C:\pymhf\. SIGKILL so pyMHF's exit path, which kills the game, never runs.
+if [ "$DETACH" = 1 ]; then
+  PIDS=$(pgrep -f 'C:\\pymhf\\')
+  [ -n "$PIDS" ] || { echo "nms-hook: no pyMHF host processes running."; exit 0; }
+  ps -o pid=,args= -p $PIDS | cut -c1-120
+  kill -KILL $PIDS
+  echo "detached. The injected code stays in the game until it exits; restart the game before attaching again."
+  exit 0
+fi
 
 # --- the Python side is installed --------------------------------------------
 [ -x "$WINE" ] || die "Proton wine not found at $WINE (set NMS_HOOK_PROTON)"
@@ -78,6 +99,14 @@ echo "game: NMS.exe unix pid $GAME_PID"
 
 GAME_ENV=$(tr '\0' '\n' < "/proc/$GAME_PID/environ")
 
+# pyMHF's injected side serves on 127.0.0.1:6770 (hex 1A72) and keeps it until
+# the game exits. If it is listening, this game was injected before, and a
+# second attach fails and then kills the game (seen 2026-10-22).
+if awk 'NR > 1 && $2 ~ /:1A72$/ && $4 == "0A" { found = 1 } END { exit !found }' \
+     "/proc/$GAME_PID/net/tcp" "/proc/$GAME_PID/net/tcp6" 2>/dev/null; then
+  die "port 6770 is already listening: this game was injected earlier. Restart the game before attaching again. Not injecting."
+fi
+
 # Same Proton as the game, or the wineserver protocol will not match.
 if ! grep -Fq "$PROTON" <<<"$GAME_ENV"; then
   warn "the game's environment never mentions $PROTON; it may be running a different Proton."
@@ -95,8 +124,6 @@ fi
 SYNC_ENV=()
 while IFS= read -r kv; do SYNC_ENV+=("$kv"); done < <(grep -E '^(WINE[A-Z_]*SYNC[A-Z_]*|PROTON_NO_[A-Z]*SYNC)=' <<<"$GAME_ENV")
 echo "sync env copied from game: ${SYNC_ENV[*]:-(none)}"
-
-[ -t 0 ] && [ -t 1 ] || die "run this from an interactive terminal: pyMHF's prompts need a console"
 
 export WINEPREFIX=$PREFIX
 export WINEDEBUG=${WINEDEBUG:--all}
@@ -120,6 +147,8 @@ if [ "$CHECK" = 1 ]; then
   echo "--check: not injecting."
   exit 0
 fi
+
+[ -t 0 ] && [ -t 1 ] || die "run this from an interactive terminal: pyMHF's prompts need a console"
 
 if [ "$YES" != 1 ]; then
   printf 'This injects Python into the running game and may crash it. Have you saved? [y/N] '

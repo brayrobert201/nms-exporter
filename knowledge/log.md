@@ -2,6 +2,13 @@
 
 Newest first. One entry per change to the bundle: what landed, from where.
 
+## 2026-10-22 - first live pyMHF attach
+
+- `scripts/nms-hook` attached to the running game (2 mods, 5 hooks). A second
+  attach into the same game run failed and pyMHF closed the game; Ctrl+C takes
+  the same exit path. Launcher now refuses a second attach and has `--detach`.
+  Notes: `research/runs/2026-10-21-pymhf-proton/raw/notes.md` (Live test).
+
 ## 2026-10-21 - pyMHF under Proton, map, farm check
 
 - pyMHF + NMS.py install and import inside the game's Proton prefix; version

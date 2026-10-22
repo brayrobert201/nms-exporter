@@ -248,8 +248,35 @@ unknown flag -> rc 2.
 3. If that passes: `~/Projects/nms-exporter/scripts/nms-hook`, answer `y`.
    Success = "Python injected", "Found PID", an "Exe hash is" line, the NMS.py log
    window and DearPyGui window appear, and the game keeps running. Logs land in
-   `pfx/drive_c/pymhf/logs`. Ctrl+C detaches.
+   `pfx/drive_c/pymhf/logs`. (Originally written as "Ctrl+C detaches"; that
+   is wrong, see the live test below.)
 4. If `--check` says NOT VISIBLE: try the launcher-service fallback in risk 1.
+
+## Live test (2026-10-22)
+
+- `--check` with the game running: `wine side: pymhf 0.2.5 nmspy 181442.1
+  NMS.exe windows pid 332`. The host-side wine client reaches the game's
+  wineserver; risk 1 (container isolation) did not happen.
+- Attach: "Python injected", "Found PID: 332", exe hash
+  `803f2b8d5a8b579849917b849d0f064a4c77f81d`; log: "pyMHF injection complete!",
+  "Loaded 2 mods and 5 hooks in 0.721s", "Serving on executor
+  ('127.0.0.1', 6770)". Game kept running.
+- SIGINT to the host-side Windows python did nothing: Wine does not turn a Unix
+  signal into a console Ctrl+C.
+- Detach by SIGKILL of the host side (python.exe, start.exe, log_terminal.py):
+  game kept running; port 6770 stayed listening (owned by the game's
+  wineserver), the injected code idle in the game.
+- Second attach into that same game: `Could not read memory at: 5931466752,
+  length: 24 - GetLastError: 5`, then "pyMHF exiting..." and the game closed.
+  Saves written 1.5 min earlier decoded fine.
+- Why the game closed: in pymhf 0.2.5 `main.py`, `close_callback` (attached to
+  the future that waits on the injected script's thread) SIGTERMs
+  `pm_binary.process_id` without checking `start_exe`. Any end of the injected
+  script fires it: an injected-side error (observed) or Ctrl+C, which sends the
+  exit sequence to the injected side (read from source, not tested).
+- Launcher changes: refuses while 6770 is listening in the game's netns;
+  `--detach` SIGKILLs the host side; `--check` no longer needs a tty.
+- Still untested: Ctrl+C from a real terminal (expected to close the game).
 
 ## What the trial added (for removal)
 
