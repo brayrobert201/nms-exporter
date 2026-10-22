@@ -156,5 +156,12 @@ if [ "$YES" != 1 ]; then
   case "$ans" in y|Y|yes) ;; *) echo "not injecting."; exit 1 ;; esac
 fi
 
+# Our mods live in the repo; pyMHF loads every .py in C:\pymhf\mods at inject time.
+MODS_SRC=$(dirname "$(readlink -f "$0")")/../pymhf_mods
+mkdir -p "$PREFIX/drive_c/pymhf/mods"
+for m in "$MODS_SRC"/*.py; do
+  [ -f "$m" ] && cp "$m" "$PREFIX/drive_c/pymhf/mods/" && echo "mod: $(basename "$m")"
+done
+
 cd "$PREFIX/drive_c/pymhf" || exit 1
 exec env "${SYNC_ENV[@]}" "$WINE" "$PY_WIN" -m pymhf run nmspy
