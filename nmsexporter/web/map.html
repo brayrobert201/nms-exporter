@@ -1112,7 +1112,7 @@ $("globebtn").onclick = () => {
     }
     const dx = e.clientX - last.clientX, dy = e.clientY - last.clientY; moved += Math.hypot(dx, dy); last = e;
     const R = Math.min(cv.clientWidth, cv.clientHeight) * 0.42 * gzoom, [n, ea] = gframe();
-    gc = vnorm(rotAbout(rotAbout(gc, n, -dx / R), ea, dy / R));
+    gc = vnorm(rotAbout(rotAbout(gc, n, dx / R), ea, dy / R));     // horizontal: drag right turns the view east
     drawGlobe();
   });
   const up = (e) => {
