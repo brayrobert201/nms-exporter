@@ -38,8 +38,9 @@ OUT_DIR = r"C:\pymhf\mod_saves\live"
 MARKER_REPEAT_S = 60.0
 VISOR_IDLE_S = 0.75         # no UpdateTarget for this long = visor closed
 # High-churn marker types that say nothing about the visor or resources.
+# SpacePoi moves every frame (879 of the first 902 lines, 2026-10-22).
 QUIET_TYPES = {"NetworkPlayer", "NetworkPlayerShip", "NetworkPlayerVehicle", "NetworkPlayerFireTeam",
-               "NetworkPlayerFireTeamShip", "NetworkPlayerFireTeamFreighter"}
+               "NetworkPlayerFireTeamShip", "NetworkPlayerFireTeamFreighter", "SpacePoi"}
 
 
 def _v(v):
@@ -47,10 +48,20 @@ def _v(v):
 
 
 def _name(v, enum):
+    """Enum field or argument as its name; the raw number if the enum has no
+    such value (e.g. meBuildingClass read 63 on 2026-10-22). c_enum8 fields
+    hold a one-byte bytes value, and their .name raises for unknown values."""
     try:
-        return enum(int(v)).name
-    except (ValueError, TypeError):
-        return getattr(v, "name", str(v))
+        raw = v if isinstance(v, int) else getattr(v, "value", v)
+        if isinstance(raw, (bytes, bytearray)):
+            raw = raw[0] if raw else 0
+        raw = int(raw)
+    except Exception:
+        return str(v)
+    try:
+        return enum(raw).name
+    except ValueError:
+        return raw
 
 
 def _text(s):
@@ -129,6 +140,16 @@ class VisorLog(Mod):
 
     # --- markers ---
     def _marker(self, kind, ptr):
+        # never raise: pyMHF disables a detour that throws, and this one sees every marker
+        try:
+            self._marker_row(kind, ptr)
+        except Exception as e:
+            if not getattr(self, "_marker_failed", False):
+                self._marker_failed = True
+                logger.exception("marker read failed")
+                self._write("marker_error", error=repr(e))
+
+    def _marker_row(self, kind, ptr):
         if not ptr:
             return
         m = ptr.contents
