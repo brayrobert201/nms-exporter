@@ -33,7 +33,14 @@ select, button { background: var(--surface-2); color: var(--ink-1); border: 1px 
   border-radius: 8px; padding: 6px 10px; font: inherit; }
 button { cursor: pointer; }
 .note { color: var(--ink-muted); font-size: 13px; margin-left: auto; }
-main { position: relative; overflow: hidden; touch-action: none; }
+main { position: relative; overflow: hidden; touch-action: none;
+  background: radial-gradient(ellipse at 50% 42%, var(--surface-1) 0%, var(--page) 72%); }
+/* glass: panels let the map show through, blurred */
+.panel, .dock > div, .away, .mapctl button, .tip { background: color-mix(in srgb, var(--surface-1) 78%, transparent) !important;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35); }
+@keyframes pulse { 0% { transform: scale(0.6); opacity: 0.45; } 100% { transform: scale(1.9); opacity: 0; } }
+.pulse { transform-box: fill-box; transform-origin: center; animation: pulse 2s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .pulse { animation: none; opacity: 0.15; } }
 svg { width: 100%; height: 100%; display: block; cursor: grab; }
 svg.dragging { cursor: grabbing; }
 .panel { position: absolute; right: 12px; top: 12px; max-width: min(360px, calc(100% - 24px));
@@ -179,6 +186,21 @@ function iconOf(kind, cls) {
   if (SURVEY[kind]) return `surveying.${SURVEY[kind]}${cls ? cls.toLowerCase() : ""}`;
   return ICON[kind] || null;
 }
+// Hide a label that would overlap a more important one (marks 5, problems 5, bases 4, hotspots 3);
+// zooming in brings it back. Screen-space boxes, so it works when the map is rotated too.
+function declutter() {
+  const ts = [...document.querySelectorAll("#world text[data-x]")];
+  ts.forEach(t => t.style.visibility = "");
+  ts.sort((a, b) => (+b.dataset.pri || 2) - (+a.dataset.pri || 2));
+  const kept = [];
+  for (const t of ts) {
+    const r = t.getBoundingClientRect();
+    if (!r.width) continue;
+    if (kept.some(q => r.left < q.right && r.right > q.left && r.top < q.bottom && r.bottom > q.top)) t.style.visibility = "hidden";
+    else kept.push(r);
+  }
+}
+
 // an icon of `size` screen pixels at (x, y) in map units; rescale() keeps it that size
 function icon(g, x, y, name, size) {
   const k = px();
@@ -272,6 +294,7 @@ function rescale() {
   if (typeof drawFinds === "function") drawFinds();
   drawLive();
   if (typeof rotate === "function") rotate();
+  declutter();
 }
 
 // Kinds and segment types switched off in the legend; remembered per device.
@@ -323,9 +346,9 @@ function drawSel() {
   if (selected) el("circle", { cx: selected[0], cy: -selected[1], r: 13 * px(), fill: "none", stroke: css("--ink-1"), "stroke-width": 2 * px() }, g);
 }
 
-function label(g, x, y, text, colour = "--ink-2", fs = 13) {
+function label(g, x, y, text, colour = "--ink-2", fs = 13, pri = 2) {
   // dark outline under the glyphs keeps labels readable over height cells and lines
-  const t = el("text", { "data-x": x, "data-y": y, "data-fs": fs, fill: css(colour), stroke: css("--page"),
+  const t = el("text", { "data-x": x, "data-y": y, "data-fs": fs, "data-pri": pri, fill: css(colour), stroke: css("--page"),
     "data-w": 3, "paint-order": "stroke", "stroke-linejoin": "round" }, g);
   t.textContent = text;
   return t;
@@ -342,7 +365,7 @@ function drawPlanet(g) {
     // stack labels of bases that sit within a label's height of each other
     const dy = placed.filter(q => Math.abs(q.x - p.x) < 160 * k && Math.abs(q.y - p.y) < 18 * k).length;
     placed.push(p);
-    const t = label(g, p.x, p.y, p.name + (p.loose ? `  ⚠ ${p.loose} loose` : ""), p.loose ? "--critical" : "--ink-1", 14);
+    const t = label(g, p.x, p.y, p.name + (p.loose ? `  ⚠ ${p.loose} loose` : ""), p.loose ? "--critical" : "--ink-1", 14, 4);
     t.dataset.dy = dy * 18;
   }
   issues(pts.filter(p => p.loose).map(p => ({ text: `${p.name}: ${p.loose} loose extractor${p.loose > 1 ? "s" : ""}`,
@@ -384,7 +407,7 @@ function drawBase(g) {
   for (const it of items) dot(g, it.e, it.n, it.kind, () => show(it), !!it.problems,
     (KIND[it.kind] || {}).label + (Math.hypot(it.e, it.n) < 2 ? "" : ` · ${fmtDist(Math.hypot(it.e, it.n))} ${compass(bearing(it.e, it.n))} of the computer`));
   const loose = lay.items.filter(i => i.problems);
-  for (const it of loose) label(g, it.e, it.n, "⚠ " + it.problems.join(", "), "--critical", 13);
+  for (const it of loose) label(g, it.e, it.n, "⚠ " + it.problems.join(", "), "--critical", 13, 5);
   fit(lay.items.map(i => [i.e, i.n]), 0.06);
   issues(loose.map(it => {
     const d = Math.hypot(it.e, it.n);
@@ -633,7 +656,7 @@ function drawFinds() {
     if (kind === "mark" && ICONS) {
       icon(g, p[0], p[1], "custommarker", 26);
       const t = el("text", { x: p[0] + 16 * k, y: -p[1] + 4 * k, "font-size": 12 * k, fill: css("--ink-1"), stroke: css("--page"),
-        "stroke-width": 3 * k, "paint-order": "stroke", "data-x": p[0], "data-y": p[1] }, g);
+        "stroke-width": 3 * k, "paint-order": "stroke", "data-x": p[0], "data-y": p[1], "data-pri": 5 }, g);
       t.textContent = f.name;
       const hitm = el("circle", { cx: p[0], cy: -p[1], r: 15 * k, fill: "transparent", cursor: "pointer" }, hits);
       hitm.addEventListener("click", (ev) => { ev.stopPropagation(); showFind(f, p); });
@@ -643,7 +666,7 @@ function drawFinds() {
       el("path", { d: `M ${p[0]} ${-p[1]} v ${-16 * k} l ${10 * k} ${4 * k} l ${-10 * k} ${4 * k}`, fill: css("--ink-1"),
         stroke: css("--page"), "stroke-width": 1.5 * k, "stroke-linejoin": "round" }, g);
       const t = el("text", { x: p[0] + 12 * k, y: -p[1] - 8 * k, "font-size": 12 * k, fill: css("--ink-1"), stroke: css("--page"),
-        "stroke-width": 3 * k, "paint-order": "stroke", "data-x": p[0], "data-y": p[1] }, g);
+        "stroke-width": 3 * k, "paint-order": "stroke", "data-x": p[0], "data-y": p[1], "data-pri": 5 }, g);
       t.textContent = f.name;
       const hitm = el("circle", { cx: p[0], cy: -p[1] - 8 * k, r: 14 * k, fill: "transparent", cursor: "pointer" }, hits);
       hitm.addEventListener("click", (ev) => { ev.stopPropagation(); showFind(f, p); });
@@ -665,7 +688,7 @@ function drawFinds() {
       const res = f.options && f.basis !== "recorded by you from the visor" ? "?" : (f.resource || "?");
       const t = el("text", { x: p[0] + (ic ? 17 : 11) * k, y: -p[1] + 4 * k, "font-size": 12 * k, fill: css(f.class ? "--ink-1" : "--ink-2"),
         stroke: css("--page"), "stroke-width": 3 * k, "paint-order": "stroke", "stroke-linejoin": "round",
-        "data-x": p[0], "data-y": p[1] }, g);
+        "data-x": p[0], "data-y": p[1], "data-pri": 3 }, g);
       // with icons the class letter is in the icon itself
       const cls = ic ? "" : `${f.class || "?"} `;
       t.textContent = `${cls}${kind === "hotspot-power" ? `${f.class ? f.rates[f.class] + " kP" : "power"}` : res}`;
@@ -675,6 +698,7 @@ function drawFinds() {
     hit.addEventListener("pointerenter", (ev) => { if (ev.pointerType === "mouse") tip(findTitle(f), ev); });
     hit.addEventListener("pointerleave", () => { $("tip").hidden = true; });
   }
+  declutter();      // the finds arrive after the rest of the map
 }
 
 function showFind(f, p) {
@@ -1031,7 +1055,8 @@ function drawLive() {
   }
   const h = live.player.heading;
   const a = el("g", { transform: `translate(${m.x} ${-m.y}) scale(${k}) rotate(${h === null ? 0 : h})` }, g);
-  el("circle", { r: 15, fill: css("--ink-1"), opacity: 0.12 }, a);
+  if (!stale) el("circle", { r: 16, fill: css("--ink-1"), class: "pulse", style: `animation-delay:-${(Date.now() % 2000) / 1000}s` }, a);
+  el("circle", { r: 13, fill: css("--ink-1"), opacity: 0.12 }, a);
   el(h === null ? "circle" : "path", h === null ? { r: 6, fill: css(stale ? "--ink-muted" : "--ink-1") }
     : { d: "M 0 -12 L 8 9 L 0 4 L -8 9 Z", fill: css(stale ? "--ink-muted" : "--ink-1"), stroke: css("--page"), "stroke-width": 1.5 }, a);
 }
