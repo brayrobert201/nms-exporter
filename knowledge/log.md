@@ -2,6 +2,12 @@
 
 Newest first. One entry per change to the bundle: what landed, from where.
 
+## 2026-10-22 - water level
+
+- Live samples: the sea-level field is the water surface above the planet's
+  nominal radius (120 on a water planet, 0 on dry ones); recorded in
+  save-coordinates.md. `/map` heights now measure from the water where there is one.
+
 ## 2026-10-22 - base power, heights
 
 - New concept: base power (part ratings, battery charge = UserData >> 32, what the
