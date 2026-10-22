@@ -44,6 +44,11 @@ svg.dragging { cursor: grabbing; }
   border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; }
 .dock > div:empty { display: none; }
 .issues { max-height: 40vh; overflow: auto; }
+.power { width: min(380px, 100%); color: var(--ink-2); font-size: 13px; }
+.power b { color: var(--ink-1); font-size: 15px; }
+.power table { border-collapse: collapse; margin-top: 6px; width: 100%; }
+.power td { padding: 1px 0; } .power td + td { text-align: right; color: var(--ink-1); font-variant-numeric: tabular-nums; }
+.pill.none { color: var(--ink-muted); }
 .nearby { width: min(380px, 100%); max-height: 46vh; overflow: auto; color: var(--ink-2); }
 @media (max-width: 700px) { .dock > div { font-size: 13px; } .issues { max-height: 22vh; } .nearby { max-height: 34vh; } }
 .nearby h2 { cursor: pointer; font-size: 14px; margin: 0 0 4px; color: var(--ink-1); font-weight: 600; display: flex; gap: 8px; align-items: baseline; }
@@ -84,7 +89,7 @@ text { font-family: system-ui, sans-serif; }
 <main id="main">
   <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
   <div class="panel" id="panel"></div>
-  <div class="dock"><div class="issues" id="issues"></div><div class="nearby" id="nearby"></div></div>
+  <div class="dock"><div class="issues" id="issues"></div><div class="power" id="power"></div><div class="nearby" id="nearby"></div></div>
 </main>
 <footer id="legend"></footer>
 <script>
@@ -155,6 +160,7 @@ function render() {
   el("g", { id: "live" }, world);
   el("g", { id: "scale" }, svg);
   base ? drawBase(g) : drawPlanet(g);
+  drawPower();
   rescale();
   drawScale();
   crumbs();
@@ -210,6 +216,26 @@ function drawPlanet(g) {
   legend(["base", "exocraft", "settlement", "deposit"], []);
 }
 
+const POWER = { good: "✓", warning: "⚠", critical: "✕", none: "–" };
+const powerPill = (pw) => `<span class="pill ${pw.status}">${POWER[pw.status]} ${pw.headline}</span>`;
+
+function drawPower() {
+  const P = $("power");
+  const pw = base && planet.layouts[base] ? planet.layouts[base].power : null;
+  if (!pw || pw.status === "none") { P.innerHTML = ""; return; }
+  const kp = (v) => `${Math.round(v).toLocaleString()} kP`;
+  const rows = [["Extractors", `${pw.extractors} × 50 = ${kp(pw.demand_kp)}`]];
+  if (pw.em) rows.push(["Electromagnetic generators", `${pw.em}: ${kp(pw.em_kp[0])}–${kp(pw.em_kp[1])}`]);
+  if (pw.solar) rows.push(["Solar (daytime)", `${pw.solar}: ${kp(pw.solar_kp)}`]);
+  if (pw.bio) rows.push(["Biofuel (if fuelled)", `${pw.bio}: ${kp(pw.bio_kp)}`]);
+  if (pw.batteries) rows.push(["Batteries at last save", `${pw.charge_pct}%` + (pw.battery_minutes ? ` · ${pw.battery_minutes} min of extraction` : "")]);
+  if (pw.other_up_to_kp) rows.push(["Other powered parts, if wired", `up to ${kp(pw.other_up_to_kp)}`]);
+  P.innerHTML = `<b id="powerhead" style="cursor:pointer" title="Show or hide the details">${powerOpen ? "▾" : "▸"} Power</b> ${powerPill(pw)}`
+    + (powerOpen ? `<div>${pw.why || ""}</div><table>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</table>` : "");
+  $("powerhead").onclick = () => { powerOpen = !powerOpen; drawPower(); };
+}
+let powerOpen = window.innerWidth > 700;     // a phone starts with the one-line verdict
+
 function drawBase(g) {
   const lay = planet.layouts[base];
   if (!lay) { label(g, 0, 0, "No layout for this base"); return; }
@@ -244,6 +270,7 @@ function show(p) {
   const P = $("panel");
   const rows = [];
   if (p.kind === "base") rows.push(`<b>${p.name}</b>`, `${p.objects} objects`, `lat ${p.lat}°, lon ${p.lon}°`);
+  if (p.kind === "base" && p.power && p.power !== "none") rows.push(`Power: <span class="pill ${p.power}">${POWER[p.power]} ${p.power_headline}</span>`);
   else if (p.name) rows.push(`<b>${p.name}</b>`);
   else rows.push(`<b>${(KIND[p.kind] || {}).label || p.kind}</b> <span style="color:var(--ink-muted)">${p.id || ""}</span>`);
   if (p.e !== undefined) {
@@ -520,7 +547,7 @@ function drawPill() {
 
 function drawNearby() {
   const N = $("nearby");
-  if (!live || !live.on_planet || !live.nearby) { N.innerHTML = ""; return; }
+  if (!onThisPlanet() || !live.nearby) { N.innerHTML = ""; return; }
   const rows = [];
   const t = live.target;
   if (t) {

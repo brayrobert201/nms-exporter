@@ -8,6 +8,7 @@ Conventions: [meta/conventions.md](meta/conventions.md). Changes: [log.md](log.m
 
 | Concept | Evidence | Builds | Status |
 |---|---|---|---|
+| [Base power - part ratings, battery charge in the save, what the save omits](mechanics/base-power.md) | game-data | 25800958 | draft |
 | [Extraction hotspots - classes, rates, ranges, gases and substances](mechanics/extraction-hotspots.md) | game-data | 25800958 | draft |
 | [Harvest All Plants radius](mechanics/harvest-all-radius.md) | game-data | 25800958 | draft |
 | [Positions in the save - planet-centred bases, base-local objects](mechanics/save-coordinates.md) | measured | 25800958 | draft |

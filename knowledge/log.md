@@ -2,6 +2,12 @@
 
 Newest first. One entry per change to the bundle: what landed, from where.
 
+## 2026-10-22 - base power, heights
+
+- New concept: base power (part ratings, battery charge = UserData >> 32, what the
+  save omits); `/map` shows a power verdict per base. Ground heights from live
+  samples: distance_from_planet is height above a round nominal radius.
+
 ## 2026-10-22 - compass north and live position
 
 - Measured with the live_position mod: compass north = planet +Y, east = north

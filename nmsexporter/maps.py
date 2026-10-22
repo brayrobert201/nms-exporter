@@ -23,6 +23,7 @@ from __future__ import annotations
 import math
 
 from .farmcheck import EXTRACTORS, check_base
+from .power import base_power
 
 NORTH_AXIS = (0.0, 1.0, 0.0)
 SKIP_BASES = {"FreighterBase", "PlayerShipBase", "PlayerSpaceBase"}
@@ -190,9 +191,10 @@ def base_layout(b) -> dict | None:
     return {"items": items, "segments": segs, "loose": sum(1 for i in items if i.get("problems"))}
 
 
-def build(ps_points: dict, bases: list) -> dict:
+def build(ps_points: dict, bases: list, tables: dict | None = None) -> dict:
     """ps_points: the save fields kept by the collector (vehicles, deposits,
-    settlements). bases: collector.raw_bases."""
+    settlements). bases: collector.raw_bases. tables: the game tables, for the
+    power budget."""
     planets: dict = {}
     for b in bases:
         t = (b.get("BaseType") or {}).get("PersistentBaseTypes")
@@ -210,10 +212,14 @@ def build(ps_points: dict, bases: list) -> dict:
             x, y = proj.xy(b["Position"])
             name = b.get("Name") or "base"
             lay = base_layout(b)
+            pw = base_power(b, tables or {})
+            if lay is not None:
+                lay["power"] = pw
             layouts[name] = lay
             lat, lon = latlon(b["Position"])
             pts.append({"kind": "base", "name": name, "x": round(x, 1), "y": round(y, 1),
                         "lat": lat, "lon": lon, "loose": (lay or {}).get("loose", 0),
+                        "power": (pw or {}).get("status"), "power_headline": (pw or {}).get("headline"),
                         "objects": len(b.get("Objects") or []), "w": [round(c, 1) for c in b["Position"][:3]]})
 
         def near_planet(p):
