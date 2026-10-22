@@ -22,11 +22,13 @@ from urllib.parse import unquote_plus  # noqa: E402
 
 from nmsexporter import maps  # noqa: E402
 from nmsexporter.live import Live  # noqa: E402
+from nmsexporter.systems import portal  # noqa: E402
 from nmsexporter.nms import Collector  # noqa: E402
 
 HOST = os.environ.get("NMS_EXPORTER_HOST", "0.0.0.0")
 PORT = int(os.environ.get("NMS_EXPORTER_PORT", "9877"))
 
+GLYPH_DIR = os.environ.get("NMS_GLYPH_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "glyphs"))
 collector = Collector()
 live = Live()
 
@@ -83,6 +85,7 @@ class Handler(BaseHTTPRequestHandler):
                 for pl in m["planets"]:
                     a = maps._addr(pl.get("address"))
                     pl["planet_name"], pl["system_name"] = live.systems.planet_name(a), live.systems.system_name(a)
+                    pl["portal"] = portal(a) if a is not None else None
                 return self._send(json.dumps(m).encode(),
                                   "application/json")
             if path == "/api/live":
@@ -95,6 +98,16 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(json.dumps({"systems": live.systems.listing(maps._addr(unquote_plus(params.get("from", ""))) ,
                                                                               collector.raw_bases),
                                               "ly_per_voxel": 400}).encode(), "application/json")
+            if path.startswith("/glyph/") and path.endswith(".png"):
+                # portal glyph icons extracted from the game by scripts/nms-glyphs (not in the repo)
+                h = path[len("/glyph/"):-len(".png")].lower()
+                if len(h) == 1 and h in "0123456789abcdef":
+                    try:
+                        with open(os.path.join(GLYPH_DIR, f"{h}.png"), "rb") as f:
+                            return self._send(f.read(), "image/png")
+                    except OSError:
+                        pass
+                return self._send(b"no glyph (run scripts/nms-glyphs)", "text/plain", 404)
             if path == "/systems":
                 return self._send(page_html("systems.html"), "text/html; charset=utf-8")
             if path == "/api/finds":

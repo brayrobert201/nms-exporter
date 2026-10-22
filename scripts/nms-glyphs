@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Extract the 16 portal glyph icons from the installed game as PNGs, for the
+# /systems page (served by the exporter at /glyph/<hex digit>.png).
+#
+#   scripts/nms-glyphs            # writes data/glyphs/0.png .. f.png (gitignored: game art)
+#
+# Source: NMSARC.TexUI.pak textures/ui/frontend/icons/update3/portalsymbol.<0-f>.dds,
+# glyph order 0-F = Sunset, Bird, Face, Diplo, Eclipse, Balloon, Boat, Bug,
+# Dragonfly, Galaxy, Voxel, Fish, Tent, Rocket, Tree, Atlas.
+# Needs scripts/nms-pak (and its /opt/nmstools) and ImageMagick's convert.
+set -eu
+HERE=$(cd "$(dirname "$0")/.." && pwd)
+OUT=$HERE/data/glyphs
+mkdir -p "$OUT"
+list=$("$HERE/scripts/nms-pak" get 'textures/ui/frontend/icons/update3/portalsymbol\.[0-9a-f]\.dds$' --all)
+for h in 0 1 2 3 4 5 6 7 8 9 a b c d e f; do
+  src=$(grep -E "portalsymbol\.$h\.dds$" <<<"$list" | head -1)
+  [ -n "$src" ] || { echo "nms-glyphs: glyph $h not found in the game files" >&2; exit 1; }
+  convert "$src" -resize 64x64 "$OUT/$h.png"
+done
+echo "wrote 16 glyphs to $OUT"

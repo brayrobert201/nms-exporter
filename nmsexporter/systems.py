@@ -28,6 +28,21 @@ def system_ua(address: int) -> int:
     return address & ~PLANET_BITS
 
 
+def portal(address: int, planet: int | None = None) -> str:
+    """The 12-glyph portal address as hex digits: planet, system (3), Y (2), Z (3), X (3).
+    It is the universe address without its reality byte; planet 0 (no planet)
+    becomes 1, since a portal lands on a planet."""
+    p = planet if planet is not None else (address >> 52) & 0xF
+    return (f"{p or 1:X}{(address >> 40) & 0xFFF:03X}{(address >> 24) & 0xFF:02X}"
+            f"{(address >> 12) & 0xFFF:03X}{address & 0xFFF:03X}")
+
+
+def galactic_coords(address: int) -> str:
+    """Signal-booster style XXXX:YYYY:ZZZZ:SSSS (voxel offset to the galaxy corner)."""
+    x, y, z = voxel(address)
+    return f"{x + 0x7FF:04X}:{y + 0x7F:04X}:{z + 0x7FF:04X}:{(address >> 40) & 0xFFF:04X}"
+
+
 def voxel(address: int) -> tuple:
     def signed(v, bits):
         return v - (1 << bits) if v >= 1 << (bits - 1) else v
@@ -79,6 +94,7 @@ class Systems:
     def listing(self, here: int | None, bases: list) -> list:
         """Every system seen, with distance from `here` (any address in the player's system)."""
         base_systems: dict = {}
+        base_planet: dict = {}        # a portal code lands on the planet of one of your bases where there is one
         for b in bases:
             if (b.get("BaseType") or {}).get("PersistentBaseTypes") in SKIP_BASES:
                 continue
@@ -88,6 +104,7 @@ class Systems:
             except (TypeError, ValueError):
                 continue
             base_systems.setdefault(system_ua(a), set()).add(b.get("Name") or "base")
+            base_planet.setdefault(system_ua(a), (a >> 52) & 0xF)
         hv = voxel(here) if here is not None else None
         out = []
         for ua, r in self.systems.items():
@@ -100,6 +117,7 @@ class Systems:
                         "pirate": r.get("pirate"), "abandoned": r.get("abandoned"),
                         "here": here is not None and system_ua(here) == ua,
                         "distance_ly": None if d is None else round(d), "voxel": list(v),
-                        "bases": sorted(base_systems.get(ua, ()))})
+                        "bases": sorted(base_systems.get(ua, ())),
+                        "portal": portal(ua, base_planet.get(ua)), "coords": galactic_coords(ua)})
         out.sort(key=lambda s: (s["distance_ly"] is None, s["distance_ly"] or 0, s["name"] or ""))
         return out

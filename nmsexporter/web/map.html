@@ -68,6 +68,8 @@ svg.dragging { cursor: grabbing; }
 .goto button { padding: 2px 8px; }
 .livepill { color: var(--ink-2); font-size: 13px; }
 button.on { border-color: var(--ink-1); }
+.glyphs { display: inline-flex; gap: 1px; vertical-align: middle; font-family: ui-monospace, monospace; }
+.glyphs img { display: block; }
 .viewmenu { position: relative; }
 a.navlink { color: var(--ink-1); background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
   padding: 6px 10px; text-decoration: none; }
@@ -125,6 +127,10 @@ text { font-family: system-ui, sans-serif; }
 <footer id="legend"></footer>
 <script>
 "use strict";
+// Portal glyphs, 0-F, served from /glyph/<digit>.png (scripts/nms-glyphs); the hex digit stands in if an image is missing.
+const GLYPH_NAMES = ["Sunset", "Bird", "Face", "Diplo", "Eclipse", "Balloon", "Boat", "Bug", "Dragonfly", "Galaxy", "Voxel", "Fish", "Tent", "Rocket", "Tree", "Atlas"];
+const glyphs = (code, px = 18) => `<span class="glyphs" title="${code} — ${[...code].map(c => GLYPH_NAMES[parseInt(c, 16)]).join(", ")}">`
+  + [...code.toLowerCase()].map(c => `<img src="/glyph/${c}.png" width="${px}" height="${px}" alt="${c.toUpperCase()}" onerror="this.replaceWith(document.createTextNode('${c.toUpperCase()}'))">`).join("") + "</span>";
 const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const NS = "http://www.w3.org/2000/svg";
 const $ = (id) => document.getElementById(id);
@@ -377,6 +383,7 @@ function show(p) {
   if (p.kind === "base") {
     rows.push(`<b>${p.name}</b>`, `${p.objects} objects`, `lat ${p.lat}°, lon ${p.lon}°`);
     if (p.power && p.power !== "none") rows.push(`Power: <span class="pill ${p.power}">${POWER[p.power]} ${p.power_headline}</span>`);
+    if (planet.portal) rows.push(`Portal: ${glyphs(planet.portal, 22)}`);
   } else if (p.name) rows.push(`<b>${p.name}</b>`);
   else rows.push(`<b>${(KIND[p.kind] || {}).label || p.kind}</b> <span style="color:var(--ink-muted)">${p.id || ""}</span>`);
   if (p.e !== undefined) {

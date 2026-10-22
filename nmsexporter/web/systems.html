@@ -41,6 +41,10 @@ tr.detail td { color: var(--ink-muted); white-space: normal; background: var(--s
 .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
   background: var(--surface-2); border: 1px solid currentColor; }
 .pill.warning { color: var(--warning); } .pill.serious { color: var(--serious); } .pill.good { color: var(--good); }
+.glyphs { display: inline-flex; gap: 1px; vertical-align: middle; font-family: ui-monospace, monospace; }
+.glyphs img { display: block; }
+.portalbig { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; margin: 6px 0; }
+.portalbig figure { margin: 0; text-align: center; font-size: 11px; color: var(--ink-muted); }
 .empty { color: var(--ink-muted); padding: 24px; text-align: center; }
 </style>
 </head>
@@ -57,17 +61,23 @@ tr.detail td { color: var(--ink-muted); white-space: normal; background: var(--s
 <main>
   <div class="tablewrap"><table>
     <thead><tr>
-      <th data-k="name">System</th><th data-k="distance_ly" class="sorted asc">Distance</th><th data-k="economy">Economy</th>
+      <th data-k="name">System</th><th data-k="distance_ly" class="sorted asc">Distance</th><th data-k="portal">Portal address</th><th data-k="economy">Economy</th>
       <th data-k="wealth">Wealth</th><th data-k="conflict">Conflict</th><th data-k="race">Race</th><th data-k="star">Star</th>
       <th data-k="planets">Planets</th><th data-k="bases">Your bases</th>
     </tr></thead>
     <tbody id="rows"></tbody>
   </table></div>
   <p class="note">Systems you have seen on the galaxy map (pymhf_mods/galaxy_log.py). Distance is between galactic
-    regions at ≈ 400 ly each, so systems in your region show as "same region". Tap a row for its planets.</p>
+    regions at ≈ 400 ly each, so systems in your region show as "same region". Tap a row for its planets and a large
+    portal address: dial it at any planetary portal to go there.</p>
 </main>
 <script>
 "use strict";
+// Portal glyphs, 0-F, served from /glyph/<digit>.png (scripts/nms-glyphs); the hex digit stands in if an image is missing.
+const GLYPH_NAMES = ["Sunset", "Bird", "Face", "Diplo", "Eclipse", "Balloon", "Boat", "Bug", "Dragonfly", "Galaxy", "Voxel", "Fish", "Tent", "Rocket", "Tree", "Atlas"];
+const glyphs = (code, px = 18) => `<span class="glyphs" title="${code} — ${[...code].map(c => GLYPH_NAMES[parseInt(c, 16)]).join(", ")}">`
+  + [...code.toLowerCase()].map(c => `<img src="/glyph/${c}.png" width="${px}" height="${px}" alt="${c.toUpperCase()}" onerror="this.replaceWith(document.createTextNode('${c.toUpperCase()}'))">`).join("") + "</span>";
+
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const WEALTH = ["Poor", "Average", "Wealthy", "Pirate"];
@@ -98,12 +108,14 @@ function render() {
   $("rows").innerHTML = rows.length ? rows.map(s => {
     const row = `<tr class="sys${s.here ? " here" : ""}" data-ua="${s.ua}">
       <td class="name"${s.name ? "" : ` style="color:var(--ink-muted);font-weight:400" title="Hover it on the galaxy map to get its name"`}>${esc(s.name || "unnamed")}${s.anomaly && s.anomaly !== "None_" ? ` <span class="note">${esc(s.anomaly.replace(/([a-z])([A-Z])/g, "$1 $2"))}</span>` : ""}</td>
-      <td class="num">${dist(s)}</td><td>${esc(s.economy)}</td><td>${wealth(s.wealth)}</td><td>${conflict(s.conflict)}</td>
+      <td class="num">${dist(s)}</td><td>${glyphs(s.portal)}</td><td>${esc(s.economy)}</td><td>${wealth(s.wealth)}</td><td>${conflict(s.conflict)}</td>
       <td>${esc(s.race === "None_" ? "none" : s.race)}</td><td>${esc(s.star)}</td><td class="num">${s.planets ?? ""}</td>
       <td>${esc(s.bases.join(", "))}</td></tr>`;
     const names = (s.planet_names || []).map(n => n || "?");
-    return row + (open.has(s.ua) ? `<tr class="detail"><td colspan="9">Planets: ${names.length ? esc(names.join(", ")) : "none recorded"}${names.includes("?") ? " (hover the system on the galaxy map to name the rest)" : ""}</td></tr>` : "");
-  }).join("") : `<tr><td colspan="9" class="empty">No systems match. Browse the galaxy map in game to add more.</td></tr>`;
+    const big = `<div class="portalbig">${[...s.portal.toLowerCase()].map((c, i) => `<figure>${glyphs(c, 40)}<br>${i === 0 ? "planet" : GLYPH_NAMES[parseInt(c, 16)]}</figure>`).join("")}</div>`;
+    return row + (open.has(s.ua) ? `<tr class="detail"><td colspan="10">Planets: ${names.length ? esc(names.join(", ")) : "none recorded"}${names.includes("?") ? " (hover the system on the galaxy map to name the rest)" : ""}
+      <br>Portal address ${s.portal} (first glyph = planet${s.bases.length ? ", set to your base's planet" : " 1; any planet in the system works"}) · galactic coordinates ${s.coords}${big}</td></tr>` : "");
+  }).join("") : `<tr><td colspan="10" class="empty">No systems match. Browse the galaxy map in game to add more.</td></tr>`;
   document.querySelectorAll("tr.sys").forEach(tr => tr.onclick = () => { open.has(tr.dataset.ua) ? open.delete(tr.dataset.ua) : open.add(tr.dataset.ua); render(); });
   document.querySelectorAll("th").forEach(th => th.className = th.dataset.k === sortKey ? `sorted${asc ? " asc" : ""}` : "");
   $("note").textContent = `${rows.length} of ${systems.length} systems`;
