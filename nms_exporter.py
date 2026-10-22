@@ -58,7 +58,7 @@ class Handler(BaseHTTPRequestHandler):
         path = path.rstrip("/") or "/"
         params = dict(p.split("=", 1) for p in query.split("&") if "=" in p)
         try:
-            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases", "/api/map", "/api/live"):
+            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases", "/api/map", "/api/live", "/api/elevation"):
                 collector.refresh()
             if path == "/metrics":
                 return self._send(collector.metrics().encode(), "text/plain; version=0.0.4")
@@ -79,12 +79,20 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(json.dumps(live.build(collector.raw_bases, unquote_plus(params.get("base", "")) or None,
                                                         unquote_plus(params.get("target", "")) or None)).encode(),
                                   "application/json")
+            if path == "/api/elevation":
+                try:
+                    cell = min(max(float(params.get("cell", "25")), 2.0), 500.0)
+                except ValueError:
+                    cell = 25.0
+                return self._send(json.dumps(live.elevation(collector.raw_bases, maps._addr(unquote_plus(params.get("address", ""))),
+                                                            unquote_plus(params.get("base", "")) or None, cell)).encode(),
+                                  "application/json")
             if path == "/map":
                 return self._send(map_html(), "text/html; charset=utf-8")
             if path == "/healthz":
                 return self._send(b"ok", "text/plain")
             if path == "/":
-                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /map /api/map /api/live /healthz\n", "text/plain")
+                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /map /api/map /api/live /api/elevation /healthz\n", "text/plain")
             self._send(b"not found", "text/plain", 404)
         except BrokenPipeError:
             pass

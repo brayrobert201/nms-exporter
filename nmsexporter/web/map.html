@@ -12,6 +12,10 @@
   --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10);
   --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-7: #9085e9;
   --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+  /* sequential blue (data-viz palette) for ground height, low = dark, high = light. Steps 600-200
+     only: an empty cell means "never sampled", so the lowest height must still clear the surface. */
+  --seq-1: #184f95; --seq-2: #1c5cab; --seq-3: #256abf; --seq-4: #2a78d6; --seq-5: #3987e5;
+  --seq-6: #5598e7; --seq-7: #6da7ec; --seq-8: #86b6ef; --seq-9: #9ec5f4;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--page); color: var(--ink-1);
@@ -72,6 +76,7 @@ text { font-family: system-ui, sans-serif; }
   <select id="planet" aria-label="Planet"></select>
   <span class="crumbs" id="crumbs"></span>
   <button id="fit" title="Fit to screen">Fit</button>
+  <button id="heights" class="on" title="Ground height above sea level, from where you've walked">Heights</button>
   <button id="follow" title="Centre on you: off, north up, facing up">Centre</button>
   <span class="livepill" id="livepill"></span>
   <span class="note" id="note"></span>
@@ -145,6 +150,7 @@ function render() {
   const svg = $("svg");
   svg.innerHTML = "";
   const world = el("g", { id: "world" }, svg);
+  el("g", { id: "elev" }, world);
   const g = el("g", { id: "content" }, world);
   el("g", { id: "live" }, world);
   el("g", { id: "scale" }, svg);
@@ -152,6 +158,7 @@ function render() {
   rescale();
   drawScale();
   crumbs();
+  loadElevation();
 }
 
 function rescale() {
@@ -280,6 +287,7 @@ function legend(kinds, segs) {
     + `<span><i style="background:transparent;border:2px solid ${css("--critical")}"></i>⚠ problem</span>`
     + `<span><i style="border-radius:0;clip-path:polygon(50% 0,100% 100%,50% 75%,0 100%);background:${css("--ink-1")}"></i>You</span>`
     + `<span><i style="border-radius:0;height:3px;background:${css("--ink-muted")}"></i>Your trail</span>`;
+  if (typeof legendHeights === "function") legendHeights();
 }
 
 function crumbs() {
@@ -373,6 +381,50 @@ async function load() {
   $("note").textContent = data.north_verified ? "" : "North and east/west not yet checked against the in-game compass";
   render();
   poll();
+}
+
+// ---- ground heights (/api/elevation): lowest sample per cell, metres above sea level ----
+let elev = null, showHeights = true, elevTimer = null;
+const SEQ = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => `--seq-${i}`);
+$("heights").onclick = () => { showHeights = !showHeights; $("heights").classList.toggle("on", showHeights); drawElevation(); legendHeights(); };
+
+async function loadElevation() {
+  clearTimeout(elevTimer);
+  if (!planet) return;
+  const q = new URLSearchParams({ address: planet.address, cell: base ? 10 : 25 });
+  if (base) q.set("base", base);
+  const want = `${planet.address}|${base}`;
+  try {
+    const got = await (await fetch("/api/elevation?" + q, { cache: "no-store" })).json();
+    if (want === `${planet.address}|${base}`) { elev = got; drawElevation(); legendHeights(); }
+  } catch (e) { elev = { error: String(e), cells: [] }; }
+  elevTimer = setTimeout(loadElevation, 15000);
+}
+
+function drawElevation() {
+  const g = $("elev");
+  if (!g) return;
+  g.innerHTML = "";
+  if (!showHeights || !elev || !elev.cells.length) return;
+  const c = elev.cell, lo = elev.min, span = Math.max(elev.max - elev.min, 1);
+  for (const [i, j, h] of elev.cells) {
+    const step = Math.min(SEQ.length - 1, Math.floor((h - lo) / span * SEQ.length));
+    const r = el("rect", { x: i * c, y: -(j + 1) * c, width: c, height: c, fill: css(SEQ[step]), opacity: 0.85 }, g);
+    el("title", {}, r).textContent = `${Math.round(h)} m above sea level`;
+  }
+}
+
+function legendHeights() {
+  const L = $("legend");
+  L.querySelector(".hlegend")?.remove();
+  if (!elev) return;
+  const span = document.createElement("span");
+  span.className = "hlegend";
+  if (!showHeights) span.textContent = "";
+  else if (elev.error) span.textContent = `Heights: ${elev.error}`;
+  else span.innerHTML = `Height above sea level <i style="width:90px;height:8px;border-radius:2px;background:linear-gradient(90deg,${SEQ.map(v => css(v)).join(",")})"></i>`
+    + `${Math.round(elev.min)}–${Math.round(elev.max)} m · from ${elev.samples} steps on foot and ${elev.objects} built objects`;
+  L.appendChild(span);
 }
 
 // ---- live position (pymhf_mods/live_position.py via /api/live) ----

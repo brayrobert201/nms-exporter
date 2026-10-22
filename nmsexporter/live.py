@@ -14,6 +14,7 @@ Standard library only. Every read returns (value, error) and never raises.
 """
 from __future__ import annotations
 
+import glob
 import json
 import math
 import os
@@ -121,9 +122,57 @@ def nav(rel, heading, w) -> dict:
             "turn": None if turn is None else round(turn, 1), "h": round(math.hypot(*w) - r, 1)}
 
 
+# Ground elevation from where the player has been. distance_from_planet is the
+# height above the planet's nominal (sea-level) radius: |rel| - distance_from_planet
+# is the same round number for every sample on a planet (130048 = 127 x 1024 on
+# Cobalt Oxygen's planet, 98304 = 96 x 1024 for another). On foot or in an exocraft
+# the player is on the ground; indoors (floors) and ships are not used. A cell keeps
+# its lowest sample, so jetpack jumps don't raise it.
+GROUND_LOCATIONS = {"PlanetOnFoot", "PlanetInVehicle"}
+# Built objects that stand on the ground give heights at bases too.
+GROUND_KINDS = {"extractor-mineral", "extractor-gas", "depot", "power", "computer", "teleporter"}
+
+
+class Elevation:
+    """Every trail file ever written, read incrementally: ground samples and
+    the nominal radius of each planet seen."""
+
+    def __init__(self):
+        self.samples: dict = {}     # address -> [rel]
+        self.radius: dict = {}      # address -> nominal radius
+        self._pos: dict = {}
+
+    def refresh(self):
+        for path in sorted(glob.glob(os.path.join(LIVE_DIR, "trail-*.jsonl"))):
+            try:
+                with open(path, "rb") as f:
+                    f.seek(self._pos.get(path, 0))
+                    data = f.read()
+            except OSError:
+                continue
+            end = data.rfind(b"\n") + 1
+            self._pos[path] = self._pos.get(path, 0) + end
+            for line in data[:end].splitlines():
+                try:
+                    s = json.loads(line)
+                    address, rel = ua_int(s.get("ua")), s["rel"]
+                except (ValueError, KeyError, TypeError):
+                    continue
+                if address is None:
+                    continue
+                dfp = s.get("distance_from_planet")
+                if dfp is not None and dfp < 20000:
+                    self.radius[address] = round(math.hypot(*rel) - dfp)
+                if s.get("location") in GROUND_LOCATIONS:
+                    self.samples.setdefault(address, []).append(rel)
+
+
 class Live:
     def __init__(self):
         self.trail = Trail()
+        self.elev = Elevation()
+        self._grid_key = None
+        self._grid = None
         self._objs_for = None
         self._objs: dict = {}      # address -> [(key, base, kind, id, world)]
 
@@ -228,4 +277,44 @@ class Live:
                     out["target"].update(e=te, n=tn)
             else:
                 out["target"] = {"key": target, "error": "not on this planet"}
+        return out
+
+    def elevation(self, bases: list, address: int | None, base: str | None = None, cell: float = 25.0) -> dict:
+        """Ground height above sea level in square cells of `cell` metres, on the
+        planet projection or (with `base`) the base's layout frame."""
+        self.elev.refresh()
+        mine = [b for b in bases if maps._addr(b.get("GalacticAddress")) == address and b.get("Position")
+                and (b.get("BaseType") or {}).get("PersistentBaseTypes") not in maps.SKIP_BASES]
+        if not mine:
+            return {"error": "no bases on this planet", "cells": []}
+        radius = self.elev.radius.get(address)
+        if radius is None:
+            return {"error": "sea level not known yet: visit this planet with the live_position mod running",
+                    "cells": []}
+        trail = self.elev.samples.get(address, [])
+        key = (address, base, cell, len(trail), id(bases))
+        if key == self._grid_key:
+            return self._grid
+        if base:
+            b = next((b for b in mine if (b.get("Name") or "base") == base), None)
+            frame = maps.base_en(b) if b else None
+            if not frame:
+                return {"error": f"no layout for {base}", "cells": []}
+            to_xy = lambda w: frame[1](maps.world_to_local(b, frame[0], w))[:2]  # noqa: E731
+        else:
+            proj = maps.planet_projection(mine)
+            to_xy = proj.xy
+        objs = [o[4] for o in self._objects(bases).get(address, []) if o[2] in GROUND_KINDS]
+        grid: dict = {}
+        for w in list(trail) + objs:
+            x, y = to_xy(w)
+            k = (math.floor(x / cell), math.floor(y / cell))
+            h = math.hypot(*w) - radius
+            if k not in grid or h < grid[k]:
+                grid[k] = h
+        hs = list(grid.values())
+        out = {"cell": cell, "radius": radius, "samples": len(trail), "objects": len(objs),
+               "min": round(min(hs), 1) if hs else None, "max": round(max(hs), 1) if hs else None,
+               "cells": [[i, j, round(h, 1)] for (i, j), h in grid.items()], "error": None}
+        self._grid_key, self._grid = key, out
         return out
