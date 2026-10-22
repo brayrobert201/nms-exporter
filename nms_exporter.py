@@ -5,23 +5,28 @@
   /json     the same snapshot as JSON, for the wall displays
   /healthz
 
-Runs as the Steam user, because it reads the Proton save directory. Nothing else
-needs to be installed: standard library only.
-Standard library only.
+Runs as the Steam user, because it reads the Proton save directory. The save
+side is standard library only; the map's history (trail, finds, systems) lives in
+Postgres (nms-db, see nmsexporter/db.py), reached with psycopg from the project's
+uv environment (pyproject.toml). With nms-db down, /metrics and /json carry on and
+the map's history APIs answer 503 with the reason.
 """
 from __future__ import annotations
 
 import json
 import os
 import sys
+import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from urllib.parse import unquote_plus  # noqa: E402
 
-from nmsexporter import maps  # noqa: E402
-from nmsexporter.live import Live  # noqa: E402
+import psycopg  # noqa: E402
+
+from nmsexporter import db, maps  # noqa: E402
+from nmsexporter.live import LIVE_DIR, Live  # noqa: E402
 from nmsexporter.systems import portal  # noqa: E402
 from nmsexporter.nms import Collector  # noqa: E402
 
@@ -32,6 +37,35 @@ ICON_DIR = os.environ.get("NMS_ICON_DIR", os.path.join(os.path.dirname(os.path.a
 GLYPH_DIR = os.environ.get("NMS_GLYPH_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "glyphs"))
 collector = Collector()
 live = Live()
+ingest = db.Ingest(LIVE_DIR)
+DB_PATHS = ("/api/live", "/api/elevation", "/api/finds", "/api/sectors", "/api/systems")
+
+
+def db_error() -> str | None:
+    """Why the map's history is unavailable, or None."""
+    if not db.configured():
+        return "nms-db not configured: no PGHOST (nms-bao-sync writes /etc/nms-exporter/db.env)"
+    return ingest.error
+
+
+def start_db():
+    """Create the schema, then copy the hook's files in every 2 s. Retries until nms-db answers."""
+    if not db.configured():
+        print("nms-db not configured (no PGHOST): the map's history APIs will answer 503", flush=True)
+        return
+
+    def run():
+        while True:
+            try:
+                db.migrate(ingest.dir)
+                break
+            except Exception as e:      # noqa: BLE001
+                ingest.error = f"{type(e).__name__}: {e}"
+                print(f"nms-db: {ingest.error}; retrying in 30 s", flush=True)
+                time.sleep(30)
+        print("nms-db: schema ready, ingesting", flush=True)
+        ingest.run()
+    threading.Thread(target=run, name="nms-db", daemon=True).start()
 
 
 def page_html(name: str) -> bytes:
@@ -65,10 +99,15 @@ class Handler(BaseHTTPRequestHandler):
         path = path.rstrip("/") or "/"
         params = dict(p.split("=", 1) for p in query.split("&") if "=" in p)
         try:
+            if path in DB_PATHS and not db.configured():
+                return self._send(json.dumps({"error": db_error(), "db": False}).encode(), "application/json", 503)
             if path in ("/metrics", "/json", "/", "/diff", "/raw/bases", "/api/map", "/api/live", "/api/elevation", "/api/finds", "/api/systems", "/api/sectors"):
                 collector.refresh()
             if path == "/metrics":
-                return self._send(collector.metrics().encode(), "text/plain; version=0.0.4")
+                up = 0 if db_error() else 1
+                extra = ("# HELP nms_db_up 1 when nms-db (the map's history store) is reachable and ingesting\n"
+                         f"# TYPE nms_db_up gauge\nnms_db_up {up}\n")
+                return self._send((collector.metrics() + extra).encode(), "text/plain; version=0.0.4")
             if path == "/json":
                 return self._send(json.dumps(collector.projected()).encode(), "application/json")
             if path == "/diff":
@@ -81,8 +120,14 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(json.dumps(collector.raw_bases).encode(), "application/json")
             if path == "/api/map":
                 m = maps.build(collector.raw_points, collector.raw_bases, collector.tables)
-                m["planets"] += live.visited_planets(collector.raw_bases)
-                live.systems.refresh()
+                try:
+                    if not db.configured():
+                        raise psycopg.OperationalError(db_error())
+                    m["planets"] += live.visited_planets(collector.raw_bases)
+                    live.systems.refresh()
+                except psycopg.Error as e:
+                    # the save's planets and bases still show; planets known only from the hook do not
+                    m.setdefault("errors", {})["nms-db"] = f"nms-db unreachable: {e}".strip()
                 for pl in m["planets"]:
                     a = maps._addr(pl.get("address"))
                     pl["planet_name"], pl["system_name"] = live.systems.planet_name(a), live.systems.system_name(a)
@@ -154,6 +199,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send(b"not found", "text/plain", 404)
         except BrokenPipeError:
             pass
+        except psycopg.Error as e:
+            try:
+                self._send(json.dumps({"error": f"nms-db unreachable: {e}".strip(), "db": False}).encode(), "application/json", 503)
+            except Exception:
+                pass
         except Exception as e:
             try:
                 self._send(f"error: {e}\n".encode(), "text/plain", 500)
@@ -170,9 +220,13 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(b"bad json", "text/plain", 400)
         if path == "/api/finds/class":
             # the player records a hotspot's class from the visor (the marker does not carry it readably)
-            live.finds.refresh(live.elev.timeline)
-            fields = {k: (body.get(k) or None) for k in ("class", "resource") if k in body}
-            ok = bool(fields) and live.finds.set_label(str(body.get("key", "")), **fields)
+            try:
+                live.elev.refresh()
+                live.finds.refresh(live.elev.timeline)
+                fields = {k: (body.get(k) or None) for k in ("class", "resource") if k in body}
+                ok = bool(fields) and live.finds.set_label(str(body.get("key", "")), **fields)
+            except psycopg.Error as e:
+                return self._send(json.dumps({"ok": False, "error": f"nms-db unreachable: {e}"}).encode(), "application/json", 503)
             return self._send(json.dumps({"ok": ok}).encode(), "application/json", 200 if ok else 400)
         self._send(b"not found", "text/plain", 404)
 
@@ -180,6 +234,7 @@ class Handler(BaseHTTPRequestHandler):
 def main():
     server = ThreadingHTTPServer((HOST, PORT), Handler)
     server.daemon_threads = True
+    start_db()
     print(f"nms-exporter listening on http://{HOST}:{PORT}", flush=True)
     try:
         server.serve_forever()

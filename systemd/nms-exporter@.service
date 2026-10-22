@@ -10,10 +10,14 @@ Wants=network-online.target
 Type=simple
 User=%i
 WorkingDirectory=/opt/nms-exporter
-ExecStart=/usr/bin/python3 /opt/nms-exporter/nms_exporter.py
+# the project's uv environment (pyproject.toml: psycopg for nms-db); install.sh builds it
+ExecStart=/opt/nms-exporter/.venv/bin/python /opt/nms-exporter/nms_exporter.py
 Environment=NMS_EXPORTER_HOST=0.0.0.0
 Environment=NMS_EXPORTER_PORT=9877
 Environment=PYTHONUNBUFFERED=1
+# Optional: the nms-db Postgres login (PGHOST, PGUSER, PGPASSWORD, ...; written by
+# nms-bao-sync, mode 600). Absent, the map's history APIs answer 503.
+EnvironmentFile=-/etc/nms-exporter/db.env
 # fill-level history (for measured extraction rates) and the cached key mapping
 StateDirectory=nms-exporter
 CacheDirectory=nms-exporter

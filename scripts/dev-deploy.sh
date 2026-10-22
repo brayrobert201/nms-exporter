@@ -23,12 +23,12 @@ stop_test() {
 }
 
 echo "== syntax"
-python3 -m py_compile "$HERE"/nms_exporter.py "$HERE"/nmsexporter/*.py "$HERE"/conky/nms_conky.py || exit 1
+"$HERE"/.venv/bin/python -m py_compile "$HERE"/nms_exporter.py "$HERE"/nmsexporter/*.py "$HERE"/conky/nms_conky.py || exit 1
 
 echo "== test exporter on :$PORT"
 stop_test
 rm -f "$T/state.json"
-(cd "$HERE" && NMS_EXPORTER_PORT=$PORT NMS_STATE="$T/state.json" nohup python3 nms_exporter.py > "$T/exporter.log" 2>&1 &)
+(cd "$HERE" && NMS_EXPORTER_PORT=$PORT NMS_STATE="$T/state.json" nohup "$HERE"/.venv/bin/python nms_exporter.py > "$T/exporter.log" 2>&1 &)
 for i in $(seq 1 20); do curl -fs "http://127.0.0.1:$PORT/healthz" >/dev/null 2>&1 && break; sleep 1; done
 curl -fs "http://127.0.0.1:$PORT/json" -o "$T/live.json" || { echo "test exporter did not answer"; tail -5 "$T/exporter.log"; stop_test; exit 1; }
 python3 - "$T/live.json" <<'EOF' || { stop_test; exit 1; }

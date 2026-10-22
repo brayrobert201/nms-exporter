@@ -10,7 +10,10 @@ NMS_USER="${NMS_USER:-${SUDO_USER:-}}"
 
 DEST=/opt/nms-exporter
 install -d "$DEST"
-cp -r nms_exporter.py nmsexporter data conky "$DEST/"
+cp -r nms_exporter.py nmsexporter data conky pyproject.toml uv.lock "$DEST/"
+# the Python environment (psycopg for nms-db), exactly as locked; system Python, no downloads
+command -v uv >/dev/null || { echo "uv not found (apt install uv)" >&2; exit 1; }
+UV_PYTHON_DOWNLOADS=never UV_CACHE_DIR=/var/cache/nms-exporter-uv uv sync --frozen --no-dev --python /usr/bin/python3 --project "$DEST" --quiet
 chmod 755 "$DEST/nms_exporter.py"
 install -m 644 systemd/nms-exporter@.service /etc/systemd/system/nms-exporter@.service
 install -m 644 systemd/nms-conky@.service /etc/systemd/user/nms-conky@.service

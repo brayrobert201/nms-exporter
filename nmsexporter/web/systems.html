@@ -136,6 +136,7 @@ async function load() {
     here = live.address || here;
   } catch (e) { /* keep the last known position */ }
   const d = await (await fetch("/api/systems" + (here ? `?from=${here}` : ""), { cache: "no-store" })).json();
+  if (d.db === false) { $("runes").textContent = `⚠ Database down: the systems list is in nms-db, which can't be reached (${d.error}).`; return; }
   systems = d.systems;
   known = d.known_runes ?? null;
   if (known !== null) {

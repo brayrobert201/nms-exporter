@@ -1,5 +1,7 @@
 """Live player position for /api/live, from the pyMHF mod
-pymhf_mods/live_position.py (live.json plus daily trail-YYYYMMDD.jsonl).
+pymhf_mods/live_position.py: live.json for where the player is now, and the
+trail (its daily trail-YYYYMMDD.jsonl, copied into nms-db by db.Ingest) for
+where they have been.
 
 Frames (research/sources/measurements/2026-10-22-live-position-compass.md):
 `rel` = player minus nearest planet centre, the same planet-centred frame as a
@@ -10,18 +12,18 @@ packed the way the save packs GalacticAddress. Distances between two points
 on a planet are along the surface (arc at the player's radius) with heights
 apart, so they stay right for a base on the far side of the planet.
 
-Standard library only. Every read returns (value, error) and never raises.
+live.json reads return (value, error) and never raise; history reads go to
+nms-db and raise when it is unreachable (the HTTP handler reports that).
 """
 from __future__ import annotations
 
-import glob
 import json
 import math
 import os
 import time
 from collections import Counter, deque
 
-from . import maps, sectors
+from . import db, maps, sectors
 from .finds import Finds
 from .systems import Systems
 
@@ -58,33 +60,17 @@ def read_sample():
 
 
 class Trail:
-    """Today's and yesterday's trail files, read incrementally."""
+    """The last two days of trail, from nms-db (db.py), read incrementally."""
 
     def __init__(self):
         self.points: deque = deque(maxlen=TRAIL_KEEP)   # (t, address, rel)
-        self._pos: dict[str, int] = {}
-
-    def _files(self):
-        now = time.time()
-        days = [time.strftime("%Y%m%d", time.localtime(now - 86400)), time.strftime("%Y%m%d", time.localtime(now))]
-        return [os.path.join(LIVE_DIR, f"trail-{d}.jsonl") for d in days]
+        self._last = 0
 
     def refresh(self):
-        for path in self._files():
-            try:
-                with open(path, "rb") as f:
-                    f.seek(self._pos.get(path, 0))
-                    data = f.read()
-            except OSError:
-                continue
-            end = data.rfind(b"\n") + 1       # leave a half-written last line for next time
-            self._pos[path] = self._pos.get(path, 0) + end
-            for line in data[:end].splitlines():
-                try:
-                    s = json.loads(line)
-                    self.points.append((s["t"], ua_int(s.get("ua")), s["rel"]))
-                except (ValueError, KeyError, TypeError):
-                    continue
+        self._last, rows = db.tail("trail", self._last, None if self._last else time.time() - 2 * 86400)
+        for address, s in rows:
+            if s.get("rel"):
+                self.points.append((s["t"], address, s["rel"]))
 
     def on(self, address: int, since: float):
         return [p[2] for p in self.points if p[1] == address and p[0] >= since]
@@ -158,29 +144,17 @@ class Elevation:
         self.timeline: list = []    # [(t, address)] at each change of planet, for placing visor finds
         self.by_centre: dict = {}   # rounded nearest-planet centre -> address, for samples that lack one
         self.charted: dict = {}     # address -> {fine cell path: [first t, last t]} (sectors.py)
-        self._pos: dict = {}
+        self._last = 0
 
     def refresh(self):
-        for path in sorted(glob.glob(os.path.join(LIVE_DIR, "trail-*.jsonl"))):
-            try:
-                with open(path, "rb") as f:
-                    f.seek(self._pos.get(path, 0))
-                    data = f.read()
-            except OSError:
+        """New trail rows from nms-db; their address was filled in at ingest (db.Ingest)."""
+        self._last, rows = db.tail("trail", self._last)
+        for address, s in rows:
+            if address is None or not s.get("rel"):
                 continue
-            end = data.rfind(b"\n") + 1
-            self._pos[path] = self._pos.get(path, 0) + end
-            for line in data[:end].splitlines():
-                try:
-                    s = json.loads(line)
-                    address, rel = ua_int(s.get("ua")), s["rel"]
-                except (ValueError, KeyError, TypeError):
-                    continue
-                if address is None:
-                    continue
-                if s.get("planet_pos") and (address >> 52) & 0xF:
-                    self.by_centre[tuple(round(c) for c in s["planet_pos"])] = address
-                self.add(address, s)
+            if s.get("planet_pos") and (address >> 52) & 0xF:
+                self.by_centre[tuple(round(c) for c in s["planet_pos"])] = address
+            self.add(address, s)
 
     def add(self, address, s):
         """One sample (from a trail line, or the latest live.json)."""

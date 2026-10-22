@@ -89,6 +89,7 @@ a.navlink { color: var(--ink-1); background: var(--surface-2); border: 1px solid
   background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px;
   color: var(--ink-2); font-size: 14px; text-align: center; z-index: 4; }
 .away b { color: var(--ink-1); }
+.away.dbdown { top: 60px; z-index: 7; }
 .away button { margin-left: 8px; padding: 3px 10px; }
 .tip { position: absolute; pointer-events: none; background: var(--surface-2); border: 1px solid var(--border);
   border-radius: 8px; padding: 4px 8px; font-size: 13px; color: var(--ink-1); white-space: nowrap; z-index: 5; }
@@ -176,6 +177,7 @@ text { font-family: system-ui, sans-serif; }
     <div class="body" id="sheetbody"></div>
   </div>
   <div class="away" id="away" hidden></div>
+  <div class="away dbdown" id="dbdown" hidden></div>
   <div class="mapctl"><button id="zin" title="Zoom in" aria-label="Zoom in">+</button><button id="zout" title="Zoom out" aria-label="Zoom out">−</button><button id="findme" title="Centre on you once" aria-label="Centre on you">◎</button></div>
   <div class="dock"><div class="issues" id="issues"></div><div class="power" id="power"></div><div class="nearby" id="nearby"></div></div>
 </main>
@@ -688,6 +690,7 @@ async function load() {
   try { ICONS = (await fetch("/icon/base.png", { method: "HEAD" })).ok; } catch (e) { ICONS = false; }
   const r = await fetch("/api/map", { cache: "no-store" });
   data = await r.json();
+  dbCheck({ db: !(data.errors || {})["nms-db"], error: (data.errors || {})["nms-db"] });
   const sel = $("planet");
   sel.innerHTML = data.planets.map((p, i) => `<option value="${i}">${p.label}${p.planet_name && !p.visited ? ` · ${p.planet_name}` : ""}${p.points.some(q => q.loose) ? " ⚠" : ""}</option>`).join("");
   const q = new URLSearchParams(location.search);
@@ -718,8 +721,8 @@ async function loadFinds() {
   const q = new URLSearchParams({ address: planet.address });
   if (base) q.set("base", base);
   try {
-    const got = await (await fetch("/api/finds?" + q, { cache: "no-store" })).json();
-    if (want === `${planet.address}|${base}`) { finds = got; drawFinds(); legendFinds(); }
+    const got = dbCheck(await (await fetch("/api/finds?" + q, { cache: "no-store" })).json());
+    if (got && want === `${planet.address}|${base}`) { finds = got; drawFinds(); legendFinds(); }
   } catch (e) { /* the layer just stays empty */ }
   findsTimer = setTimeout(loadFinds, 15000);
 }
@@ -850,7 +853,8 @@ function showFind(f, p) {
 }
 
 async function setFindLabel(key, field, value) {
-  await fetch("/api/finds/class", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, [field]: value }) });
+  const r = await fetch("/api/finds/class", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, [field]: value }) });
+  if (r.status === 503) { dbCheck(await r.json()); return; }
   await loadFinds();
   const f = finds && finds.finds.find(x => x.key === key);
   if (f) showFind(f, findPos(f));
@@ -874,6 +878,19 @@ function legendFinds() {
   }
 }
 
+// ---- nms-db: the map's history (trail, finds, sectors, systems) is in Postgres; say so when it can't be reached ----
+let dbDown = null;
+function dbCheck(got) {          // got from an /api/* call: returns it, or null when nms-db is down
+  const down = got && got.db === false ? got.error || "nms-db unreachable" : null;
+  if (down !== dbDown) {
+    dbDown = down;
+    const D = $("dbdown");
+    D.hidden = !down;
+    D.innerHTML = down ? `<span class="pill critical">⚠ Database down</span>History, finds and sectors can't load: ${down}` : "";
+  }
+  return down ? null : got;
+}
+
 // ---- sectors (/api/sectors, nmsexporter/sectors.py): the planet in 8 octants x 4, and the cells your trail has charted ----
 let sect = null, sectTimer = null;
 async function loadSectors() {
@@ -881,8 +898,8 @@ async function loadSectors() {
   if (!planet) return;
   const want = planet.address;
   try {
-    const got = await (await fetch("/api/sectors?" + new URLSearchParams({ address: planet.address }), { cache: "no-store" })).json();
-    if (planet && want === planet.address) { sect = got; drawSectors(); if (globeOn) drawGlobe(); if (!$("sheet").hidden) drawSheet(); }
+    const got = dbCheck(await (await fetch("/api/sectors?" + new URLSearchParams({ address: planet.address }), { cache: "no-store" })).json());
+    if (got && planet && want === planet.address) { sect = got; drawSectors(); if (globeOn) drawGlobe(); if (!$("sheet").hidden) drawSheet(); }
   } catch (e) { /* the layer just stays empty */ }
   sectTimer = setTimeout(loadSectors, onThisPlanet() ? 20000 : 120000);
 }
@@ -1094,8 +1111,8 @@ async function loadElevation() {
   if (base) q.set("base", base);
   const want = `${planet.address}|${base}`;
   try {
-    const got = await (await fetch("/api/elevation?" + q, { cache: "no-store" })).json();
-    if (want === `${planet.address}|${base}`) { elev = got; drawElevation(); legendHeights(); }
+    const got = dbCheck(await (await fetch("/api/elevation?" + q, { cache: "no-store" })).json());
+    if (got && want === `${planet.address}|${base}`) { elev = got; drawElevation(); legendHeights(); }
   } catch (e) { elev = { error: String(e), cells: [] }; }
   elevTimer = setTimeout(loadElevation, 15000);
 }
@@ -1610,7 +1627,7 @@ async function poll() {
       const r = await fetch("/api/live?" + q, { cache: "no-store" });
       const got = await r.json();
       if (seq !== pollSeq) return;
-      live = got;
+      live = dbCheck(got) || { state: "none", error: got.error };
       // Show the player's planet the first time we see them on one (unless the URL chose a view),
       // and keep following them to other planets and bases while Centre is on.
       if (live.on_planet && data && !data.planets.some(p => p.address === live.address)

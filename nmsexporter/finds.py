@@ -1,6 +1,7 @@
 """Hotspots and resource deposits found in game, for the /map "finds" layer.
 
-Source: pymhf_mods/visor_log.py's visor-YYYYMMDD.jsonl. The game adds a
+Source: pymhf_mods/visor_log.py's visor-YYYYMMDD.jsonl, as copied into nms-db
+(db.py: duplicates of a marker dropped on the way in). The game adds a
 MineralHotspot / GasHotspot / PowerHotspot marker when the player reaches the
 point the survey led to, and TerrainResource markers ("Cobalt Deposit") as an
 area loads. Marker local + offset - nearest planet centre is the planet frame
@@ -18,24 +19,23 @@ Which substance a hotspot gives is not in the marker:
 The class (C/B/A/S) is not in the marker at all: a class B power and a class S
 gas marker differ only in position, label and type. The player records it
 from the visor, either on the map (POST /api/finds/class, kept in
-LIVE_DIR/find_labels.json) or in game with the chat command `/hs S silver`
+nms-db table find_label) or in game with the chat command `/hs S silver`
 (visor_log writes a "label" event with the player's position; it applies to
 the nearest hotspot within CHAT_LABEL_M). Chat labels stay in the log and are
-never copied into find_labels.json; per field, the newer of the two wins, so
+never copied into find_label; per field, the newer of the two wins, so
 a correction on the map is not undone by replaying an older chat label.
 `/mark name` adds a named point ("mark" finds).
 
 Planet facts (biome, substances) come from live.json's weather block and are
-kept in LIVE_DIR/planets.json so they outlive both the visit and an exporter
-restart. Standard library only; reads never raise.
+kept in nms-db (planet_facts) so they outlive both the visit and an exporter
+restart. Reads go to nms-db and raise when it is unreachable.
 """
 from __future__ import annotations
 
 import bisect
-import glob
-import json
 import math
-import os
+
+from . import db
 
 TYPES = {"MineralHotspot": "hotspot-mineral", "GasHotspot": "hotspot-gas", "PowerHotspot": "hotspot-power",
          "TerrainResource": "deposit"}
@@ -46,22 +46,13 @@ CHAT_LABEL_M = 50.0
 class Finds:
     def __init__(self, live_dir: str):
         self.dir = live_dir
-        self._pos: dict = {}
+        self._last = 0
         self.rows: dict = {}          # (address, kind, rounded position) -> find
         self._pending: list = []      # marker rows seen before the trail covered their time
         self.chat: list = []          # /hs labels: {"address", "rel", "t", "class", "resource"}
-        self.planets: dict = {}       # address (int) -> planet facts
-        self.labels: dict = {}        # find key -> {"class": "B"}
-        try:
-            with open(os.path.join(live_dir, "find_labels.json")) as f:
-                self.labels = json.load(f)
-        except (OSError, ValueError):
-            pass
-        try:
-            with open(os.path.join(live_dir, "planets.json")) as f:
-                self.planets = {int(k): v for k, v in json.load(f).items()}
-        except (OSError, ValueError):
-            pass
+        self.planets: dict = {}       # address (int) -> planet facts (nms-db planet_facts)
+        self.labels: dict = {}        # find key -> {"class": "B"} (nms-db find_label)
+        self._loaded = False
 
     def remember_planet(self, address: int | None, planet: dict | None):
         if address is None or not planet or not planet.get("substances"):
@@ -69,36 +60,23 @@ class Finds:
         keep = {k: planet.get(k) for k in ("substances", "biome", "weather", "storm_frequency", "intensity", "tile_colours")}
         if self.planets.get(address) == keep:
             return
-        self.planets[address] = keep
         try:
-            tmp = os.path.join(self.dir, "planets.json.tmp")
-            with open(tmp, "w") as f:
-                json.dump({str(k): v for k, v in self.planets.items()}, f)
-            os.replace(tmp, os.path.join(self.dir, "planets.json"))
-        except OSError:
+            db.put_planet(address, keep)
+            self.planets[address] = keep
+        except Exception:      # noqa: BLE001 - tried again on the next live sample
             pass
 
     def refresh(self, timeline: list):
         """timeline: sorted [(t, address)] of planet changes from the trail."""
+        if not self._loaded:
+            self.labels, self.planets, self._loaded = db.labels(), db.planets(), True
         new = self._pending
         self._pending = []
-        for path in sorted(glob.glob(os.path.join(self.dir, "visor-*.jsonl"))):
-            try:
-                with open(path, "rb") as f:
-                    f.seek(self._pos.get(path, 0))
-                    data = f.read()
-            except OSError:
-                continue
-            end = data.rfind(b"\n") + 1
-            self._pos[path] = self._pos.get(path, 0) + end
-            for line in data[:end].splitlines():
-                try:
-                    r = json.loads(line)
-                except ValueError:
-                    continue
-                if (r.get("event") == "marker_add" and r.get("type") in TYPES and r.get("rel")) \
-                        or (r.get("event") in ("label", "mark") and r.get("rel")):
-                    new.append(r)
+        self._last, rows = db.tail("visor", self._last)
+        for _, r in rows:
+            if (r.get("event") == "marker_add" and r.get("type") in TYPES and r.get("rel")) \
+                    or (r.get("event") in ("label", "mark") and r.get("rel")):
+                new.append(r)
         times = [t for t, _ in timeline]
         for r in new:
             i = bisect.bisect_right(times, r["t"]) - 1
@@ -141,13 +119,7 @@ class Finds:
             self.labels[key] = {**lab, "t": round(__import__("time").time())}
         else:
             self.labels.pop(key, None)
-        try:
-            tmp = os.path.join(self.dir, "find_labels.json.tmp")
-            with open(tmp, "w") as fh:
-                json.dump(self.labels, fh)
-            os.replace(tmp, os.path.join(self.dir, "find_labels.json"))
-        except OSError:
-            return False
+        db.put_label(key, self.labels.get(key))
         return True
 
     def resource(self, f: dict, tables: dict) -> dict:

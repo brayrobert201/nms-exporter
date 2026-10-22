@@ -1,5 +1,5 @@
 """Star systems and names seen in game, from pymhf_mods/galaxy_log.py's
-systems-YYYYMMDD.jsonl.
+systems-YYYYMMDD.jsonl, as copied into nms-db (db.py).
 
 - A system record (economy, wealth, conflict, race, star, planets, planet
   seeds, flags) is keyed by its universe address with the planet bits clear.
@@ -10,14 +10,13 @@ systems-YYYYMMDD.jsonl.
 - Distance: galactic voxels are taken as 400 light years (the usual rule; not
   in the game's data), so systems in one voxel show as the same region.
 
-Standard library only; reads never raise.
+Reads go to nms-db and raise when it is unreachable.
 """
 from __future__ import annotations
 
-import glob
-import json
 import math
-import os
+
+from . import db
 
 LY_PER_VOXEL = 400
 SKIP_BASES = {"FreighterBase", "PlayerShipBase", "PlayerSpaceBase"}   # as maps.SKIP_BASES
@@ -52,33 +51,21 @@ def voxel(address: int) -> tuple:
 class Systems:
     def __init__(self, live_dir: str):
         self.dir = live_dir
-        self._pos: dict = {}
+        self._last = 0
         self.systems: dict = {}       # system UA -> record
         self.names: dict = {}         # system UA -> name
         self.planet_names: dict = {}  # planet seed -> name
 
     def refresh(self):
-        for path in sorted(glob.glob(os.path.join(self.dir, "systems-*.jsonl"))):
-            try:
-                with open(path, "rb") as f:
-                    f.seek(self._pos.get(path, 0))
-                    data = f.read()
-            except OSError:
-                continue
-            end = data.rfind(b"\n") + 1
-            self._pos[path] = self._pos.get(path, 0) + end
-            for line in data[:end].splitlines():
-                try:
-                    r = json.loads(line)
-                except ValueError:
-                    continue
-                ev = r.get("event")
-                if ev == "system" and r.get("ua") is not None:
-                    self.systems[system_ua(r["ua"])] = r
-                elif ev == "system_name" and r.get("name"):
-                    self.names[system_ua(r["seed"])] = r["name"]
-                elif ev == "planet_name" and r.get("name"):
-                    self.planet_names[r["seed"]] = r["name"]
+        self._last, rows = db.tail("systems", self._last)
+        for _, r in rows:
+            ev = r.get("event")
+            if ev == "system" and r.get("ua") is not None:
+                self.systems[system_ua(r["ua"])] = r
+            elif ev == "system_name" and r.get("name"):
+                self.names[system_ua(r["seed"])] = r["name"]
+            elif ev == "planet_name" and r.get("name"):
+                self.planet_names[r["seed"]] = r["name"]
 
     def system_name(self, address: int | None) -> str | None:
         return None if address is None else self.names.get(system_ua(address))
