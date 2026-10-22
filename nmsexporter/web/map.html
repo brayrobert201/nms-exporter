@@ -747,7 +747,7 @@ function drawLive() {
 const STORM = { Warning: ["warning", "Storm coming"], TransitionIn: ["serious", "Storm starting"],
   Active: ["serious", "Storm"], TransitionOut: ["warning", "Storm clearing"] };
 const dur = (s) => s < 60 ? `${s} s` : `${Math.round(s / 60)} min`;
-const durRange = ([lo, hi]) => hi <= 0 ? "any moment" : lo <= 0 ? `within ${dur(hi)}`
+const durRange = ([lo, hi]) => hi <= 0 ? "any moment (past the expected range)" : lo <= 0 ? `within ${dur(hi)}`
   : dur(lo) === dur(hi) ? `in ${dur(hi)}` : `in ${lo < 60 && hi >= 60 ? `${lo} s` : dur(lo).replace(/ (s|min)$/, "")}–${dur(hi)}`;
 function conditions() {
   const w = live && live.weather;

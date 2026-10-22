@@ -188,17 +188,21 @@ def _mine(bases, address):
 
 # Storm timing, seconds (gcskyglobals.globals, research/sources/game-data/25800958/
 # gcskyglobals.globals.MXML.L68-92.xml), keyed by the planet's StormFrequency.
-# Whether "length" includes the 20 s transitions is not known yet: the mod's
-# weather log will tell after one storm.
+# Measured 2026-10-22 on an Extreme humid planet with StormFrequency Low: warning
+# 25.0 s, build-up 20.1 s, storm 315.0 s, clearing 20.0 s. 315 s is outside the
+# Low length (120-180) and inside High (150-320), so storm length excludes the
+# transitions and an Extreme planet appears to use the High length; its gap is
+# taken as ExtremeFallback (240-620 s) until the next storm confirms it.
 STORM_WARNING_S = 25
 STORM_TRANSITION_S = 20
 STORM_TIMING = {"Low": {"length": (120, 180), "between": (900, 2400)},
-                "High": {"length": (150, 320), "between": (120, 620)}}
+                "High": {"length": (150, 320), "between": (120, 620)},
+                "Extreme": {"length": (150, 320), "between": (240, 620)}}
 # Order of the six values in each cGcPlanetHazardData table (weather files, e.g. humidweather.MXML).
 HAZARD_SLOTS = ("ambient", "water", "cave", "storm", "night", "deep_water")
 
 
-def storm_eta(storm: dict | None, frequency: str | None, now: float) -> dict:
+def storm_eta(storm: dict | None, frequency: str | None, now: float, intensity: str | None = None) -> dict:
     """Where the storm cycle is and the time ranges ahead, from the last
     SetStormState transition and the game's storm timing for this planet."""
     if frequency == "Always":
@@ -207,7 +211,7 @@ def storm_eta(storm: dict | None, frequency: str | None, now: float) -> dict:
         return {"note": "no storms on this planet"} if frequency else {}
     if not storm:
         return {"note": "no storm change seen since the mod loaded"}
-    t = STORM_TIMING.get(frequency)
+    t = STORM_TIMING.get("Extreme" if intensity == "Extreme" else frequency)
     el = now - storm["t"]
     rng = lambda lo, hi: [max(0, round(lo - el)), max(0, round(hi - el))]  # noqa: E731
     phase = storm["state"]
@@ -293,7 +297,7 @@ class Live:
             p["substances"] = [(items.get(i) or {}).get("name") or i for i in p["substances"] if i]
         if p.get("hazard"):
             p["hazard"] = {k: dict(zip(HAZARD_SLOTS, v)) for k, v in p["hazard"].items()}
-        eta = storm_eta(w.get("storm"), p.get("storm_frequency"), sample.get("t", time.time()))
+        eta = storm_eta(w.get("storm"), p.get("storm_frequency"), sample.get("t", time.time()), p.get("intensity"))
         return {**w, "planet": p or None, "storm_eta": eta}
 
     def build(self, bases: list, base: str | None = None, target: str | None = None, trail_s: float = 6 * 3600,
