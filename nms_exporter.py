@@ -149,7 +149,8 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/finds/class":
             # the player records a hotspot's class from the visor (the marker does not carry it readably)
             live.finds.refresh(live.elev.timeline)
-            ok = live.finds.set_class(str(body.get("key", "")), body.get("class") or None)
+            fields = {k: (body.get(k) or None) for k in ("class", "resource") if k in body}
+            ok = bool(fields) and live.finds.set_label(str(body.get("key", "")), **fields)
             return self._send(json.dumps({"ok": ok}).encode(), "application/json", 200 if ok else 400)
         self._send(b"not found", "text/plain", 404)
 

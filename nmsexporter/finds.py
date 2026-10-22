@@ -12,9 +12,9 @@ Which substance a hotspot gives is not in the marker:
 - deposit: its own name ("Cobalt Deposit" -> Cobalt);
 - gas: Gas1 is set by the planet's biome (REGIONHOTSPOTSTABLE, data/nms_tables.json
   extraction.biome_gases), Gas2 is always Oxygen;
-- mineral: the table has Mineral1-3. Assumed Mineral1 = the planet's common
-  substance, from one planet where the farm on the hotspot extracts the common
-  one (Activated Indium); uncommon and rare are given as the alternatives.
+- mineral: any of the planet's three substances (Mineral1-3). Seen: the common
+  one on Pondal IX (Activated Indium), the rare one on Okyota Gamma (Silver).
+  The map lists the three until the player records which (POST /api/finds/class).
 The class (C/B/A/S) is not in the marker at all: a class B power and a class S
 gas marker differ only in position, label and type. The player records it
 from the visor (POST /api/finds/class), kept in LIVE_DIR/find_labels.json.
@@ -110,11 +110,21 @@ class Finds:
     def key(f: dict) -> str:
         return f"{f['address']:X}:{f['kind']}:" + ":".join(str(round(c / MERGE_M)) for c in f["w"])
 
-    def set_class(self, key: str, cls: str | None) -> bool:
-        if cls not in (None, "C", "B", "A", "S") or not any(self.key(f) == key for f in self.rows.values()):
+    def set_label(self, key: str, **fields) -> bool:
+        """Record what the visor showed: class (C/B/A/S) and/or resource; None clears a field."""
+        if "class" in fields and fields["class"] not in (None, "C", "B", "A", "S"):
             return False
-        if cls:
-            self.labels[key] = {"class": cls, "t": round(__import__("time").time())}
+        if not any(self.key(f) == key for f in self.rows.values()):
+            return False
+        lab = dict(self.labels.get(key) or {})
+        for k, v in fields.items():
+            if v:
+                lab[k] = v
+            else:
+                lab.pop(k, None)
+        lab.pop("t", None)
+        if lab:
+            self.labels[key] = {**lab, "t": round(__import__("time").time())}
         else:
             self.labels.pop(key, None)
         try:
@@ -140,12 +150,12 @@ class Finds:
             if not gases:
                 return {"resource": None, "basis": "planet biome not known yet"}
             g1, g2 = name(gases["gas1"]), name(gases["gas2"])
-            return {"resource": g1 if g1 == g2 else f"{g1} or {g2}",
+            return {"resource": g1 if g1 == g2 else f"{g1} or {g2}", "options": [g1] if g1 == g2 else [g1, g2],
                     "basis": f"{planet['biome']} biome: Gas1 {g1}, Gas2 {g2}"}
         if subs:
             named = [name(s) for s in subs]
-            return {"resource": named[0], "likely": True, "alternatives": named[1:],
-                    "basis": "assumed the planet's common resource (Mineral1); Mineral2/3 would be " + " or ".join(named[1:])}
+            return {"resource": " or ".join(named), "options": named,
+                    "basis": "one of the planet's three resources; the visor says which"}
         return {"resource": None, "basis": "planet resources not known yet"}
 
     def for_planet(self, address: int, tables: dict) -> list:
@@ -157,10 +167,14 @@ class Finds:
             if f["address"] != address:
                 continue
             key = self.key(f)
+            lab = self.labels.get(key) or {}
+            res = self.resource(f, tables)
+            if lab.get("resource"):
+                res.update(resource=lab["resource"], basis="recorded by you from the visor")
             out.append({"kind": f["kind"], "name": f["name"], "w": [round(c, 1) for c in f["w"]], "key": key,
-                        "first": f["first"], "last": f["last"], "class": (self.labels.get(key) or {}).get("class"),
-                        "class_source": "you" if key in self.labels else None, "has_raw": bool(f.get("raw")),
+                        "first": f["first"], "last": f["last"], "class": lab.get("class"),
+                        "class_source": "you" if lab.get("class") else None, "has_raw": bool(f.get("raw")),
                         "rates": power if f["kind"] == "hotspot-power" else rate,
                         "rate_unit": "kP" if f["kind"] == "hotspot-power" else "items/h per extractor",
-                        **self.resource(f, tables)})
+                        **res})
         return out

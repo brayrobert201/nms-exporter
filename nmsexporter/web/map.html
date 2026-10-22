@@ -579,7 +579,7 @@ async function loadFinds() {
 function findPos(f) { return base ? (f.e === undefined ? null : [f.e, f.n]) : [f.x, f.y]; }
 function findTitle(f) {
   const k = (f.class ? `Class ${f.class} ` : "") + KIND[findKind(f.kind)].label.replace(/^./, c => f.class ? c.toLowerCase() : c);
-  return f.kind === "deposit" ? `${f.resource} deposit` : `${k}${f.resource ? ` · ${f.likely ? "likely " : ""}${f.resource}` : ""}`;
+  return f.kind === "deposit" ? `${f.resource} deposit` : `${k}${f.resource ? ` · ${f.resource}` : ""}`;
 }
 
 function drawFinds() {
@@ -613,13 +613,15 @@ function showFind(f, p) {
   const rows = [`<b>${findTitle(f)}</b>`];
   if (f.kind !== "deposit") {
     if (f.kind !== "hotspot-power") {
-      rows.push(f.resource ? `Resource: ${f.likely ? "likely " : ""}<b>${f.resource}</b>` : "Resource: not known yet");
+      rows.push(f.resource ? `Resource: <b>${f.resource}</b>` : "Resource: not known yet");
       if (f.basis) rows.push(`<span style="color:var(--ink-muted)">${f.basis}</span>`);
+      const opts = f.options || [];
+      if (opts.length > 1) rows.push(opts.map(o => `<button class="${f.resource === o ? "on" : ""}" onclick='setFindLabel(${JSON.stringify(f.key)}, "resource", ${JSON.stringify(f.resource === o ? null : o)})'>${o}</button>`).join(" "));
     }
     const unit = f.rate_unit, rates = ["C", "B", "A", "S"].map(c => f.rates[c]).join("/");
     rows.push(f.class ? `Class <b>${f.class}</b> · ${f.rates[f.class]} ${unit}${f.class_source === "you" ? " <span style='color:var(--ink-muted)'>(set by you)</span>" : ""}`
       : `Class: set it from the visor (C/B/A/S give ${rates} ${unit})`);
-    rows.push(["C", "B", "A", "S"].map(c => `<button class="${f.class === c ? "on" : ""}" onclick='setFindClass(${JSON.stringify(f.key)}, ${JSON.stringify(f.class === c ? null : c)})'>${c}</button>`).join(" "));
+    rows.push(["C", "B", "A", "S"].map(c => `<button class="${f.class === c ? "on" : ""}" onclick='setFindLabel(${JSON.stringify(f.key)}, "class", ${JSON.stringify(f.class === c ? null : c)})'>${c}</button>`).join(" "));
     const r = ((finds.ranges || {})[f.kind] || finds.range_m || [190]);
     rows.push(`${f.kind === "hotspot-power" ? "Electromagnetic generators" : "Extractors"} must be within ${r[0]}–${r[1] || r[0]} m (the game's hotspot range)`);
   }
@@ -630,13 +632,13 @@ function showFind(f, p) {
   P.style.display = "block";
 }
 
-async function setFindClass(key, cls) {
-  await fetch("/api/finds/class", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, class: cls }) });
+async function setFindLabel(key, field, value) {
+  await fetch("/api/finds/class", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, [field]: value }) });
   await loadFinds();
   const f = finds && finds.finds.find(x => x.key === key);
   if (f) showFind(f, findPos(f));
 }
-window.setFindClass = setFindClass;
+window.setFindLabel = setFindLabel;
 
 function legendFinds() {
   const L = $("legend");
