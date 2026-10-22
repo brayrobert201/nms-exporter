@@ -20,13 +20,15 @@ there for Activated Indium, which supports the mPlanetData offset).
 
 # Inferred
 
-- Temperature slot 4 (index 3, 140) is the storm peak.
+- Temperature slot 4 (index 3, 140) is the storm peak. The slot order is
+  Ambient, Water, Cave, Storm, Night, DeepWater (humidweather.MXML), and these
+  are the Extreme values, so 18.6 C is the ambient 20 with something applied.
 - The HUD's toxicity and radiation do not come from these tables (all zero).
 
 # Not established
 
-- Which slots are day, night and the others; whether the HUD temperature
-  blends day (20) and night (10) by time of day (18.6 at sun angle 117.9649 would
+- (Settled: slots are Ambient, Water, Cave, Storm, Night, DeepWater; slot 2 is
+  water, not night.) What turns ambient 20 into 18.6 (sun angle 117.9649 would
   fit late day). A night reading would test it.
 - Where the HUD toxicity and radiation come from.
 - What SpookLevel (1, 6, 5, 16, 9, 0) measures.

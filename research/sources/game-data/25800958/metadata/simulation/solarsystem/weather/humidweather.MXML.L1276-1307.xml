@@ -1,0 +1,41 @@
+<!--
+  source: game-data
+  build: 25800958
+  pak: NMSARC.Precache.pak
+  path: metadata/simulation/solarsystem/weather/humidweather.mbin
+  lines: 1276-1307 of the MBINCompiler MXML
+  retrieved: 2026-10-22
+  why: Temperature hazard tables by slot (Ambient, Water, Cave, Storm, Night, DeepWater; Normal and Extreme) and storm chances for humid weather
+-->
+	<Property name="HeavyAir">
+		<Property name="HeavyAir" value="MODELS/EFFECTS/HEAVYAIR/EARTH/EARTH.SCENE.MBIN" _index="0" />
+	</Property>
+	<Property name="LowStormsChance" value="0.600000" />
+	<Property name="HighStormsChance" value="0.200000" />
+	<Property name="ExtremeWeatherChance" value="0.300000" />
+	<Property name="OverrideTemperature" value="true" />
+	<Property name="Temperature">
+		<Property name="Ambient" value="GcHazardValues">
+			<Property name="Normal" value="12.000000" />
+			<Property name="Extreme" value="20.000000" />
+		</Property>
+		<Property name="Water" value="GcHazardValues">
+			<Property name="Normal" value="5.000000" />
+			<Property name="Extreme" value="10.000000" />
+		</Property>
+		<Property name="Cave" value="GcHazardValues">
+			<Property name="Normal" value="6.000000" />
+			<Property name="Extreme" value="12.000000" />
+		</Property>
+		<Property name="Storm" value="GcHazardValues">
+			<Property name="Normal" value="92.000000" />
+			<Property name="Extreme" value="140.000000" />
+		</Property>
+		<Property name="Night" value="GcHazardValues">
+			<Property name="Normal" value="9.000000" />
+			<Property name="Extreme" value="12.000000" />
+		</Property>
+		<Property name="DeepWater" value="GcHazardValues">
+			<Property name="Normal" value="-95.000000" />
+			<Property name="Extreme" value="-158.000000" />
+		</Property>

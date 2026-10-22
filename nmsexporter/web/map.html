@@ -745,16 +745,22 @@ function drawLive() {
 
 // Storm state is a hazard state: status hue + glyph + word. Planet weather is plain text.
 const STORM = { Warning: ["warning", "Storm coming"], TransitionIn: ["serious", "Storm starting"],
-  Active: ["serious", "Storm"], TransitionOut: ["warning", "Storm ending"] };
+  Active: ["serious", "Storm"], TransitionOut: ["warning", "Storm clearing"] };
+const dur = (s) => s < 60 ? `${s} s` : `${Math.round(s / 60)} min`;
+const durRange = ([lo, hi]) => hi <= 0 ? "any moment" : lo <= 0 ? `within ${dur(hi)}`
+  : dur(lo) === dur(hi) ? `in ${dur(hi)}` : `in ${lo < 60 && hi >= 60 ? `${lo} s` : dur(lo).replace(/ (s|min)$/, "")}–${dur(hi)}`;
 function conditions() {
   const w = live && live.weather;
   if (!w) return "";
   const parts = [];
+  const eta = w.storm_eta || {};
   const st = w.storm && STORM[w.storm.state];
   if (st) {
-    const mins = Math.round((Date.now() / 1000 - w.storm.t) / 60);
-    parts.push(`<span class="pill ${st[0]}">⛈ ${st[1]}</span>${mins >= 1 ? `${mins} min` : "now"}`);
-  }
+    const when = eta.starts_in !== undefined ? `starts ${durRange([eta.starts_in, eta.starts_in])}`
+      : eta.ends_in ? `ends ${durRange(eta.ends_in)}` : eta.clears_in !== undefined ? `clears ${durRange([0, eta.clears_in])}` : "";
+    parts.push(`<span class="pill ${st[0]}">⛈ ${st[1]}</span>${when}`);
+  } else if (eta.next_in) parts.push(`next storm ${durRange(eta.next_in)}`);
+  else if (eta.note && live.on_planet) parts.push(eta.note);
   const p = w.planet;
   if (p && live.on_planet) {
     const freq = { None_: "no storms", Low: "occasional storms", High: "frequent storms", Always: "constant storms" }[p.storm_frequency] || "";

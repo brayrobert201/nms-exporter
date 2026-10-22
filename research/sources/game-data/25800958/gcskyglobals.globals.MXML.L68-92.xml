@@ -1,0 +1,34 @@
+<!--
+  source: game-data
+  build: 25800958
+  pak: NMSARC.globals.pak
+  path: gcskyglobals.globals.mbin
+  lines: 68-92 of the MBINCompiler MXML
+  retrieved: 2026-10-22
+  why: Storm timing: warning, transition, length and time between storms by planet storm frequency (Low/High/ExtremeFallback), for the /map storm countdown
+-->
+	<Property name="ForceStormSetting" value="false" />
+	<Property name="ForceStormStrength" value="0.000000" />
+	<Property name="StormScreenFilterFadeTime" value="1.000000" />
+	<Property name="StormScreenFilterDistance" value="50.000000" />
+	<Property name="MinTimeBetweenStormsLow" value="900.000000" />
+	<Property name="MaxTimeBetweenStormsLow" value="2400.000000" />
+	<Property name="MinTimeBetweenStormsHigh" value="120.000000" />
+	<Property name="MaxTimeBetweenStormsHigh" value="620.000000" />
+	<Property name="MinTimeBetweenStormsExtremeFallback" value="240.000000" />
+	<Property name="MaxTimeBetweenStormsExtremeFallback" value="620.000000" />
+	<Property name="MinStormLengthLow" value="120.000000" />
+	<Property name="MaxStormLengthLow" value="180.000000" />
+	<Property name="MinStormLengthHigh" value="150.000000" />
+	<Property name="MaxStormLengthHigh" value="320.000000" />
+	<Property name="StormWarningTime" value="25.000000" />
+	<Property name="StormTransitionTime" value="20.000000" />
+	<Property name="MaxCloudCover" value="0.800000" />
+	<Property name="MaxStormCloudCover" value="0.800000" />
+	<Property name="ForceFlightSetting" value="false" />
+	<Property name="ForceFlightStrength" value="1.000000" />
+	<Property name="ToFootFadeTime" value="3.000000" />
+	<Property name="ToFlightFadeTime" value="3.000000" />
+	<Property name="InFlightStormStrength" value="0.200000" />
+	<Property name="CreatureStormThreshold" value="0.200000" />
+	<Property name="TakeoffStormThreshold" value="0.020000" />

@@ -186,6 +186,45 @@ def _mine(bases, address):
             and (b.get("BaseType") or {}).get("PersistentBaseTypes") not in maps.SKIP_BASES]
 
 
+# Storm timing, seconds (gcskyglobals.globals, research/sources/game-data/25800958/
+# gcskyglobals.globals.MXML.L68-92.xml), keyed by the planet's StormFrequency.
+# Whether "length" includes the 20 s transitions is not known yet: the mod's
+# weather log will tell after one storm.
+STORM_WARNING_S = 25
+STORM_TRANSITION_S = 20
+STORM_TIMING = {"Low": {"length": (120, 180), "between": (900, 2400)},
+                "High": {"length": (150, 320), "between": (120, 620)}}
+# Order of the six values in each cGcPlanetHazardData table (weather files, e.g. humidweather.MXML).
+HAZARD_SLOTS = ("ambient", "water", "cave", "storm", "night", "deep_water")
+
+
+def storm_eta(storm: dict | None, frequency: str | None, now: float) -> dict:
+    """Where the storm cycle is and the time ranges ahead, from the last
+    SetStormState transition and the game's storm timing for this planet."""
+    if frequency == "Always":
+        return {"note": "constant storms"}
+    if frequency in (None, "None_"):
+        return {"note": "no storms on this planet"} if frequency else {}
+    if not storm:
+        return {"note": "no storm change seen since the mod loaded"}
+    t = STORM_TIMING.get(frequency)
+    el = now - storm["t"]
+    rng = lambda lo, hi: [max(0, round(lo - el)), max(0, round(hi - el))]  # noqa: E731
+    phase = storm["state"]
+    if phase == "Warning":
+        return {"phase": phase, "starts_in": max(0, round(STORM_WARNING_S - el))}
+    if phase == "TransitionIn" and t:
+        lo, hi = t["length"]
+        return {"phase": phase, "ends_in": rng(lo + STORM_TRANSITION_S, hi + STORM_TRANSITION_S)}
+    if phase == "Active" and t:
+        return {"phase": phase, "ends_in": rng(*t["length"])}
+    if phase == "TransitionOut":
+        return {"phase": phase, "clears_in": max(0, round(STORM_TRANSITION_S - el))}
+    if phase == "Inactive" and t:
+        return {"phase": phase, "next_in": rng(*t["between"])}
+    return {"phase": phase}
+
+
 class Live:
     def projection(self, bases, address):
         """The planet map's projection: centred on the bases, or for a planet
@@ -252,7 +291,10 @@ class Live:
         p = dict(w.get("planet") or {})
         if p.get("substances"):
             p["substances"] = [(items.get(i) or {}).get("name") or i for i in p["substances"] if i]
-        return {**w, "planet": p or None}
+        if p.get("hazard"):
+            p["hazard"] = {k: dict(zip(HAZARD_SLOTS, v)) for k, v in p["hazard"].items()}
+        eta = storm_eta(w.get("storm"), p.get("storm_frequency"), sample.get("t", time.time()))
+        return {**w, "planet": p or None, "storm_eta": eta}
 
     def build(self, bases: list, base: str | None = None, target: str | None = None, trail_s: float = 6 * 3600,
               items: dict | None = None) -> dict:

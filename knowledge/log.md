@@ -2,6 +2,11 @@
 
 Newest first. One entry per change to the bundle: what landed, from where.
 
+## 2026-10-22 - weather and storms
+
+- New concept: weather and storms (storm timing by storm frequency, hazard table
+  slot order). `/map` shows a storm countdown from the live mod's storm log.
+
 ## 2026-10-22 - water level
 
 - Live samples: the sea-level field is the water surface above the planet's
