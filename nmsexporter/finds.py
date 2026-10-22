@@ -15,10 +15,9 @@ Which substance a hotspot gives is not in the marker:
 - mineral: the table has Mineral1-3. Assumed Mineral1 = the planet's common
   substance, from one planet where the farm on the hotspot extracts the common
   one (Activated Indium); uncommon and rare are given as the alternatives.
-The class (C/B/A/S) is not in the marker's mapped fields. Until its byte is
-found the player records it from the visor (POST /api/finds/class), kept in
-LIVE_DIR/find_labels.json; each labelled hotspot with a raw struct is also an
-example for finding the byte.
+The class (C/B/A/S) is not in the marker at all: a class B power and a class S
+gas marker differ only in position, label and type. The player records it
+from the visor (POST /api/finds/class), kept in LIVE_DIR/find_labels.json.
 
 Planet facts (biome, substances) come from live.json's weather block and are
 kept in LIVE_DIR/planets.json so they outlive both the visit and an exporter

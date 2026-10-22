@@ -39,9 +39,9 @@ OUT_DIR = r"C:\pymhf\mod_saves\live"
 MARKER_REPEAT_S = 60.0
 VISOR_IDLE_S = 0.75         # no UpdateTarget for this long = visor closed
 # High-churn marker types that say nothing about the visor or resources.
-# Hotspot markers get their whole 0x2B0-byte struct logged as hex: the class is
-# not in the mapped fields (name is just UI_SURVEY_MINERALS_LABEL), so comparing
-# hotspots of different classes should show which byte carries it.
+# Hotspot markers get their whole 0x2B0-byte struct logged as hex. Done its job:
+# a class B and a class S marker differ only in position, label and type, so the
+# class is not in the marker (2026-10-22). Kept for checking other fields.
 RAW_TYPES = {"MineralHotspot", "GasHotspot", "PowerHotspot"}
 MARKER_SIZE = 0x2B0
 # SpacePoi moves every frame (879 of the first 902 lines, 2026-10-22).

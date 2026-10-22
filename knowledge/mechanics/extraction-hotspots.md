@@ -54,6 +54,11 @@ not in this table, and the save does not record it.
 - On Activated Indium's planet (Lush; common / uncommon / rare = Activated
   Indium, Paraffinium, Cobalt) the mineral hotspot under the farm gives
   Activated Indium, the common substance: one case for Mineral1 = common.
+- The class is not in the hotspot marker: a class B PowerHotspot and a class S
+  GasHotspot marker (Okyota Gamma, Ubunji) differ only in position, label and
+  marker type (26 bytes of 0x2B0). The player reads the class from the visor.
+- Okyota Gamma (Toxic) had a class S gas hotspot giving Nitrogen, the Toxic
+  biome's Gas1 in REGIONHOTSPOTSTABLE.
 
 ## Open
 

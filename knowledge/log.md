@@ -2,6 +2,12 @@
 
 Newest first. One entry per change to the bundle: what landed, from where.
 
+## 2026-10-22 - hotspots seen live
+
+- Hotspot markers carry type and position but not the class (B vs S markers
+  compared); a Toxic planet's S gas hotspot gave Nitrogen (Gas1). Recorded in
+  extraction-hotspots.md. `/map` lets the player set a hotspot's class.
+
 ## 2026-10-22 - weather and storms
 
 - New concept: weather and storms (storm timing by storm frequency, hazard table
