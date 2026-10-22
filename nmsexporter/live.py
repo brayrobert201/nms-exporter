@@ -248,7 +248,9 @@ class Live:
     def visited_planets(self, bases) -> list:
         """/api/map entries for planets visited with the mod that have no bases."""
         self.elev.refresh()
-        with_bases = {maps._addr(b.get("GalacticAddress")) for b in bases}
+        # only planetary bases: the corvette and freighter are bases too, at wherever they are now
+        with_bases = {maps._addr(b.get("GalacticAddress")) for b in bases
+                      if (b.get("BaseType") or {}).get("PersistentBaseTypes") not in maps.SKIP_BASES}
         out = []
         for address, ua in self.elev.visited.items():
             if address in with_bases or address not in self.elev.radius:

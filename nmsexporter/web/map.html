@@ -771,7 +771,10 @@ function goToMe() {
   render();
   return true;
 }
-window.showMe = () => { if (goToMe()) { setFollow(follow || 1); poll(); } };
+window.showMe = async () => {
+  if (!goToMe()) { await reloadMap(); if (!goToMe()) return; }   // a planet first visited since the page loaded
+  setFollow(follow || 1); poll();
+};
 
 // Where the player is when the map can't show them: freighter, space, another planet.
 function drawAway() {
@@ -920,7 +923,7 @@ function toggleNearby() {
   if (follow) centreOnMe();
 }
 
-let polling = null, pollSeq = 0, reloadedFor = null;
+let polling = null, pollSeq = 0, reloadedFor = null, reloadedAt = 0;
 async function reloadMap() {
   data = await (await fetch("/api/map", { cache: "no-store" })).json();
   const keep = planet && data.planets.findIndex(p => p.address === planet.address);
@@ -941,8 +944,9 @@ async function poll() {
       live = got;
       // Show the player's planet the first time we see them on one (unless the URL chose a view),
       // and keep following them to other planets and bases while Centre is on.
-      if (live.on_planet && data && !data.planets.some(p => p.address === live.address) && reloadedFor !== live.address) {
-        reloadedFor = live.address;
+      if (live.on_planet && data && !data.planets.some(p => p.address === live.address)
+          && (reloadedFor !== live.address || Date.now() - reloadedAt > 60000)) {
+        reloadedFor = live.address; reloadedAt = Date.now();
         await reloadMap();
       }
       if (live.on_planet && data) {
