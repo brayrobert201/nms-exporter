@@ -33,6 +33,8 @@ import time
 from pymhf import Mod
 from pymhf.gui.decorators import no_gui
 
+from pymhf.core.memutils import get_addressof, map_struct
+
 import nmspy.data.types as nms
 from nmspy.common import gameData
 from nmspy.data.enums import eStormState
@@ -104,7 +106,7 @@ def _address():
 class LivePosition(Mod):
     __author__ = "nms-exporter"
     __description__ = "Write the player's position to mod_saves/live four times a second"
-    __version__ = "0.4"
+    __version__ = "0.5"
 
     def __init__(self):
         super().__init__()
@@ -164,6 +166,15 @@ class LivePosition(Mod):
             with open(os.path.join(OUT_DIR, f"trail-{day}.jsonl"), "a") as f:
                 f.write(json.dumps(sample) + "\n")
             self._last = sample
+
+    # nmspy only finds the application object (and so the galactic address) on a game
+    # state change; attached mid-game on foot that may not come for a long time
+    # (2026-10-23: the map waited for an address). Take it from the main loop instead,
+    # mapped the way nmspy's singletons mod maps it.
+    @nms.cGcApplication.Update.after
+    def on_app_update(self, this):
+        if gameData.GcApplication is None and this:
+            gameData.GcApplication = map_struct(get_addressof(this), nms.cGcApplication)
 
     @nms.cGcSky.SetStormState.after
     def on_storm(self, this, leNewState):

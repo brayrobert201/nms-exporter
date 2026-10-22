@@ -156,6 +156,7 @@ class Elevation:
         self.anchor: dict = {}      # address -> first surface sample: the centre of a base-less planet's map
         self.visited: dict = {}     # address -> the mod's ua dict, for naming base-less planets
         self.timeline: list = []    # [(t, address)] at each change of planet, for placing visor finds
+        self.by_centre: dict = {}   # rounded nearest-planet centre -> address, for samples that lack one
         self._pos: dict = {}
 
     def refresh(self):
@@ -176,6 +177,8 @@ class Elevation:
                     continue
                 if address is None:
                     continue
+                if s.get("planet_pos") and (address >> 52) & 0xF:
+                    self.by_centre[tuple(round(c) for c in s["planet_pos"])] = address
                 self.add(address, s)
 
     def add(self, address, s):
@@ -357,6 +360,11 @@ class Live:
         out = {"state": "stale" if age > STALE_S else "live", "age": round(age, 1),
                "location": sample.get("location"), "error": None, "weather": self.weather(sample, items or {})}
         address = ua_int(sample.get("ua"))
+        if address is None and sample.get("planet_pos"):
+            # no address yet (attached mid-game): the same planet centre was seen with one before
+            self.elev.refresh()
+            address = self.elev.by_centre.get(tuple(round(c) for c in sample["planet_pos"]))
+            out["address_inferred"] = address is not None
         out["address"] = f"0x{address:X}" if address is not None else None
         self.systems.refresh()
         out["names"] = {"planet": self.systems.planet_name(address), "system": self.systems.system_name(address)}
