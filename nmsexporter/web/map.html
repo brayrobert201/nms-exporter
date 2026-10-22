@@ -578,7 +578,7 @@ async function loadFinds() {
 
 function findPos(f) { return base ? (f.e === undefined ? null : [f.e, f.n]) : [f.x, f.y]; }
 function findTitle(f) {
-  const k = KIND[findKind(f.kind)].label;
+  const k = (f.class ? `Class ${f.class} ` : "") + KIND[findKind(f.kind)].label.replace(/^./, c => f.class ? c.toLowerCase() : c);
   return f.kind === "deposit" ? `${f.resource} deposit` : `${k}${f.resource ? ` · ${f.likely ? "likely " : ""}${f.resource}` : ""}`;
 }
 
@@ -587,13 +587,14 @@ function drawFinds() {
   if (!g) return;
   g.innerHTML = ""; hits.innerHTML = "";
   if (!finds) return;
-  const k = px(), range = (finds.range_m || [190])[0];
+  const k = px();
+  const reach = (f) => ((finds.ranges || {})[f.kind] || finds.range_m || [190])[0];
   for (const f of finds.finds) {
     const kind = findKind(f.kind), p = findPos(f);
     if (!p || hiddenKinds.has(kind)) continue;
     const c = css(KIND[kind].colour);
     if (kind !== "deposit-find")      // the area an extractor must be inside to draw from the hotspot
-      el("circle", { cx: p[0], cy: -p[1], r: range, fill: "none", stroke: c, "stroke-width": 1.5 * k,
+      el("circle", { cx: p[0], cy: -p[1], r: reach(f), fill: "none", stroke: c, "stroke-width": 1.5 * k,
         "stroke-dasharray": `${6 * k} ${5 * k}`, opacity: 0.55 }, g);
     const s = (kind === "deposit-find" ? 5 : 8) * k;
     el("path", { d: kind === "deposit-find" ? `M ${p[0] - s} ${-p[1] - s} h ${2 * s} v ${2 * s} h ${-2 * s} Z`
@@ -611,10 +612,16 @@ function showFind(f, p) {
   selected = p; drawSel();
   const rows = [`<b>${findTitle(f)}</b>`];
   if (f.kind !== "deposit") {
-    rows.push(f.resource ? `Resource: ${f.likely ? "likely " : ""}<b>${f.resource}</b>` : "Resource: not known yet");
-    if (f.basis) rows.push(`<span style="color:var(--ink-muted)">${f.basis}</span>`);
-    rows.push(f.class ? `Class ${f.class} · ${f.rates[f.class]} items/h per extractor` : "Class: not readable yet (C/B/A/S give 250/375/500/625 items/h per extractor)");
-    rows.push(`Extractors must be within ${(finds.range_m || [190])[0]} m`);
+    if (f.kind !== "hotspot-power") {
+      rows.push(f.resource ? `Resource: ${f.likely ? "likely " : ""}<b>${f.resource}</b>` : "Resource: not known yet");
+      if (f.basis) rows.push(`<span style="color:var(--ink-muted)">${f.basis}</span>`);
+    }
+    const unit = f.rate_unit, rates = ["C", "B", "A", "S"].map(c => f.rates[c]).join("/");
+    rows.push(f.class ? `Class <b>${f.class}</b> · ${f.rates[f.class]} ${unit}${f.class_source === "you" ? " <span style='color:var(--ink-muted)'>(set by you)</span>" : ""}`
+      : `Class: set it from the visor (C/B/A/S give ${rates} ${unit})`);
+    rows.push(["C", "B", "A", "S"].map(c => `<button class="${f.class === c ? "on" : ""}" onclick='setFindClass(${JSON.stringify(f.key)}, ${JSON.stringify(f.class === c ? null : c)})'>${c}</button>`).join(" "));
+    const r = ((finds.ranges || {})[f.kind] || finds.range_m || [190]);
+    rows.push(`${f.kind === "hotspot-power" ? "Electromagnetic generators" : "Extractors"} must be within ${r[0]}–${r[1] || r[0]} m (the game's hotspot range)`);
   }
   if (f.e !== undefined) rows.push(`${fmtDist(Math.hypot(f.e, f.n))} ${compass(bearing(f.e, f.n))} of the base computer`);
   rows.push(`First seen ${new Date(f.first * 1000).toLocaleString()}`);
@@ -622,6 +629,14 @@ function showFind(f, p) {
   P.innerHTML = `<button class="close" onclick="closePanel()">×</button>` + rows.join("<br>");
   P.style.display = "block";
 }
+
+async function setFindClass(key, cls) {
+  await fetch("/api/finds/class", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, class: cls }) });
+  await loadFinds();
+  const f = finds && finds.finds.find(x => x.key === key);
+  if (f) showFind(f, findPos(f));
+}
+window.setFindClass = setFindClass;
 
 function legendFinds() {
   const L = $("legend");

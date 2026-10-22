@@ -140,6 +140,19 @@ class Handler(BaseHTTPRequestHandler):
 
     do_HEAD = do_GET
 
+    def do_POST(self):
+        path = self.path.partition("?")[0].rstrip("/")
+        try:
+            body = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 4096)) or b"{}")
+        except (ValueError, OSError):
+            return self._send(b"bad json", "text/plain", 400)
+        if path == "/api/finds/class":
+            # the player records a hotspot's class from the visor (the marker does not carry it readably)
+            live.finds.refresh(live.elev.timeline)
+            ok = live.finds.set_class(str(body.get("key", "")), body.get("class") or None)
+            return self._send(json.dumps({"ok": ok}).encode(), "application/json", 200 if ok else 400)
+        self._send(b"not found", "text/plain", 404)
+
 
 def main():
     server = ThreadingHTTPServer((HOST, PORT), Handler)

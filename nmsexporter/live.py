@@ -330,7 +330,10 @@ class Live:
                 e, n, h = frame[2](maps.world_to_local(frame[0], frame[1], f["w"]))
                 f.update(e=e, n=n, h=h)
             out.append(f)
-        return {"finds": out, "range_m": (((tables.get("extraction") or {}).get("hotspots") or {}).get("Mineral1") or {}).get("range_m")}
+        hs = (tables.get("extraction") or {}).get("hotspots") or {}
+        ranges = {"hotspot-mineral": (hs.get("Mineral1") or {}).get("range_m"), "hotspot-gas": (hs.get("Gas1") or {}).get("range_m"),
+                  "hotspot-power": (hs.get("Power") or {}).get("range_m")}
+        return {"finds": out, "range_m": ranges["hotspot-mineral"], "ranges": ranges}
 
     def build(self, bases: list, base: str | None = None, target: str | None = None, trail_s: float = 6 * 3600,
               items: dict | None = None, tables: dict | None = None) -> dict:
