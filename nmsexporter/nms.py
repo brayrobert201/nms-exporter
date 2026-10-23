@@ -398,9 +398,12 @@ class Collector:
                 for st in g.get("Stats", []):
                     v = _stat_value(st.get("Value"))
                     if v is not None:
-                        # lifetime counters are unsigned 32-bit like the wallet: MONEY_EVER read
-                        # -617,290,418 once units earned passed 2^31 (seen 2026-10-23)
-                        snap["stats"][st["Id"].lstrip("^")] = v + 2 ** 32 if isinstance(v, int) and v < 0 else v
+                        # currency counters are unsigned 32-bit like the wallet: MONEY_EVER read
+                        # -617,290,418 once units earned passed 2^31 (seen 2026-10-23). Standings
+                        # (TRA_STANDING -86) and the like are genuinely signed: leave them alone.
+                        sid = st["Id"].lstrip("^")
+                        unsigned = isinstance(v, int) and v < 0 and any(k in sid for k in ("MONEY", "NANITES", "SPECIAL", "UNITS"))
+                        snap["stats"][sid] = v + 2 ** 32 if unsigned else v
 
         dd = save.get("DiscoveryManagerData", {}).get("DiscoveryData-v1", {})
         snap["collections"] = dict(
