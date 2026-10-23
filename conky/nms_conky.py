@@ -14,6 +14,7 @@ explanation, not a blank screen or a traceback.
 """
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import re
@@ -201,29 +202,65 @@ def empty(text: str) -> str:
 
 # -------------------------------------------------------------------- data --
 
-def load() -> tuple[dict | None, str | None, float]:
-    """(payload, error, age of the last good payload). One fetch per TTL;
-    through a failure the last good payload shows until it is too old."""
+def _read_cache() -> dict:
     try:
-        cached = json.loads(CACHE.read_text())
+        return json.loads(CACHE.read_text())
     except (OSError, ValueError):
-        cached = {}
+        return {}
+
+
+def _fetch() -> None:
+    """One fetch of the payload into the cache file (atomic replace); never raises."""
+    cached = _read_cache()
     now = time.time()
-    if now - cached.get("fetched", 0) >= TTL:
-        err, data, good = None, cached.get("data"), cached.get("good", 0)
-        try:
-            with urllib.request.urlopen(URL, timeout=3) as r:
-                data, good = json.loads(r.read()), now
-            data.pop("known", None)              # large and unused here
-        except Exception as e:                   # noqa: BLE001 - never raise
-            err = f"{type(e).__name__}: {e}"
-        cached = {"fetched": now, "good": good, "error": err, "data": data}
-        try:
-            tmp = CACHE.with_name(f"{CACHE.name}.{os.getpid()}.tmp")
-            tmp.write_text(json.dumps(cached))
-            tmp.replace(CACHE)
-        except OSError:
-            pass
+    err, data, good = None, cached.get("data"), cached.get("good", 0)
+    try:
+        with urllib.request.urlopen(URL, timeout=3) as r:
+            data, good = json.loads(r.read()), now
+        data.pop("known", None)              # large and unused here
+    except Exception as e:                   # noqa: BLE001 - never raise
+        err = f"{type(e).__name__}: {e}"
+    try:
+        tmp = CACHE.with_name(f"{CACHE.name}.{os.getpid()}.tmp")
+        tmp.write_text(json.dumps({"fetched": now, "good": good, "error": err, "data": data}))
+        tmp.replace(CACHE)
+    except OSError:
+        pass
+
+
+def _refresh_in_background() -> None:
+    """conky runs ${execpi} on its main loop, so a slow exporter would freeze the whole
+    screen. The section renders from the cache at once and a detached child refreshes
+    it; a lock keeps a dozen sections from starting a dozen fetches."""
+    lock = os.open(CACHE.with_suffix(".lock"), os.O_CREAT | os.O_RDWR, 0o600)
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        os.close(lock)
+        return                               # a refresh is already running
+    if os.fork():
+        os.close(lock)                       # parent: the child holds it
+        return
+    try:                                     # child: detach and fetch
+        os.setsid()
+        devnull = os.open(os.devnull, os.O_RDWR)
+        for fd in (0, 1, 2):
+            os.dup2(devnull, fd)
+        _fetch()
+    finally:
+        os._exit(0)
+
+
+def load() -> tuple[dict | None, str | None, float]:
+    """(payload, error, age of the last good payload). One fetch per TTL, in the
+    background once there is something to show; through a failure the last good
+    payload shows until it is too old."""
+    cached, now = _read_cache(), time.time()
+    if not cached.get("data") or now - cached.get("good", 0) > STALE_AFTER:
+        _fetch()                             # nothing worth showing yet: wait for it
+        cached, now = _read_cache(), time.time()
+    elif now - cached.get("fetched", 0) >= TTL:
+        _refresh_in_background()
     good = cached.get("good", 0)
     age = now - good if good else float("inf")
     if not cached.get("data") or age > STALE_AFTER:
@@ -289,7 +326,8 @@ def left_vitals(d) -> str:
     ammo = p.get("ammo") or {}
     out.append("${voffset 8}" + stats([
         ("Ship health", fnum(p.get("ship_health"))),
-        ("Hazard", pill("warning", f"{max(hz):.0f}") if hz else f"{c('ink-2')}none"),
+        # a small hazard still rounds to "0" at .0f; one decimal below 10 keeps the pill honest
+        ("Hazard", pill("warning", f"{max(hz):.1f}" if max(hz) < 10 else f"{max(hz):.0f}") if hz else f"{c('ink-2')}none"),
         ("Bolt ammo", fnum(ammo.get("bolt"))),
         ("Scatter ammo", fnum(ammo.get("scatter"))),
     ], value_px=44))

@@ -23,6 +23,8 @@ import os
 import time
 from collections import Counter, deque
 
+import psycopg
+
 from . import db, maps, sectors
 from .finds import Finds
 from .systems import Systems
@@ -89,7 +91,9 @@ def _dot(a, b):
 # movement vs at averaged cos -0.94 on foot (304 steps) and +0.99 flying or landed
 # in the ship (1042 steps, locations PlanetInShip and Default). The corvette
 # interior ("Freighter") and Underwater were mixed and stay with the on-foot sign.
-SHIP_LOCATIONS = {"PlanetInShip", "Default", "SpaceInShip", "PlanetInAtmoShip"}
+# nmspy EnvironmentLocation has no "in space in ship" value: flying in space reports Default
+# (0x1), landed or flying over a planet PlanetInShip (0x4). In both, `at` points forward.
+SHIP_LOCATIONS = {"PlanetInShip", "Default"}
 
 
 def heading_deg(up, at, location: str | None = None) -> float | None:
@@ -340,14 +344,34 @@ class Live:
         age = time.time() - sample.get("t", 0)
         out = {"state": "stale" if age > STALE_S else "live", "age": round(age, 1),
                "location": sample.get("location"), "error": None, "weather": self.weather(sample, items or {})}
+        # The position itself is a file; the trail, names and finds are in nms-db. With the
+        # database down the position still shows and `db` says why the rest is missing.
+        db_err = None if db.configured() else "nms-db not configured: no PGHOST"
+
+        def guarded(fn, *a):
+            nonlocal db_err
+            if db_err:
+                return None
+            try:
+                return fn(*a)
+            except psycopg.Error as e:
+                db_err = f"nms-db unreachable: {e}".strip()
+                return None
+
+        def finish(o):
+            o["db"] = db_err is None
+            if db_err:
+                o["db_error"] = db_err
+            return o
+
         address = ua_int(sample.get("ua"))
         if address is None and sample.get("planet_pos"):
             # no address yet (attached mid-game): the same planet centre was seen with one before
-            self.elev.refresh()
+            guarded(self.elev.refresh)
             address = self.elev.by_centre.get(tuple(round(c) for c in sample["planet_pos"]))
             out["address_inferred"] = address is not None
         out["address"] = f"0x{address:X}" if address is not None else None
-        self.systems.refresh()
+        guarded(self.systems.refresh)
         out["names"] = {"planet": self.systems.planet_name(address), "system": self.systems.system_name(address)}
         rel, at = sample.get("rel"), sample.get("at")
         planet_bases = [b for b in bases if b.get("Position")
@@ -357,7 +381,7 @@ class Live:
         surface = (address is not None and (address >> 52) & 0xF != 0
                    and (sample.get("in_atmosphere") or sample.get("distance_from_planet", 1e9) <= 20000))
         if address is not None and rel and surface:
-            self.elev.refresh()
+            guarded(self.elev.refresh)
             self.elev.add(address, sample)        # the first moments on a new planet may not be in the trail yet
             self.finds.remember_planet(address, (sample.get("weather") or {}).get("planet"))
         proj = self.projection(bases, address) if address is not None else None
@@ -376,7 +400,7 @@ class Live:
                     f" · bases in this system: {', '.join(here)}" if here else " · no bases in this system")
             else:
                 out["why"] = "on a planet with no bases" + (f" · bases in this system: {', '.join(here)}" if here else "")
-            return out
+            return finish(out)
         out["on_planet"] = True
         out["has_bases"] = bool(mine)
         up = _norm(rel)
@@ -386,7 +410,7 @@ class Live:
         out["player"] = {"x": round(x, 1), "y": round(y, 1), "heading": None if heading is None else round(heading, 1),
                          "lat": lat, "lon": lon, "w": [round(c, 1) for c in rel]}
 
-        self.trail.refresh()
+        guarded(self.trail.refresh)
         tr = self.trail.on(address, time.time() - trail_s)
         out["trail"] = [[round(a, 1), round(b, 1)] for a, b in (proj.xy(p) for p in tr[-4000:])]
 
@@ -408,8 +432,8 @@ class Live:
                 continue
             nv = nav(rel, heading, w)
             rows.append((nv["dist"], {"key": key, "base": bname, "kind": kind, "id": oid, **nv}))
-        self.finds.refresh(self.elev.timeline)
-        for f in self.finds.for_planet(address, tables or {}):
+        finds = [] if guarded(self.finds.refresh, self.elev.timeline) is None and db_err else self.finds.for_planet(address, tables or {})
+        for f in finds:
             nv = nav(rel, heading, f["w"])
             label = f.get("resource") or f["name"]
             if f.get("class"):
@@ -445,7 +469,7 @@ class Live:
                     out["target"].update(e=te, n=tn)
             else:
                 out["target"] = {"key": target, "error": "not on this planet"}
-        return out
+        return finish(out)
 
     def sectors(self, bases: list, address: int | None, tables: dict) -> dict:
         """The planet's 32 sectors and the cells the trail has charted (sectors.py), with

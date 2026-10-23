@@ -38,7 +38,9 @@ GLYPH_DIR = os.environ.get("NMS_GLYPH_DIR", os.path.join(os.path.dirname(os.path
 collector = Collector()
 live = Live()
 ingest = db.Ingest(LIVE_DIR)
-DB_PATHS = ("/api/live", "/api/elevation", "/api/finds", "/api/sectors", "/api/systems")
+# routes whose whole answer lives in nms-db; /api/live is not one: the position is a file and
+# live.build reports the database's state in its own `db` field
+DB_PATHS = ("/api/elevation", "/api/finds", "/api/sectors", "/api/systems")
 
 
 def db_error() -> str | None:

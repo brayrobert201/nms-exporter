@@ -58,4 +58,4 @@ echo "== install"
 (cd "$HERE" && sudo -n ./install.sh) || exit 1
 sleep 5
 curl -fs http://127.0.0.1:9877/healthz >/dev/null && echo "live 9877 ok" || { echo "live service not answering"; exit 1; }
-pkill -USR1 -f "^conky -d -c /opt/nms-exporter" && echo "conky reloaded" || echo "no conky running to reload"
+pkill -USR1 -f "conky -c /opt/nms-exporter/conky/" && echo "conky reloaded" || echo "no conky running to reload"

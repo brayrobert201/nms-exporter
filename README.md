@@ -133,7 +133,7 @@ yours as its header describes.
 
 ## Game data
 
-`data/nms_tables.json` holds every refiner and cooking recipe with its time,
+`data/nms_tables.json` (not in git, it carries game text: build it from the installed game with `scripts/nms-extract-tables.py`) holds every refiner and cooking recipe with its time,
 item names, extractor and hotspot constants, base-part rates, fleet timings
 and the mission tables (title, stage objectives by progress number, rewards),
 extracted from the installed game's `.pak` files so the numbers track the

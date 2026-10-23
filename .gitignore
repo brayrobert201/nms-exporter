@@ -4,3 +4,4 @@ __pycache__/
 data/glyphs/
 data/icons/
 data/part_footprints.json
+data/nms_tables.json
