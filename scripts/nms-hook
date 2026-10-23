@@ -156,6 +156,23 @@ if [ "$YES" != 1 ]; then
   case "$ans" in y|Y|yes) ;; *) echo "not injecting."; exit 1 ;; esac
 fi
 
+# Attach mode in pyMHF's local config (scripts/nms-launch writes launch mode into the same file).
+mkdir -p "$(dirname "$LOCAL_CFG")"
+cat > "$LOCAL_CFG" <<'EOF'
+# Written by scripts/nms-hook (nms-exporter): attach to the running game, never launch it.
+[pymhf.local_config]
+mod_dir = "C:\\pymhf\\mods"
+mod_save_dir = "C:\\pymhf\\mod_saves"
+start_exe = false
+start_paused = false
+
+[pymhf.local_config.logging]
+log_level = "info"
+window_name_override = "NMS.py"
+log_dir = "C:\\pymhf\\logs"
+shown = true
+EOF
+
 # Our mods live in the repo; pyMHF loads every .py in C:\pymhf\mods at inject time.
 MODS_SRC=$(dirname "$(readlink -f "$0")")/../pymhf_mods
 mkdir -p "$PREFIX/drive_c/pymhf/mods"

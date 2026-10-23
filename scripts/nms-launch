@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# Steam launch-options wrapper: let pyMHF start No Man's Sky itself (paused), inject, resume.
+#
+#   Steam > No Man's Sky > Properties > Launch Options:
+#     /home/<you>/Projects/nms-exporter/scripts/nms-launch %command%
+#   (keep anything you already had in front, e.g. DXVK_CONFIG="..." before the path)
+#
+#   scripts/nms-launch --dry %command%-like args   # print what would run, run nothing
+#
+# WHY: attaching to a running game (scripts/nms-hook) misses hooks that only fire during
+# start-up. On Windows pyMHF starts the exe with CREATE_SUSPENDED, injects, waits for the
+# injected side's ready flag, then resumes the main thread. Nothing in that needs Windows
+# proper: Wine implements CREATE_SUSPENDED, CreateRemoteThread and ResumeThread. So this
+# wrapper makes pyMHF the program Steam launches, inside Steam's own Proton environment
+# (the SLR container, Proton's env, the Steam overlay, SteamAppId for steam_api), and
+# pyMHF launches NMS.exe as its child.
+#
+# HOW: Steam expands %command% to
+#     <SLR>/_v2-entry-point --verb=waitforexitandrun -- <Proton>/proton waitforexitandrun <NMS.exe>
+# and Proton's waitforexitandrun runs `wine` + everything after the verb. We swap the final
+# NMS.exe argument for `C:\pymhf\python\python.exe -m pymhf run nmspy`, write pyMHF's local
+# config in launch mode (start_exe = true, exe = the absolute path, start_paused = true), and
+# run the whole thing under a pseudo-terminal (`script`) because pyMHF builds console prompts at
+# import time and dies without one. Output goes to C:\pymhf\launch.log.
+#
+# What changes vs attaching: Ctrl+C / closing the terminal is now the normal way to end the
+# game (pyMHF's close_callback terminates NMS.exe when its injected side ends, which is what
+# the Windows flow does too). scripts/nms-hook --detach still SIGKILLs the host side if you
+# want the game to outlive pyMHF.
+#
+# First tried 2026-10-23 after the pyMHF author asked whether launching was possible under
+# Proton. UNTESTED until the first run; see research/runs/2026-10-21-pymhf-proton.
+set -u
+
+STEAM=${STEAM_ROOT:-$HOME/.local/share/Steam}
+PREFIX=$STEAM/steamapps/compatdata/275850/pfx
+PYMHF_DIR=$PREFIX/drive_c/pymhf
+PY_WIN='C:\pymhf\python\python.exe'
+LOCAL_CFG=$PREFIX/drive_c/users/steamuser/AppData/Roaming/pymhf/nmspy/pymhf.local.toml
+LOG=$PYMHF_DIR/launch.log
+MODS_SRC=$(dirname "$(readlink -f "$0")")/../pymhf_mods
+
+DRY=0
+if [ "${1:-}" = "--dry" ]; then DRY=1; shift; fi
+[ $# -gt 0 ] || { sed -n '2,12p' "$0"; exit 2; }
+
+# The game exe is the last argument (Proton passes it to wine as a Unix path).
+EXE=${*: -1}
+case "$EXE" in
+  *NMS.exe) ;;
+  *) echo "nms-launch: last argument is not NMS.exe: $EXE" >&2; exit 2 ;;
+esac
+EXE_WIN="Z:$(printf '%s' "$EXE" | sed 's|/|\\|g')"      # Wine maps / to Z:
+BIN_DIR=$(dirname "$EXE")
+set -- "${@:1:$#-1}"                                       # everything except the exe
+
+# pyMHF local config, launch mode. nms-hook rewrites it to attach mode before attaching.
+mkdir -p "$(dirname "$LOCAL_CFG")" "$PYMHF_DIR/mods" "$PYMHF_DIR/logs" "$PYMHF_DIR/mod_saves"
+cat > "$LOCAL_CFG" <<EOF
+# Written by scripts/nms-launch (nms-exporter): pyMHF starts the game itself, paused.
+[pymhf.local_config]
+exe = "$(printf '%s' "$EXE_WIN" | sed 's|\\|\\\\|g')"
+start_exe = true
+start_paused = true
+mod_dir = "C:\\\\pymhf\\\\mods"
+mod_save_dir = "C:\\\\pymhf\\\\mod_saves"
+
+[pymhf.local_config.logging]
+log_level = "info"
+window_name_override = "NMS.py"
+log_dir = "C:\\\\pymhf\\\\logs"
+shown = true
+EOF
+
+# Our mods: pyMHF loads every .py in C:\pymhf\mods at inject time.
+for m in "$MODS_SRC"/*.py; do [ -f "$m" ] && cp "$m" "$PYMHF_DIR/mods/"; done
+
+# The log window is started with `cmd /c start python ...`: python must be on the Wine PATH.
+export WINEPATH='C:\pymhf\python;C:\pymhf\python\Scripts'
+
+CMD=("$@" "$PY_WIN" -m pymhf run nmspy)
+{
+  echo "=== nms-launch $(date -Is) cwd=$PWD"
+  echo "exe: $EXE_WIN"
+  printf 'cmd:'; printf ' %q' "${CMD[@]}"; echo
+} >> "$LOG"
+if [ "$DRY" = 1 ]; then
+  echo "would write $LOCAL_CFG:"; sed 's/^/  /' "$LOCAL_CFG"
+  echo "would run (cwd $PWD):"; printf '  %q' "${CMD[@]}"; echo
+  exit 0
+fi
+
+# NMS.exe expects to start in its own folder (Steam does the same); pyMHF's CreateProcess
+# inherits this cwd.
+cd "$BIN_DIR" || exit 1
+# A pty for pyMHF's prompts; stdin from /dev/null so nothing can block on a question.
+exec script -qfec "$(printf '%q ' "${CMD[@]}")" "$LOG" </dev/null
