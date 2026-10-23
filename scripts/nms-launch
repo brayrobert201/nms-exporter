@@ -28,8 +28,13 @@
 # the Windows flow does too). scripts/nms-hook --detach still SIGKILLs the host side if you
 # want the game to outlive pyMHF.
 #
-# First tried 2026-10-23 after the pyMHF author asked whether launching was possible under
-# Proton. UNTESTED until the first run; see research/runs/2026-10-21-pymhf-proton.
+# TESTED 2026-10-23 (after the pyMHF author asked whether launching was possible under Proton):
+# injection completed 4 s before the game's first FSM state (APPCORESERVICES), 21 hooks and the
+# mods loaded, nmspy's one-shot singleton hook fired at boot (gameData.GcApplication /
+# simulation / player_state all set), and live.json carried the full universe address from the
+# first sample. Harmless noise in launch.log: ld.so "gameoverlayrenderer.so ... wrong ELF class"
+# (Steam preloads both 32- and 64-bit overlays into every process) and Proton's "unable to use
+# parent for game drive" (the exe passed to Proton is python.exe, not the game).
 set -u
 
 STEAM=${STEAM_ROOT:-$HOME/.local/share/Steam}
