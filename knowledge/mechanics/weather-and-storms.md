@@ -52,6 +52,14 @@ The next storm went from Inactive to Active 359 s after the first cleared,
 with no Warning or TransitionIn logged (the player was inside the corvette).
 A gap of 314-359 s fits ExtremeFallback (240-620 s) and not Low (900-2400 s).
 
+Second planet, 2026-10-23 (Itkyak VIII, planet index 0: Toxic biome, weather
+Toxic, storm_frequency Low, intensity Extreme; watched from the space station,
+so the sky hook reported the nearest planet): Active 20:50:04 to TransitionOut
+20:53:59 = **235 s** storm (High band 150-320, not Low 120-180), Inactive
+20:54:17 to the next Warning 21:00:35 = **378 s** gap (ExtremeFallback
+240-620). Same pattern as Okyota Gamma; two planets now, both with
+intensity Extreme and frequency Low.
+
 ## Scope and caveats
 
 - Two storms on one planet. An Extreme planet appears to use the High storm
