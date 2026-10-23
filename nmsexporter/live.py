@@ -21,6 +21,7 @@ import json
 import math
 import os
 import time
+import urllib.request
 from collections import Counter, deque
 
 import psycopg
@@ -51,7 +52,28 @@ def ua_int(ua: dict | None) -> int | None:
         return None
 
 
+# live_position 0.5 serves the latest sample through pyMHF's HTTP API; NMS_LIVE_URL="" turns it off.
+LIVE_URL = os.environ.get("NMS_LIVE_URL", "http://127.0.0.1:5000/LivePosition/sample")
+
+
+def _sample_over_http():
+    """The mod's current sample from pyMHF's HTTP API, or None (no game, older mod, no http_api)."""
+    if not LIVE_URL:
+        return None
+    try:
+        with urllib.request.urlopen(LIVE_URL, timeout=0.3) as r:
+            s = json.loads(r.read())
+        return s if isinstance(s, dict) and s.get("t") else None
+    except (OSError, ValueError):
+        return None
+
+
 def read_sample():
+    """The latest sample: from pyMHF's HTTP API when it answers, else live.json (attach-mode
+    sessions and mods older than 0.5). Returns (value, error) and never raises."""
+    s = _sample_over_http()
+    if s is not None:
+        return s, None
     try:
         with open(os.path.join(LIVE_DIR, "live.json")) as f:
             return json.load(f), None

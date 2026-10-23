@@ -15,6 +15,12 @@ planet's own data (weather type, storm frequency, intensity, hazard tables,
 resources, life). Only values stored inside those structs are read; no pointer
 is followed. Hazard tables are 6 floats each whose meaning is not documented.
 
+Current state (0.5): pyMHF's HTTP API serves the latest sample at
+  GET http://127.0.0.1:5000/LivePosition/sample
+(pyMHF starts that server, bound to 0.0.0.0:5000, when any loaded mod declares an
+`@endpoint`; it needs the pymhf `http_api` extra, which nmspy installs). The exporter
+reads it there first. live.json is still written as a fallback for a release or two.
+
 Output, in C:\\pymhf\\mod_saves\\live (host: pfx/drive_c/pymhf/mod_saves/live):
   live.json          latest sample (with a "weather" block), replaced atomically every 0.25 s
   weather-YYYYMMDD.jsonl  one line per storm transition
@@ -32,6 +38,12 @@ import time
 
 from pymhf import Mod
 from pymhf.gui.decorators import no_gui
+
+try:
+    from pymhf.core.http_api import endpoint
+except ImportError:          # pyMHF without the http_api extra: live.json is the only output
+    def endpoint(*_a, **_k):
+        return lambda f: f
 
 import nmspy.data.types as nms
 from nmspy.common import gameData
@@ -104,13 +116,14 @@ def _address():
 class LivePosition(Mod):
     __author__ = "nms-exporter"
     __description__ = "Write the player's position to mod_saves/live four times a second"
-    __version__ = "0.4"
+    __version__ = "0.5"
 
     def __init__(self):
         super().__init__()
         os.makedirs(OUT_DIR, exist_ok=True)
         self._next = 0.0
         self._last = None
+        self._current = None        # the latest sample incl. weather, served at /LivePosition/sample
         self._failed_address = False
         self._storm = None          # {"state", "t"} from the last SetStormState
         self._sun = None            # cGcSky mfSolarSunAngle, raw
@@ -120,6 +133,13 @@ class LivePosition(Mod):
         self._env_planet = None
         self._planet_indices = set()
         logger.info(f"live_position writing to {OUT_DIR}")
+
+    @property
+    @endpoint("sample", method="GET")
+    def sample(self):
+        """The latest sample, exactly as live.json holds it; null before the first one.
+        Served by pyMHF at /LivePosition/sample (the route is prefixed with the class name)."""
+        return self._current
 
     @nms.cGcPlayerEnvironment.Update.after
     def on_env_update(self, this, lfTimeStep):
@@ -153,10 +173,11 @@ class LivePosition(Mod):
                 self._failed_address = True
                 logger.exception("galactic address lookup failed; not trying again")
 
+        self._current = {**sample, "weather": {"storm": self._storm, "sun_angle": self._sun, "planet": self._planet,
+                                               "planet_indices_seen": sorted(self._planet_indices)}}
         tmp = os.path.join(OUT_DIR, "live.json.tmp")
         with open(tmp, "w") as f:
-            json.dump({**sample, "weather": {"storm": self._storm, "sun_angle": self._sun, "planet": self._planet,
-                                             "planet_indices_seen": sorted(self._planet_indices)}}, f)
+            json.dump(self._current, f)
         os.replace(tmp, os.path.join(OUT_DIR, "live.json"))
 
         if self._moved(sample):
