@@ -217,6 +217,59 @@ with loose extractors flagged and listed. `?base=<name>` opens a base,
 North is taken as the planet's +Y axis and is not yet checked against the
 in-game compass; the page says so until it is.
 
+## Phone page and Android app
+
+`http://<host>:9877/mobile` is the phone-sized page: Map, Farms, Inventory and
+Build, one tab at a time, built from the same `/api/map`, `/json` and
+`/api/live` the map and the wall screens use (design: the "NMS Mobile" Claude
+Design project; tokens from its Refined Midnight system, Geist fonts served from
+`/fonts/`, the portal glyph font from `conky/fonts`).
+
+- Map: the planet with its bases, exocraft and drained deposits, or a base's
+  layout with pipes, wires and loose extractors flagged; pinch, drag, tap a mark
+  for its card; the legend chips hide a kind; your live position and trail, a
+  Nearby list and Go to arrows when the hook is reporting; the planet title
+  opens the planet list.
+- Farms: every extraction farm with its projected fill, time to full and loose
+  count; a farm's page lists its extractors (tap one to see it on the layout)
+  and the base's power verdict.
+- Inventory: where everything is, per container; a search that matches a known
+  blueprint also shows its ingredients with have/short and where they are.
+- Build: the device planner, everything that can be made right now (`/json`
+  `crafting.can_make`: the route the search chose and its ingredients against
+  stock), and the almost-craftable list by the ingredient in the way. Tap any
+  of them for every level of the build: an indented tree from the item down to
+  raw materials, each line saying whether it comes from stock or is crafted,
+  refined or cooked (and how many times), with a quantity stepper, what is
+  short, and the raw materials it draws. `/api/craft?id=<id or name>&n=<units>`
+  is the data: the same route choices as the crafting search, stock drawn down
+  on a shared copy so an ingredient used in two branches is only counted once,
+  surplus from rounding up to whole crafts returned for later branches. The
+  item asked for is always made, never taken from stock.
+
+The state is in the URL hash, so the browser's and the phone's back button step
+back through it; `?base=` and `?planet=` open a view as on `/map`.
+
+`android/` is the Android app: that page in a WebView, with what a browser
+cannot give it: the screen stays on (a setting), the fold posture of a foldable
+reaches the page (unfolded, the card lists go two-column with the gap on the
+hinge; the page uses the viewport-segments media queries where the engine has
+them and the shell's report otherwise), the exporter's address is remembered,
+and it sits on the launcher. Built for a Pixel Fold; minSdk 29.
+
+```bash
+# once: an Android SDK (platform 36, build-tools 36) and a JDK 17
+#   export ANDROID_HOME=~/Android/sdk   (android/local.properties: sdk.dir=...)
+#   ~/.gradle/gradle.properties: org.gradle.java.home=/usr/lib/jvm/java-17-openjdk-amd64
+cd android && ./gradlew assembleRelease        # app/build/outputs/apk/release/app-release.apk
+adb install -r app/build/outputs/apk/release/app-release.apk
+```
+
+The release build is signed with the debug key so it installs without a
+keystore of its own. On first start the app asks for the exporter's address
+(`http://host:9877`); the App tab in the page reopens that dialog and the
+keep-screen-on switch.
+
 ## Mechanics compendium and research
 
 `knowledge/` is a sourced compendium of how the game works (mechanics, where

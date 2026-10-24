@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.NMS" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="colorPrimary">@color/brand</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+</resources>

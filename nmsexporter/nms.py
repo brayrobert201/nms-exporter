@@ -266,6 +266,29 @@ class Collector:
         except Exception as e:
             snap.setdefault("errors", {})["history"] = str(e)
 
+    def craft_tree(self, targets: list) -> dict:
+        """Every level of making [(item id or name, qty), ...] together from the current stock, and the
+        bottom-up build order (/api/craft): the phone page's build breakdown. With the crafting search
+        done, each target also carries the most it alone makes from stock now (`max`)."""
+        snap = self.snapshot
+        if "items" not in snap:
+            return {"error": (snap.get("errors") or {}).get("save", "no save loaded")}
+        names = {(v.get("name") or "").lower(): k for k, v in self.tables.get("items", {}).items() if k in self.crafting.routes}
+        resolved = []
+        for iid, q in targets:
+            iid = iid if iid in self.crafting.routes else names.get(iid.strip().lower(), iid)
+            if iid not in self.crafting.routes:
+                return {"error": f"nothing makes {iid}"}
+            resolved.append((iid, max(1, min(int(q), 10_000))))
+        if not resolved:
+            return {"error": "no item given"}
+        stock = {k: rec["total"] for k, rec in snap["items"].items()}
+        out = self.crafting.tree(resolved, stock, snap["known"]["products"], snap["known"]["recipes"])
+        for t in out["targets"]:
+            t["max"] = (self.crafting_result.get(t["id"]) or {}).get("makeable")
+        out["save"] = {"file": snap.get("save", {}).get("file"), "timestamp": snap.get("save", {}).get("timestamp")}
+        return out
+
     def diff(self, against: int = 1) -> dict:
         """What changed between the latest save and the one `against` saves
         earlier (1 = the previous save). Items sorted by absolute change."""
@@ -324,7 +347,20 @@ class Collector:
         by_ing = sorted(groups.values(), key=lambda g: (-len(g["items"]), g["ingredient"]))
         for g in by_ing:
             g["items"].sort(key=lambda x: (x["short"], x["item"]))
-        return {"computed_at": time.time(), "blocked": blocked[:150], "by_ingredient": by_ing[:24]}
+        # What can be made right now, with the route the search chose and that route's ingredients
+        # per operation against stock: the phone page's "Make now" list (nms_craftable in /metrics).
+        can = []
+        for iid, r in res.items():
+            if not r["makeable"] or not r["known"]:
+                continue
+            route = next((x for x in r["routes"] if x["route"] == r["best_route"] and x["recipe"] == r["best_recipe"]), None)
+            if route is None:
+                continue
+            can.append({"id": iid, "item": r["item"], "n": r["makeable"], "route": route["route"], "recipe": route["recipe"],
+                        "yield": route["yield"],
+                        "needs": [{"id": ing, "item": nm(ing), "amount": amt, "have": stock.get(ing, 0)} for ing, amt in route["needs"]]})
+        can.sort(key=lambda c: (-c["n"], c["item"]))
+        return {"computed_at": time.time(), "blocked": blocked[:150], "by_ingredient": by_ing[:24], "can_make": can[:400]}
 
     # -- snapshot (static part, computed once per save) ----------------------
     def _build(self, save: dict, path: str, mtime: float) -> dict:
@@ -346,7 +382,7 @@ class Collector:
         snap = {"errors": {}, "save": {}, "player": {}, "stats": {}, "collections": {},
                 "items": {}, "locations": [], "refiners": [], "farms": {}, "plants": {},
                 "fleet": {}, "universe": {}, "missions": {}, "tech": [], "tidy": {}, "blueprints": {},
-                "crafting": {"computed_at": None, "blocked": [], "by_ingredient": []}}
+                "crafting": {"computed_at": None, "blocked": [], "by_ingredient": [], "can_make": []}}
         s = snap["save"]
         s.update(path=path, file=os.path.basename(path), mtime=mtime, timestamp=ps.get("TimeStamp", 0),
                  summary=ps.get("SaveSummary", ""), version=save.get("Version"), platform=save.get("Platform"),

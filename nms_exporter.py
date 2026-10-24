@@ -35,6 +35,9 @@ PORT = int(os.environ.get("NMS_EXPORTER_PORT", "9877"))
 
 ICON_DIR = os.environ.get("NMS_ICON_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "icons"))
 GLYPH_DIR = os.environ.get("NMS_GLYPH_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "glyphs"))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_FONT_TYPES = {"woff2": "font/woff2", "ttf": "font/ttf", "txt": "text/plain"}
+FONT_DIRS = ((os.path.join(_HERE, "nmsexporter", "web", "fonts"), _FONT_TYPES), (os.path.join(_HERE, "conky", "fonts"), _FONT_TYPES))
 collector = Collector()
 live = Live()
 ingest = db.Ingest(LIVE_DIR)
@@ -103,7 +106,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path in DB_PATHS and not db.configured():
                 return self._send(json.dumps({"error": db_error(), "db": False}).encode(), "application/json", 503)
-            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases", "/api/map", "/api/live", "/api/elevation", "/api/finds", "/api/systems", "/api/sectors"):
+            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases", "/api/craft", "/api/map", "/api/live", "/api/elevation", "/api/finds", "/api/systems", "/api/sectors"):
                 collector.refresh()
             if path == "/metrics":
                 up = 0 if db_error() else 1
@@ -118,6 +121,19 @@ class Handler(BaseHTTPRequestHandler):
                 except ValueError:
                     against = 1
                 return self._send(json.dumps(collector.diff(against)).encode(), "application/json")
+            if path == "/api/craft":
+                # every level of building, and the build order: ?id=<id or name>&n=<units>, or several
+                # together sharing the stock: ?items=ULTRAPROD1:8,ULTRAPROD2:8
+                targets = []
+                for part in unquote_plus(params.get("items", "")).split(","):
+                    iid, _, q = part.rpartition(":") if ":" in part else (part, "", "1")
+                    if iid.strip():
+                        targets.append((iid.strip(), int(q) if q.strip().isdigit() else 1))
+                if not targets and params.get("id"):
+                    n = params.get("n", "1")
+                    targets = [(unquote_plus(params["id"]), int(n) if n.isdigit() else 1)]
+                out = collector.craft_tree(targets)
+                return self._send(json.dumps(out).encode(), "application/json", 404 if "error" in out else 200)
             if path == "/raw/bases":
                 return self._send(json.dumps(collector.raw_bases).encode(), "application/json")
             if path == "/api/map":
@@ -187,6 +203,28 @@ class Handler(BaseHTTPRequestHandler):
                                   "application/json")
             if path == "/map":
                 return self._send(map_html(), "text/html; charset=utf-8")
+            if path == "/mobile":
+                # the phone page (android/ wraps it as an app): map, farms, inventory, build
+                return self._send(page_html("mobile.html"), "text/html; charset=utf-8")
+            if path.startswith("/fonts/"):
+                # Geist (nmsexporter/web/fonts, OFL) and the portal glyph font (conky/fonts) for the phone page
+                n = path[len("/fonts/"):]
+                if n and all(c.isalnum() or c in "._-" for c in n) and ".." not in n:
+                    for d, ctype in FONT_DIRS:
+                        try:
+                            with open(os.path.join(d, n), "rb") as f:
+                                body = f.read()
+                        except OSError:
+                            continue
+                        self.send_response(200)
+                        self.send_header("Content-Type", ctype.get(n.rsplit(".", 1)[-1].lower(), "application/octet-stream"))
+                        self.send_header("Content-Length", str(len(body)))
+                        self.send_header("Cache-Control", "public, max-age=86400")
+                        self.end_headers()
+                        if self.command != "HEAD":
+                            self.wfile.write(body)
+                        return
+                return self._send(b"no such font", "text/plain", 404)
             if path == "/healthz":
                 return self._send(b"ok", "text/plain")
             if path == "/" and "text/html" in (self.headers.get("Accept") or ""):
@@ -197,7 +235,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 return
             if path == "/":
-                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /map /api/map /api/live /api/elevation /api/finds /api/sectors /systems /api/systems /healthz\n", "text/plain")
+                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /api/craft?id=&n=|items= /map /mobile /api/map /api/live /api/elevation /api/finds /api/sectors /systems /api/systems /healthz\n", "text/plain")
             self._send(b"not found", "text/plain", 404)
         except BrokenPipeError:
             pass

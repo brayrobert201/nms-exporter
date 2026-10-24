@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="en" data-posture="none">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#0A0A10">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:,">
+<title>NMS</title>
+<!--
+  The phone page: Map, Farms, Inventory and Build, one tab at a time, from /api/map, /json and
+  /api/live. The Android app (android/) is this page in a WebView with the screen kept on; in a
+  phone browser it is the same page, so the two never drift apart. Built from the Claude Design
+  prototype "NMS Mobile" (tokens: Refined Midnight). The save is an anchor, not a feed: every fill
+  and timer ticks forward from the save's age, and the save age is always on screen.
+-->
+<style>
+@font-face { font-family: 'Geist'; src: url('/fonts/Geist.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: 'Geist Mono'; src: url('/fonts/GeistMono.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: 'NMS Glyphs'; src: url('/fonts/NMS-Glyphs-Mono.ttf') format('truetype'); font-display: swap; }
+:root {
+  --bg: #0A0A10; --bg-elev: #0F0F16; --surface: #14141D; --surface-2: #1A1A25; --surface-3: #22222F;
+  --glass: rgba(255,255,255,0.035); --glass-strong: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.08); --glass-border-strong: rgba(255,255,255,0.14); --line: rgba(255,255,255,0.06);
+  --text: #F2F2F5; --text-dim: #C9C9D2; --muted: #8B8B9E; --dim: #55556A; --disabled: #3A3A4A;
+  --brand: #7B6CFF; --brand-hover: #8F82FF; --brand-glow: rgba(123,108,255,0.28); --brand-tint: rgba(123,108,255,0.12);
+  --svc-movement: #5B8CFF; --svc-strength: #FF5F6D; --svc-squash: #FFC93C;
+  --success: #1FD9A3; --success-tint: rgba(31,217,163,0.12); --warn: #FFA94D; --warn-tint: rgba(255,169,77,0.14);
+  --danger: #FF5C5C; --danger-tint: rgba(255,92,92,0.12); --info: #5B8CFF; --info-tint: rgba(91,140,255,0.14);
+  --tier-5: #FFC070;
+  --r-pill: 999px; --shadow-3: 0 12px 40px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.4);
+  --font-sans: 'Geist', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --fold-gap: 16px;
+  /* a browser pads for the system bars here; the Android app already pads its WebView, so it zeroes these */
+  --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: dark;
+}
+html.app { --safe-top: 0px; --safe-bottom: 0px; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-sans); -webkit-font-smoothing: antialiased;
+  line-height: 1.45; letter-spacing: -0.003em; overscroll-behavior: none; }
+body { display: flex; flex-direction: column; height: 100dvh; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+input { font: inherit; color: inherit; }
+input::placeholder { color: var(--dim); }
+.nms-scroll { scrollbar-width: none; } .nms-scroll::-webkit-scrollbar { display: none; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+[hidden] { display: none !important; }
+
+/* ---- shell: header, content, nav ---- */
+.tab { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#page { overflow-y: auto; padding-bottom: 20px; }
+#page > * { flex: none; }     /* a flex column would squeeze tall blocks; every block keeps its height */
+.hdr { flex: none; padding: calc(8px + var(--safe-top)) 20px 12px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+.hdr .row { display: flex; justify-content: space-between; align-items: center; gap: 6px 8px; min-height: 22px; flex-wrap: wrap; }
+.hdr .row > .eyebrow, .hdr .row > .back { flex: 1 1 auto; min-width: 0; }
+.hdr .row.base { align-items: baseline; gap: 10px; }
+.hdr h1 { font-size: 22px; font-weight: 600; letter-spacing: -.02em; line-height: 1.2; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hdr h1 button { font: inherit; letter-spacing: inherit; text-align: left; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hdr h1 button::after { content: " ▾"; color: var(--dim); font-size: 14px; }
+.hdr .sub { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.eyebrow { font: 600 10px var(--font-mono); color: var(--dim); letter-spacing: .12em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.back { font-size: 12px; font-weight: 600; color: var(--brand); display: flex; align-items: center; gap: 4px; padding: 4px 0; white-space: nowrap; }
+.pills { display: flex; gap: 6px; flex: none; margin-left: auto; max-width: 100%; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: var(--r-pill); font: 600 10px var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  background: var(--glass-strong); color: var(--text-dim); }
+.pill.ok { background: var(--success-tint); color: var(--success); }
+.pill.warn { background: var(--warn-tint); color: var(--warn); }
+.pill.bad { background: var(--danger-tint); color: var(--danger); }
+.pill.off { color: var(--muted); }
+.hdr .row.glyphrow { flex-wrap: nowrap; justify-content: flex-start; }
+.glyphrow { display: flex; align-items: center; gap: 10px; }
+.glyphs { font-family: 'NMS Glyphs', var(--font-mono); font-size: 19px; letter-spacing: 1px; line-height: 1; }
+.glyphcode { font: 500 10.5px var(--font-mono); color: var(--muted); }
+
+nav { flex: none; display: flex; justify-content: space-around; padding: 10px 0 calc(14px + var(--safe-bottom)); border-top: 1px solid var(--line);
+  background: rgba(10,10,16,.95); backdrop-filter: blur(12px); }
+nav button { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; min-height: 44px; font-size: 9.5px; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
+nav button.on { color: var(--brand); }
+nav button span { display: flex; align-items: center; gap: 4px; }
+nav .badge { min-width: 14px; height: 14px; padding: 0 4px; border-radius: 7px; background: var(--warn); color: #1A0E00; font: 700 9px/14px var(--font-mono); }
+nav .badge.bad { background: var(--danger); color: #fff; }
+nav svg { width: 22px; height: 22px; }
+
+/* ---- map ---- */
+.mapwrap { flex: 1; position: relative; min-height: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 42%, #14141D 0%, #0A0A10 72%); touch-action: none; }
+#svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+#svg text { font-family: var(--font-sans); pointer-events: none; paint-order: stroke; stroke-linejoin: round; }
+.north { position: absolute; left: 14px; bottom: 60px; display: flex; flex-direction: column; align-items: center; color: var(--text-dim); font: 500 11px var(--font-mono); pointer-events: none; opacity: .8; }
+.glass { background: rgba(20,20,29,.82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--glass-border); }
+.ctl { position: absolute; right: 12px; top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.ctl button { width: 40px; height: 40px; border-radius: 12px; font-size: 20px; color: var(--text); display: flex; align-items: center; justify-content: center; }
+.ctl button.fit { font: 600 10px var(--font-mono); color: var(--text-dim); }
+.ctl button.on { color: var(--brand); border-color: var(--brand); }
+.ctl button:disabled { color: var(--dim); }
+.issue { position: absolute; left: 12px; top: 12px; max-width: calc(100% - 76px); display: flex; align-items: center; gap: 8px; padding: 7px 12px 7px 8px; border-radius: var(--r-pill);
+  border: 1px solid rgba(255,92,92,.35); font-size: 12px; color: var(--text-dim); text-align: left; }
+.issue span.t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tag { padding: 2px 8px; border-radius: var(--r-pill); font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; flex: none; }
+.tag.bad { background: var(--danger-tint); color: var(--danger); }
+.tag.warn { background: var(--warn-tint); color: var(--warn); }
+.tag.ok { background: var(--success-tint); color: var(--success); }
+.tag.off { background: var(--glass-strong); color: var(--muted); }
+.away { position: absolute; left: 12px; right: 64px; top: 12px; padding: 8px 12px; border-radius: 14px; font-size: 12px; color: var(--text-dim); display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+.away.down { top: 56px; }
+.away b { color: var(--text); font-weight: 600; }
+.away button { color: var(--brand); font-weight: 600; font-size: 12px; padding: 4px 6px; }
+.goto { position: absolute; left: 12px; right: 64px; bottom: 60px; padding: 8px 10px; border-radius: 14px; display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; color: var(--text); font-size: 13px; }
+.goto b { font-size: 16px; font-weight: 600; font-family: var(--font-mono); }
+.goto small { display: block; color: var(--muted); font-size: 11px; }
+.goto svg { width: 28px; height: 28px; color: var(--text); }
+.goto button { width: 30px; height: 30px; border-radius: 50%; background: var(--glass-strong); color: var(--muted); font-size: 15px; }
+.legend { position: absolute; left: 0; right: 0; bottom: 12px; display: flex; gap: 6px; overflow-x: auto; padding: 0 12px; }
+.legend button { flex: none; display: flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: var(--r-pill); font-size: 11px; font-weight: 600; color: var(--text-dim); }
+.legend button.off { color: var(--dim); text-decoration: line-through; }
+.legend button.off i { opacity: .3; }
+.legend button i { width: 8px; height: 8px; border-radius: 50%; display: block; }
+.legend button i.line { height: 2px; border-radius: 1px; }
+.legend button.live { color: var(--text); border-color: var(--glass-border-strong); }
+.selsheet { position: absolute; left: 8px; right: 8px; bottom: 8px; background: var(--surface); border: 1px solid var(--glass-border); border-radius: 20px; padding: 10px 16px 16px;
+  box-shadow: var(--shadow-3); display: flex; flex-direction: column; gap: 10px; max-height: 60%; overflow-y: auto; }
+.handle { width: 36px; height: 4px; border-radius: 2px; background: var(--glass-border-strong); align-self: center; flex: none; }
+.selhead { display: flex; align-items: flex-start; gap: 10px; }
+.selhead i { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; flex: none; }
+.selhead .t { font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
+.selhead .k { font-size: 11px; color: var(--muted); }
+.xbtn { width: 32px; height: 32px; border-radius: 50%; background: var(--glass-strong); color: var(--muted); font-size: 16px; flex: none; display: flex; align-items: center; justify-content: center; }
+.lines { display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; color: var(--text-dim); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.actions { display: flex; gap: 8px; }
+.actions button { flex: 1; padding: 11px 14px; border-radius: var(--r-pill); font-size: 13px; font-weight: 600; border: 1px solid var(--glass-border); color: var(--text-dim); }
+.actions button.pri { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+/* ---- lists and cards (farms, inventory, build) ---- */
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 14px 16px 6px; }
+.tiles.two { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 14px 6px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+.tile .l { font-size: 9.5px; color: var(--dim); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
+.tile .v { font: 600 20px var(--font-mono); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .v.bad { color: var(--danger); }
+.tile .v.sm { font-size: 18px; }
+.tile .n { font-size: 11px; color: var(--muted); }
+.cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 8px 16px 12px; }
+.cards.tight { padding: 0 14px; }
+.card { text-align: left; display: flex; flex-direction: column; gap: 9px; padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
+.card .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; width: 100%; }
+.card .name { font-size: 15px; font-weight: 600; letter-spacing: -.01em; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.card .sub { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+.state { flex: none; padding: 3px 9px; border-radius: var(--r-pill); font-size: 10.5px; font-weight: 600; white-space: nowrap; color: var(--text-dim); background: var(--glass-strong); }
+.state.full { color: var(--warn); background: var(--warn-tint); }
+.bar { height: 6px; width: 100%; background: var(--glass-strong); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--brand); border-radius: 3px; }
+.bar.thin { height: 4px; } .bar.thin i { border-radius: 2px; }
+.bar i.bad { background: var(--danger); }
+.card .foot { display: flex; justify-content: space-between; width: 100%; font-size: 11px; color: var(--muted); gap: 8px; }
+.card .foot .mono { color: var(--text-dim); }
+.hero { margin: 14px 14px 10px; padding: 18px; border-radius: 16px; background: linear-gradient(145deg, rgba(123,108,255,.16), rgba(91,140,255,.06)); border: 1px solid rgba(123,108,255,.28); display: flex; flex-direction: column; gap: 10px; }
+.hero .row { display: flex; justify-content: space-between; align-items: center; }
+.hero .big { display: flex; align-items: baseline; gap: 10px; }
+.hero .pct { font: 600 40px/1 var(--font-mono); letter-spacing: -.03em; }
+.hero .of { font: 500 13px var(--font-mono); color: var(--text-dim); }
+.hero .bar { height: 10px; background: rgba(255,255,255,.08); border-radius: 5px; } .hero .bar i { box-shadow: 0 0 12px var(--brand-glow); border-radius: 5px; }
+.sect { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; padding: 16px 18px 8px; display: flex; justify-content: space-between; gap: 8px; }
+.sect span:last-child { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.list { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 0 14px; }
+.list .r { width: 100%; text-align: left; display: grid; grid-template-columns: 10px minmax(0, 1fr) 96px; gap: 10px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.list .r:last-child { border-bottom: 0; }
+.list .r i { width: 8px; height: 8px; border-radius: 50%; display: block; }
+.list .r .n { font-size: 13px; font-weight: 600; }
+.list .r .w { font-size: 11px; color: var(--muted); }
+.list .r .p { font-size: 10px; font-weight: 700; color: var(--danger); text-transform: uppercase; letter-spacing: .04em; margin-top: 2px; }
+.list .r .f { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; font: 500 11.5px var(--font-mono); color: var(--text-dim); white-space: nowrap; text-align: right; }
+.list .r .f .q { font: 400 10.5px var(--font-sans); color: var(--dim); white-space: normal; line-height: 1.2; }
+.pcard { margin: 10px 14px 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.pcard .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pcard .why { font-size: 12px; color: var(--muted); text-wrap: pretty; }
+.pcard .kv { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-top: 1px solid var(--line); font-size: 12px; }
+.pcard .kv span:first-child { color: var(--muted); } .pcard .kv span:last-child { font-family: var(--font-mono); text-align: right; }
+.cta { margin: 12px 14px 20px; }
+.cta button { width: 100%; padding: 13px; border-radius: var(--r-pill); background: var(--brand); color: #fff; font-size: 14px; font-weight: 700; }
+.note { font-size: 12px; color: var(--muted); text-align: center; padding: 8px 14px 20px; text-wrap: pretty; }
+.search { margin-top: 8px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 14px; height: 44px; border-radius: 12px; background: var(--surface); border: 1px solid var(--glass-border); }
+.search input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; font-size: 14px; }
+.chips { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.chips.pad { padding: 0 14px 8px; margin: 0; }
+.chips button { padding: 5px 11px; border-radius: var(--r-pill); font-size: 11px; font-weight: 600; display: flex; gap: 5px; color: var(--muted); border: 1px solid var(--glass-border); }
+.chips button.on { color: var(--text); background: var(--glass-strong); border-color: var(--glass-border-strong); }
+.chips button span { font-family: var(--font-mono); opacity: .6; }
+.rowcard { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; min-width: 0; }
+.rowcard > button { width: 100%; text-align: left; display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 11px 12px; min-height: 52px; }
+.rowcard .chev { color: var(--dim); font-size: 10px; }
+.rowcard .n { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rowcard .s { font-size: 11px; color: var(--muted); }
+.rowcard .tot { font: 600 15px var(--font-mono); font-variant-numeric: tabular-nums; }
+.rowcard .body { padding: 2px 12px 12px 34px; display: flex; flex-direction: column; gap: 8px; }
+.place { display: flex; flex-direction: column; gap: 4px; }
+.place .l { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-dim); }
+.place .l span:last-child { font-family: var(--font-mono); color: var(--text); }
+.place .l small { color: var(--dim); }
+.ing { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-dim); }
+.ing span:last-child { font-family: var(--font-mono); }
+.ing small { color: var(--dim); }
+.bp { padding: 14px; border-radius: 14px; background: linear-gradient(145deg, rgba(123,108,255,.14), rgba(91,140,255,.05)); border: 1px solid rgba(123,108,255,.28); display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.bp .h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.bp .h .t { font-size: 15px; font-weight: 600; } .bp .h .t small { font-size: 11px; color: var(--muted); font-weight: 400; }
+.bp .h .v { font-size: 11px; font-weight: 600; white-space: nowrap; }
+.bp .g { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+.bp .g .nm { font-size: 13px; font-weight: 600; } .bp .g .nm span { font-family: var(--font-mono); font-weight: 500; color: var(--text-dim); }
+.bp .g .wh { font-size: 11px; color: var(--muted); grid-column: 1 / -1; }
+.plan .nums { display: flex; gap: 24px; }
+.plan .nums .l { font-size: 9.5px; color: var(--dim); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
+.plan .nums .v { font: 600 24px/1.1 var(--font-mono); } .plan .nums .v.ok { color: var(--success); }
+.plan .blk { font-size: 12px; color: var(--warn); }
+.ok { color: var(--success); } .warn { color: var(--warn); } .bad { color: var(--danger); }
+.almost { padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+.almost .h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.almost .h .t { font-size: 14px; font-weight: 600; } .almost .h .t small { font-size: 11px; font-weight: 400; color: var(--muted); }
+.almost .h .c { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.almost .l { font-size: 12px; color: var(--text-dim); text-wrap: pretty; }
+.empty { padding: 28px 8px; text-align: center; font-size: 13px; color: var(--muted); }
+button.bp { width: 100%; }
+.lvbtn { align-self: flex-start; color: var(--brand); font-size: 12px; font-weight: 600; padding: 4px 0; }
+.lnk { color: var(--text); text-decoration: underline; text-decoration-color: var(--glass-border-strong); text-underline-offset: 3px; font-size: inherit; }
+.qty { display: flex; align-items: center; gap: 6px; padding: 12px 16px 0; flex-wrap: wrap; }
+.qty .lbl { flex: 1 1 100%; font-size: 12px; color: var(--muted); }
+.qty .step { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--glass-border); font-size: 18px; }
+.qty .n { font: 600 20px var(--font-mono); min-width: 44px; text-align: center; }
+.qty .chips { margin: 0 0 0 auto; flex-wrap: nowrap; }
+.qty .chips button { padding: 5px 10px; }
+.tree { margin: 0 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.tn { width: 100%; text-align: left; display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); min-height: 48px; }
+.tn:last-child { border-bottom: 0; }
+.tn .chev { color: var(--dim); font-size: 10px; text-align: center; }
+.tn .nm { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tn .nm small { font: 500 12px var(--font-mono); color: var(--text-dim); margin-left: 4px; }
+.tn .how { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tn .how b { color: var(--brand); font-weight: 600; }
+.tn .lv { font: 600 9px var(--font-mono); color: var(--dim); letter-spacing: .08em; margin-right: 6px; }
+.tn.d0 .nm { font-size: 15px; }
+.tn.step { grid-template-columns: 64px minmax(0, 1fr); padding: 10px 12px 10px 0; cursor: default; }
+.tn.step .q { font: 600 15px var(--font-mono); text-align: right; color: var(--text); }
+.tn.step .how { white-space: normal; }
+.tn.step.tgt { background: var(--brand-tint); } .tn.step.tgt .nm { font-size: 15px; } .tn.step.tgt .q { color: var(--brand); }
+.amt { text-align: right; font: 600 13px var(--font-mono); white-space: nowrap; }
+.amt small { display: block; font: 500 10px var(--font-sans); letter-spacing: .04em; text-transform: uppercase; }
+.amt.make small { color: var(--brand); } .amt.stock small { color: var(--muted); } .amt.short { color: var(--danger); } .amt.short small { color: var(--danger); }
+
+/* ---- sheets, banners ---- */
+.scrim { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 20; display: flex; align-items: flex-end; }
+.sheet { width: 100%; max-height: 72%; background: var(--surface); border: 1px solid var(--glass-border); border-radius: 20px 20px 0 0; padding: 10px 0 calc(12px + var(--safe-bottom)); display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow-3); }
+.sheet .th { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+.sheet .th .t { font-size: 16px; font-weight: 600; } .sheet .th .t small { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 6px; }
+.sheet .rows { overflow-y: auto; padding: 0 8px; }
+.srow { width: 100%; text-align: left; display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 8px; border-radius: 12px; }
+.srow.on { background: var(--glass-strong); }
+.srow .n { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.srow .s { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.srow .d { font: 500 12px var(--font-mono); color: var(--text-dim); text-align: right; } .srow .d small { display: block; color: var(--dim); font-size: 10px; }
+.srow i { width: 10px; height: 10px; border-radius: 50%; display: block; margin: 0 auto; }
+.srow svg { width: 20px; height: 20px; color: var(--text); }
+.srow .glyphs { font-size: 14px; color: var(--text-dim); }
+#err { position: fixed; left: 50%; top: calc(8px + var(--safe-top)); transform: translateX(-50%); z-index: 30; padding: 7px 12px; border-radius: var(--r-pill); font-size: 12px; color: var(--danger); border: 1px solid rgba(255,92,92,.35); max-width: calc(100% - 24px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#toast { position: fixed; left: 50%; bottom: calc(90px + var(--safe-bottom)); transform: translateX(-50%); z-index: 30; padding: 8px 14px; border-radius: var(--r-pill); font-size: 12px; color: var(--text); }
+@keyframes pulse { 0% { transform: scale(0.6); opacity: 0.45; } 100% { transform: scale(1.9); opacity: 0; } }
+.pulse { transform-box: fill-box; transform-origin: center; animation: pulse 2s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .pulse { animation: none; opacity: .15; } }
+
+/* ---- postures: cover screen is the default; unfolded gets two columns with the gap on the fold ---- */
+@media (min-width: 600px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+html[data-posture="flat"][data-fold="vertical"] .cards, html[data-posture="book"] .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--fold-gap); }
+html[data-posture="flat"][data-fold="vertical"] .tiles, html[data-posture="book"] .tiles { column-gap: var(--fold-gap); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (horizontal-viewport-segments: 2) {
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: calc(env(viewport-segment-left 1 0) - env(viewport-segment-right 0 0) + 32px); }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: calc(env(viewport-segment-left 1 0) - env(viewport-segment-right 0 0) + 32px); }
+}
+@media (max-width: 360px) { .tile .v { font-size: 17px; } .hdr { padding-left: 16px; padding-right: 16px; } }
+</style>
+</head>
+<body>
+<section id="map" class="tab" hidden>
+  <header class="hdr">
+    <div class="row"><span id="mapCrumb" class="eyebrow"></span><span class="pills"><button id="livePill" class="pill off" data-act="showme">○ no live data</button><span class="pill ok saveage">● save</span></span></div>
+    <div class="row base"><h1 id="mapTitle"></h1><span id="mapSub" class="sub"></span></div>
+    <div class="row glyphrow" id="mapGlyphs"></div>
+  </header>
+  <div class="mapwrap" id="mapwrap">
+    <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="north" id="north"><svg width="12" height="12" viewBox="-6 -7 12 14"><path d="M0 -6 L5 6 L0 3 L-5 6 Z" fill="currentColor"/></svg>N</div>
+    <button id="issue" class="issue glass" data-act="issue" hidden></button>
+    <div id="away" class="away glass" hidden></div>
+    <div class="ctl"><button class="glass" data-act="zoom" data-k="0.667" aria-label="Zoom in">+</button><button class="glass" data-act="zoom" data-k="1.5" aria-label="Zoom out">−</button><button class="glass" id="findme" data-act="findme" aria-label="Centre on you">◎</button><button class="glass fit" data-act="fit" aria-label="Fit">FIT</button></div>
+    <div id="goto" class="goto glass" hidden></div>
+    <div id="legend" class="legend nms-scroll"></div>
+    <div id="selsheet" class="selsheet nms-scroll" hidden></div>
+  </div>
+</section>
+<section id="page" class="tab nms-scroll" hidden></section>
+<nav id="nav"></nav>
+<div id="err" class="glass" hidden></div>
+<div id="toast" class="glass" hidden></div>
+<div id="sheet" hidden></div>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fnum = (v) => Math.round(v || 0).toLocaleString('en-US');
+const fdur = (sec) => { if (sec == null || !isFinite(sec)) return '—'; const s = Math.max(0, Math.floor(sec)); const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
+  return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : m ? `${m}m` : `${s}s`; };
+const fbig = (v) => { v = v || 0; for (const [d, u] of [[1e9, 'B'], [1e6, 'M'], [1e3, 'k']]) if (Math.abs(v) >= d * 10) return (v / d).toLocaleString('en-US', { maximumFractionDigits: 1 }) + u; return fnum(v); };
+const fdist = (m) => m >= 10000 ? (m / 1000).toFixed(0) + ' km' : m >= 1000 ? (m / 1000).toFixed(1) + ' km' : Math.round(m) + ' m';
+const bearing = (e, n) => ((Math.atan2(e, n) * 180 / Math.PI) + 360) % 360;
+const compass = (deg) => ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(deg / 45) % 8];
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+const clock = (t) => { const d = new Date(t * 1000); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) if (v !== undefined && v !== null) e.setAttribute(k, v); if (parent) parent.appendChild(e); return e; };
+const SHELL = window.NMSShell || null;          // the Android app's bridge; absent in a browser
+if (SHELL) document.documentElement.classList.add('app');
+
+// Kinds: the design's palette (series colours for categories, status hues only for problems), one label per kind as on /map.
+const COL = { base: 'var(--svc-movement)', exocraft: 'var(--brand)', settlement: 'var(--tier-5)', deposit: 'var(--muted)',
+  'extractor-mineral': 'var(--svc-movement)', 'extractor-gas': 'var(--success)', depot: 'var(--text-dim)', power: 'var(--svc-squash)',
+  refiner: 'var(--svc-strength)', teleporter: 'var(--brand)', computer: 'var(--text)', structure: 'var(--dim)', plants: 'var(--success)',
+  pipe: 'var(--muted)', wire: 'var(--svc-squash)', link: 'var(--brand)', problem: 'var(--danger)' };
+const LABEL = { base: 'Base', exocraft: 'Exocraft', settlement: 'Settlement', deposit: 'Drained deposit', 'extractor-mineral': 'Mineral extractor',
+  'extractor-gas': 'Gas extractor', depot: 'Depot', power: 'Power', refiner: 'Refiner', teleporter: 'Teleporter', computer: 'Base computer',
+  plants: 'Plants', structure: 'Buildings', pipe: 'Pipe', wire: 'Wire', link: 'Wire teleport' };
+const RADIUS = { base: 8, exocraft: 5, settlement: 6, deposit: 4, 'extractor-mineral': 5, 'extractor-gas': 5, computer: 5 };
+const POWER = { good: '✓', warning: '⚠', critical: '✕', none: '–' };
+const LOC = { FreighterInternals: 'Freighter', Freighter: 'In your corvette', IndoorInBase: 'In a base', PlanetOnFoot: 'On foot', PlanetInVehicle: 'In exocraft',
+  PlanetInShip: 'In ship', SpaceStation: 'Space station', Underwater: 'Underwater', Cave: 'In a cave', Default: 'In space' };
+const locName = (l) => LOC[l] || (l || '').replace(/([a-z])([A-Z])/g, '$1 $2');
+const ico = (d, extra = '') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" ${extra}>${d.map((p) => `<path d="${p}"/>`).join('')}</svg>`;
+const ICONS = {
+  map: ico(['M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5L9 4Z', 'M9 4v13.5', 'M15 6.5V20']),
+  farms: ico(['M4 20h16', 'M6 20V9l6-5 6 5v11', 'M10 20v-6h4v6']),
+  inv: ico(['M3.5 8 12 3.5 20.5 8v8L12 20.5 3.5 16V8Z', 'M3.5 8 12 12.5 20.5 8', 'M12 12.5v8']),
+  build: ico(['M14.7 6.3a4 4 0 0 0-5.2 5.2L4 17l3 3 5.5-5.5a4 4 0 0 0 5.2-5.2l-2.4 2.4-2.6-.4-.4-2.6 2.4-2.4Z']),
+  app: ico(['M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z', 'M12 2.5v3', 'M12 18.5v3', 'M2.5 12h3', 'M18.5 12h3', 'M5.3 5.3l2.1 2.1', 'M16.6 16.6l2.1 2.1', 'M5.3 18.7l2.1-2.1', 'M16.6 7.4l2.1-2.1']),
+};
+const turnWord = (t) => t == null ? '' : Math.abs(t) < 10 ? 'ahead' : Math.abs(t) > 170 ? 'behind' : `${Math.round(Math.abs(t))}° ${t < 0 ? 'left' : 'right'}`;
+const arrow = (t) => t == null ? '<span></span>' : `<svg viewBox="-10 -10 20 20" aria-label="${turnWord(t)}"><path transform="rotate(${t})" d="M 0 -9 L 7 7 L 0 3 L -7 7 Z" fill="currentColor"/></svg>`;
+const height = (h) => Math.abs(h || 0) < 2 ? '' : `${h > 0 ? '↑' : '↓'} ${Math.round(Math.abs(h))} m`;
+
+// ---- state ----
+const S = { tab: 'map', planet: null, level: 'planet', base: null, farm: null, sel: null, hidden: new Set(), query: '', type: 'All', exp: null, bkind: 'All', bexp: null, craft: null, cview: 'order', closed: new Set(),
+  target: null, follow: false, userChose: false, placed: false };
+let MAP = null, J = null, LIVE = null, mapAt = 0, jsonAt = 0, view = null, ERR = null;
+const elapsed = () => J ? J.save.age + (Date.now() - jsonAt) / 1000 : null;
+const planet = () => MAP && (MAP.planets.find((p) => p.address === S.planet) || null);
+const layout = () => { const pl = planet(); return pl && S.base ? pl.layouts[S.base] || null : null; };
+const layoutOf = (baseName) => { if (!MAP) return null; for (const pl of MAP.planets) if (pl.layouts[baseName]) return { planet: pl, lay: pl.layouts[baseName] }; return null; };
+const looseTotal = () => MAP ? MAP.planets.reduce((a, p) => a + Object.values(p.layouts).reduce((b, l) => b + (l.loose || 0), 0), 0) : 0;
+const onThisPlanet = () => LIVE && LIVE.on_planet && planet() && LIVE.address === planet().address;
+
+// ---- routing: the state lives in the hash so the system back button steps back through it ----
+function hash() {
+  if (S.tab === 'map') return S.planet ? (S.level === 'base' && S.base ? `#map/${S.planet}/${encodeURIComponent(S.base)}` : `#map/${S.planet}`) : '#map';
+  if (S.tab === 'farms') return S.farm ? `#farms/${encodeURIComponent(S.farm)}` : '#farms';
+  if (S.tab === 'build' && S.craft) return `#build/${S.craft.map(([i, n]) => `${encodeURIComponent(i)}:${n}`).join(',')}`;
+  return '#' + S.tab;
+}
+function readHash() {
+  const parts = (location.hash || '#map').slice(1).split('/');
+  const tab = parts[0] || 'map';
+  if (tab === 'map') { S.tab = 'map'; if (parts[1]) S.planet = parts[1]; S.base = parts[2] ? decodeURIComponent(parts[2]) : null; S.level = S.base ? 'base' : 'planet'; }
+  else if (tab === 'farms') { S.tab = 'farms'; S.farm = parts[1] ? decodeURIComponent(parts[1]) : null; }
+  else if (tab === 'build') { S.tab = 'build'; S.craft = parts[1] ? parts[1].split(',').map((x) => { const k = x.lastIndexOf(':'); return k < 0 ? [decodeURIComponent(x), 1] : [decodeURIComponent(x.slice(0, k)), Math.max(1, parseInt(x.slice(k + 1), 10) || 1)]; }) : null; }
+  else if (tab === 'inv') S.tab = tab;
+  else S.tab = 'map';
+}
+function go(changes, opts = {}) {
+  const before = hash(), wasMap = S.tab === 'map', wasLevel = S.level, wasBase = S.base, wasPlanet = S.planet;
+  Object.assign(S, changes);
+  if (S.tab !== 'map') S.sel = null;
+  if (S.tab === 'map' && (S.planet !== wasPlanet || S.level !== wasLevel || S.base !== wasBase || !wasMap)) { S.sel = null; if (S.planet !== wasPlanet || S.level !== wasLevel || S.base !== wasBase) view = null; }
+  if (changes.planet !== undefined || changes.base !== undefined) S.userChose = true;
+  const h = hash();
+  if (h !== before && opts.push !== false) history.pushState(null, '', h);
+  closeSheet();
+  render();
+  if (S.tab === 'map') pollLive(true);
+}
+window.addEventListener('popstate', () => { closeSheet(); readHash(); S.sel = null; view = null; render(); });
+
+// ---- data ----
+async function api(path) { const r = await fetch(path, { cache: 'no-store' }); if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`); return r.json(); }
+function setErr(e) { ERR = e; const E = $('err'); E.hidden = !e; if (e) E.textContent = `⚠ Exporter unreachable · ${e}`; }
+async function loadJson() {
+  try { J = await api('/json'); jsonAt = Date.now(); setErr(null); } catch (e) { setErr(String(e.message || e)); return; }
+  render();
+}
+async function loadMap() {
+  let m;
+  try { m = await api('/api/map'); } catch (e) { setErr(String(e.message || e)); return; }
+  MAP = m; mapAt = Date.now(); setErr(null);
+  if (!planet()) {
+    // first choice, as /map makes it: the URL, then the planet with a loose extractor, then the first
+    const q = new URLSearchParams(location.search), want = q.get('base'), wantPlanet = q.get('planet');
+    const named = (p, n) => n && (p.bases.includes(n) || p.planet_name === n || p.label === n || (p.label || '').startsWith(n + ' '));
+    let pi = MAP.planets.findIndex((p) => named(p, want) || named(p, wantPlanet));
+    if (pi >= 0) { S.userChose = true; if (want && MAP.planets[pi].bases.includes(want)) { S.base = want; S.level = 'base'; } }
+    if (pi < 0) pi = MAP.planets.findIndex((p) => p.points.some((x) => x.loose));
+    if (pi < 0) pi = 0;
+    if (MAP.planets[pi]) { S.planet = MAP.planets[pi].address; if (!S.base && MAP.planets[pi].bases.length === 1 && !wantPlanet) { S.base = MAP.planets[pi].bases[0]; S.level = 'base'; } }
+    history.replaceState(null, '', hash());
+  }
+  render();
+}
+
+// ---- render ----
+function render() {
+  const isMap = S.tab === 'map';
+  $('map').hidden = !isMap; $('page').hidden = isMap;
+  renderNav();
+  if (isMap) renderMap();
+  else if (S.tab === 'farms') renderFarms();
+  else if (S.tab === 'inv') renderInv();
+  else if (S.tab === 'build') (S.craft ? renderCraft() : renderBuild());
+  document.querySelectorAll('.saveage').forEach((e) => { e.textContent = J ? `● save ${fdur(elapsed())} ago` : '● no save yet'; e.className = `pill saveage ${!J ? 'off' : elapsed() < 1800 ? 'ok' : 'warn'}`; });
+}
+function renderNav() {
+  const full = J ? Object.values(J.farms || {}).filter((f) => f.full_in_seconds !== null && f.full_in_seconds !== undefined && f.full_in_seconds <= 0).length : 0;
+  const loose = looseTotal();
+  const items = [['map', 'Map', loose, 'bad'], ['farms', 'Farms', full, ''], ['inv', 'Inventory', 0, ''], ['build', 'Build', 0, '']];
+  if (SHELL) items.push(['app', 'App', 0, '']);
+  $('nav').innerHTML = items.map(([t, label, badge, cls]) => `<button class="${S.tab === t ? 'on' : ''}" data-act="tab" data-tab="${t}">${ICONS[t]}<span>${label}${badge ? `<span class="badge ${cls}">${badge}</span>` : ''}</span></button>`).join('');
+}
+const pillSave = () => `<span class="pill ok saveage">● save</span>`;
+const header = (eyebrow, title, sub, extra = '') => `<header class="hdr"><div class="row">${eyebrow}<span class="pills">${pillSave()}</span></div><h1>${title}</h1><div class="sub" style="white-space:normal">${sub}</div>${extra}</header>`;
+
+// ---- Map ----
+function renderMap() {
+  const pl = planet();
+  const lay = layout();
+  if (!pl) { $('mapTitle').textContent = MAP ? 'No planets in the save' : 'Loading map…'; $('mapSub').textContent = ''; $('mapCrumb').textContent = ''; $('mapGlyphs').innerHTML = ''; $('svg').innerHTML = ''; $('legend').innerHTML = ''; return; }
+  if (S.level === 'base' && !lay) { S.level = 'planet'; S.base = null; }
+  const name = pl.planet_name || pl.label;
+  if (S.level === 'base') {
+    $('mapCrumb').innerHTML = `<button class="back" data-act="planet">‹ ${esc(name)}</button>`;
+    $('mapTitle').innerHTML = esc(S.base);
+    const bp = pl.points.find((p) => p.kind === 'base' && p.name === S.base);
+    $('mapSub').textContent = `${bp ? plural(bp.objects, 'object') + ' · ' : ''}layout`;
+  } else {
+    $('mapCrumb').textContent = `${pl.system_name || 'Unknown system'} · radius ${Math.round(pl.radius / 1000)} km`;
+    $('mapTitle').innerHTML = `<button data-act="planets" title="Choose a planet">${esc(name)}</button>`;
+    $('mapSub').textContent = `${plural(pl.bases.length, 'base')}${pl.points.length > pl.bases.length ? ` · ${pl.points.length - pl.bases.length} more` : ''}${MAP.planets.length > 1 ? ` · ${MAP.planets.length} planets` : ''}`;
+  }
+  $('mapGlyphs').innerHTML = pl.portal ? `<span class="glyphs" title="Portal glyphs">${esc(pl.portal)}</span><span class="glyphcode">${esc(pl.portal)}</span>` : '';
+  tint(pl);
+  if (!view) fitAll();
+  drawMap();
+  drawIssue();
+  drawLegend();
+  drawSel();
+  drawLivePill(); drawAway(); drawGoto();
+}
+function tint(pl) {
+  const tc = pl.tile_colours;
+  let bg = '#14141D';
+  if (tc && tc.length) { const n = tc.length; let r = 0, g = 0, b = 0; for (const c of tc) { r += c[0]; g += c[1]; b += c[2]; } r /= n; g /= n; b /= n;
+    const m = Math.max(r, g, b, 0.001), s = 0.16 / m; bg = `rgb(${Math.round(20 + r * s * 255 * 0.55)}, ${Math.round(20 + g * s * 255 * 0.55)}, ${Math.round(29 + b * s * 255 * 0.55)})`; }
+  $('mapwrap').style.background = `radial-gradient(ellipse at 50% 42%, ${bg} 0%, #0A0A10 72%)`;
+}
+function wrapBox() { return $('mapwrap').getBoundingClientRect(); }
+function px() { return view.w / Math.max(wrapBox().width, 1); }
+function setView(v, redraw = true) { view = v; $('svg').setAttribute('viewBox', `${v.x} ${v.y} ${v.w} ${v.h}`); if (redraw) drawMap(); }
+function fitPoints(pts, pad = 0.12, minSize = 40) {
+  const box = wrapBox(), ar = box.height / Math.max(box.width, 1);
+  if (!pts.length) pts = [[0, 0]];
+  let x0 = Math.min(...pts.map((p) => p[0])), x1 = Math.max(...pts.map((p) => p[0])), y0 = Math.min(...pts.map((p) => -p[1])), y1 = Math.max(...pts.map((p) => -p[1]));
+  let w = Math.max(x1 - x0, minSize), h = Math.max(y1 - y0, minSize);
+  if (h / w > ar) w = h / ar; else h = w * ar;
+  w *= 1 + 2 * pad; h *= 1 + 2 * pad;
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  // leave room under the top controls and above the legend
+  setView({ x: cx - w / 2, y: cy - h / 2 + 0.04 * h, w, h });
+}
+function fitAll() { const pl = planet(); if (!pl) return; const lay = layout();
+  if (lay) fitPoints(lay.items.map((i) => [i.e, i.n]), 0.08); else fitPoints(pl.points.map((p) => [p.x, p.y]), 0.14, 400); }
+function zoomAt(k, cx, cy) {
+  const r = wrapBox(); const sx = ((cx ?? r.left + r.width / 2) - r.left) / r.width, sy = ((cy ?? r.top + r.height / 2) - r.top) / r.height;
+  const mx = view.x + sx * view.w, my = view.y + sy * view.h, w = view.w * k, h = view.h * k;
+  setView({ x: mx - sx * w, y: my - sy * h, w, h });
+}
+function label(g, x, y, text, colour, fs, k, bold, dx = 10, pri = 2) {
+  const t = el('text', { x: x + dx * k, y: y + 4 * k, 'font-size': fs * k, 'data-pri': pri, style: `fill:${colour};stroke:var(--bg);stroke-width:${3 * k}px;font-weight:${bold ? 600 : 400}` }, g);
+  t.textContent = text;
+  return t;
+}
+function dot(g, x, y, kind, id, problem, k, selected) {
+  const r = (RADIUS[kind] || 4) * k, c = COL[kind] || 'var(--text-dim)';
+  if (kind === 'base') {
+    el('circle', { cx: x, cy: y, r: r + 3 * k, style: `fill:var(--bg);stroke:${problem ? COL.problem : c};stroke-width:${2.5 * k}px` }, g);
+    el('circle', { cx: x, cy: y, r: 4 * k, style: `fill:${c}` }, g);
+  } else el('circle', { cx: x, cy: y, r: problem ? r + 2 * k : r, style: `fill:${c};stroke:${problem ? COL.problem : 'var(--bg)'};stroke-width:${(problem ? 3 : 1) * k}px` }, g);
+  if (selected) el('circle', { cx: x, cy: y, r: 14 * k, style: 'fill:none;stroke:var(--text);stroke-width:' + 2 * k + 'px' }, g);
+  el('circle', { cx: x, cy: y, r: Math.max((RADIUS[kind] || 4) + 8, 16) * k, fill: 'transparent', 'data-hit': id, style: 'cursor:pointer' }, g);
+}
+function niceLen(t) { const p = Math.pow(10, Math.floor(Math.log10(t))); for (const m of [1, 2, 5, 10]) if (m * p >= t) return m * p; return 10 * p; }
+function drawGrid(g, k) {
+  const step = niceLen(view.w / 6), x0 = Math.floor((view.x - view.w) / step) * step, x1 = view.x + 2 * view.w, y0 = Math.floor((view.y - view.h) / step) * step, y1 = view.y + 2 * view.h;
+  let d = '';
+  for (let x = x0; x <= x1; x += step) d += `M${x} ${y0}V${y1}`;
+  for (let y = y0; y <= y1; y += step) d += `M${x0} ${y}H${x1}`;
+  el('path', { d, style: `stroke:rgba(255,255,255,0.045);stroke-width:${k}px;fill:none` }, g);
+  // scale: one grid square
+  const sb = el('g', { style: 'pointer-events:none' }, g);
+  const bx = view.x + view.w - (24 * k) - step, by = view.y + view.h - 44 * k;
+  el('path', { d: `M${bx} ${by}h${step}`, style: `stroke:var(--text-dim);stroke-width:${1.5 * k}px` }, sb);
+  el('path', { d: `M${bx} ${by - 4 * k}v${8 * k}M${bx + step} ${by - 4 * k}v${8 * k}`, style: `stroke:var(--text-dim);stroke-width:${1.5 * k}px` }, sb);
+  label(sb, bx + step / 2, by - 10 * k, fdist(step), 'var(--text-dim)', 10.5, k, false, 0).setAttribute('text-anchor', 'middle');
+}
+function drawMap() {
+  const svg = $('svg'); svg.innerHTML = '';
+  const pl = planet(); if (!pl || !view) return;
+  const k = px(), W = el('g', { id: 'world' }, svg);
+  drawGrid(W, k);
+  const lay = layout();
+  if (lay) drawBase(W, k, lay); else drawPlanet(W, k, pl);
+  el('g', { id: 'liveG' }, W);
+  drawLive();
+  declutter();
+}
+function declutter() {
+  const ts = [...document.querySelectorAll('#svg text[data-pri]')];
+  ts.forEach((t) => { t.style.visibility = ''; });
+  ts.sort((a, b) => (+b.dataset.pri) - (+a.dataset.pri));
+  const kept = [];
+  for (const t of ts) { const r = t.getBoundingClientRect(); if (!r.width) continue;
+    if (kept.some((q) => r.left < q.right && r.right > q.left && r.top < q.bottom && r.bottom > q.top)) t.style.visibility = 'hidden'; else kept.push(r); }
+}
+function drawPlanet(g, k, pl) {
+  const zoomed = k < 6;         // one screen pixel under six metres: names of exocraft and deposits fit
+  pl.points.forEach((p, i) => {
+    if (S.hidden.has(p.kind) && !p.loose) return;
+    const x = p.x, y = -p.y, id = `p:${i}`;
+    dot(g, x, y, p.kind, id, p.loose > 0, k, S.sel === id);
+    if (p.kind === 'base') label(g, x + 4 * k, y, p.name + (p.loose ? `  ⚠ ${p.loose} loose` : ''), p.loose ? COL.problem : 'var(--text)', 13, k, true, 10, p.loose ? 5 : 4);
+    else if (zoomed && p.kind !== 'deposit') label(g, x, y, p.name, 'var(--text-dim)', 11, k, false);
+  });
+}
+function drawBase(g, k, lay) {
+  const shapes = lay.items.some((i) => i.poly);
+  if (shapes) for (const it of [...lay.items].filter((i) => i.poly && !S.hidden.has(i.kind)).sort((a, b) => a.top - b.top)) {
+    const st = it.kind === 'structure', c = st ? 'var(--text-dim)' : COL[it.kind] || 'var(--text-dim)';
+    el('polygon', { points: it.poly.map(([e, n]) => `${e},${-n}`).join(' '), 'data-hit': st ? `o:${it.i}` : null,
+      style: `fill:${c};fill-opacity:${st ? 0.13 : 0.32};stroke:${c};stroke-opacity:${st ? 0.4 : 0.85};stroke-width:${(st ? 0.6 : 1) * k}px;stroke-linejoin:round${st ? ';cursor:pointer' : ''}` }, g);
+  }
+  for (const s of lay.segments) {
+    if (S.hidden.has(s.kind)) continue;
+    const dash = s.kind === 'wire' ? `${4 * k} ${3 * k}` : s.kind === 'link' ? `${2 * k} ${4 * k}` : null;
+    el('line', { x1: s.a[0], y1: -s.a[1], x2: s.b[0], y2: -s.b[1], 'stroke-dasharray': dash, style: `stroke:${COL[s.kind]};stroke-width:${(s.kind === 'pipe' ? 2 : 1.4) * k}px;stroke-linecap:round` }, g);
+  }
+  const order = ['structure', 'plants', 'depot', 'power', 'refiner', 'teleporter', 'extractor-mineral', 'extractor-gas', 'computer'];
+  const items = [...lay.items].sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || !!a.problems - !!b.problems);
+  for (const it of items) {
+    if (shapes && it.kind === 'structure' && it.poly) continue;
+    if (S.hidden.has(it.kind) && !it.problems) continue;
+    dot(g, it.e, -it.n, it.kind, `o:${it.i}`, !!it.problems, k, S.sel === `o:${it.i}`);
+  }
+  for (const it of lay.items) if (it.problems) label(g, it.e, -it.n, '⚠ ' + it.problems.join(', '), COL.problem, 12, k, true, 10, 5);
+}
+function me() {
+  if (!onThisPlanet()) return null;
+  if (S.level === 'base') return LIVE.in_base && LIVE.in_base.name === S.base ? { x: LIVE.in_base.e, y: LIVE.in_base.n, trail: LIVE.in_base.trail } : null;
+  return { x: LIVE.player.x, y: LIVE.player.y, trail: LIVE.trail };
+}
+function drawLive() {
+  const g = $('liveG'); if (!g || !view) return;
+  g.innerHTML = '';
+  const m = me();
+  $('findme').disabled = !m;
+  if (!m) return;
+  const k = px(), stale = LIVE.state !== 'live';
+  if (m.trail && m.trail.length > 1) el('polyline', { points: m.trail.map((p) => `${p[0]},${-p[1]}`).join(' '), style: `fill:none;stroke:var(--muted);stroke-width:${2 * k}px;stroke-linejoin:round;stroke-linecap:round;opacity:.8` }, g);
+  const t = LIVE.target;
+  if (t && !t.error) {
+    const tx = S.level === 'base' ? t.e : t.x, ty = S.level === 'base' ? t.n : t.y;
+    if (tx !== undefined) {
+      el('line', { x1: m.x, y1: -m.y, x2: tx, y2: -ty, 'stroke-dasharray': `${6 * k} ${4 * k}`, style: `stroke:var(--text-dim);stroke-width:${1.5 * k}px` }, g);
+      el('circle', { cx: tx, cy: -ty, r: 9 * k, style: `fill:none;stroke:var(--text);stroke-width:${2 * k}px` }, g);
+    }
+  }
+  const h = LIVE.player.heading;
+  const a = el('g', { transform: `translate(${m.x} ${-m.y}) scale(${k}) rotate(${h == null ? 0 : h})` }, g);
+  if (!stale) el('circle', { r: 16, class: 'pulse', style: `fill:var(--text);animation-delay:-${(Date.now() % 2000) / 1000}s` }, a);
+  el('circle', { r: 13, style: 'fill:var(--text);opacity:.12' }, a);
+  if (h == null) el('circle', { r: 6, style: `fill:${stale ? 'var(--muted)' : 'var(--text)'}` }, a);
+  else el('path', { d: 'M 0 -12 L 8 9 L 0 4 L -8 9 Z', style: `fill:${stale ? 'var(--muted)' : 'var(--text)'};stroke:var(--bg);stroke-width:1.5px` }, a);
+}
+function centreOnMe(glide = true) {
+  const m = me(); if (!m) return;
+  const x = m.x - view.w / 2, y = -m.y - view.h / 2;
+  if (!glide || Math.hypot(x - view.x, y - view.y) > view.w) { setView({ ...view, x, y }, false); return; }
+  const from = { x: view.x, y: view.y }, t0 = performance.now();
+  const step = (t) => { const a = Math.min(1, (t - t0) / 400), e = a * (2 - a); setView({ ...view, x: from.x + (x - from.x) * e, y: from.y + (y - from.y) * e }, false); if (a < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+// what the selected mark is, as /map's panel says it
+function selInfo() {
+  const pl = planet(), id = S.sel; if (!pl || !id) return null;
+  const [kind, idx] = id.split(':');
+  const act = (label, a, pri, data = {}) => ({ label, a, pri, data });
+  if (kind === 'p') {
+    const p = pl.points[+idx]; if (!p) return null;
+    const dist = `${fdist(Math.hypot(p.x, p.y))} ${compass(bearing(p.x, p.y))} of the map centre`;
+    const lines = [], tags = [], actions = [];
+    if (p.kind === 'base') {
+      lines.push(`${plural(p.objects, 'object')} · lat ${p.lat}°, lon ${p.lon}°`, dist);
+      if (p.power && p.power !== 'none') tags.push({ cls: p.power === 'good' ? 'ok' : p.power === 'warning' ? 'warn' : 'bad', text: `${POWER[p.power]} ${p.power_headline}` });
+      if (p.loose) tags.push({ cls: 'bad', text: `⚠ ${plural(p.loose, 'loose extractor')}` });
+      if (pl.layouts[p.name]) actions.push(act('Open layout', 'openbase', true, { base: p.name }));
+      const fs = farmsAt(p.name);
+      if (fs.length) actions.push(act(fs.length > 1 ? `${fs.length} farms` : 'Farm details', fs.length > 1 ? 'farms' : 'farm', !actions.length, { farm: fs[0].id }));
+    } else lines.push(dist);
+    if (onThisPlanet()) actions.push(act(S.target && S.target.key === keyOf(p) ? 'Stop' : 'Go to', 'target', false, { key: keyOf(p), label: p.name }));
+    return { title: p.name, kind: p.kind === 'base' ? 'Base' : LABEL[p.kind] || p.kind, color: p.loose ? COL.problem : COL[p.kind], lines, tags, actions };
+  }
+  const lay = layout(); if (!lay) return null;
+  const it = lay.items.find((q) => q.i === +idx); if (!it) return null;
+  const d = Math.hypot(it.e, it.n), lines = [], tags = [], actions = [];
+  lines.push(d < 2 ? 'The base computer' : `${fdist(d)} ${compass(bearing(it.e, it.n))} (${Math.round(bearing(it.e, it.n))}°) of the base computer${it.h !== undefined ? `, ${it.h >= 0 ? '+' : ''}${it.h} m height` : ''}`);
+  if (it.kind === 'structure') lines.push(`${it.id.replace(/_/g, ' ').toLowerCase()} · top ${it.top >= 0 ? '+' : ''}${it.top} m`);
+  if (it.fill !== undefined) lines.push(`Fill ${it.fill} / 250 at last save`);
+  if (it.problems) { if (it.pipe_gap !== undefined) lines.push(`Nearest pipe end ${it.pipe_gap} m`); if (it.near) lines.push(it.near); for (const p of it.problems) tags.push({ cls: 'bad', text: `⚠ ${p}` }); }
+  const farm = it.kind.startsWith('extractor') ? farmsAt(S.base).find((f) => `extractor-${f.kind}` === it.kind) : null;
+  if (farm) actions.push(act('Farm details', 'farm', true, { farm: farm.id }));
+  if (onThisPlanet()) actions.push(act(S.target && S.target.key === `o:${S.base}:${it.i}` ? 'Stop' : 'Go to', 'target', false, { key: `o:${S.base}:${it.i}`, label: `${LABEL[it.kind] || it.kind} · ${S.base}` }));
+  return { title: LABEL[it.kind] || it.kind, kind: S.base + (farm ? ` · ${farm.name} farm` : it.kind === 'structure' ? ' · building' : ''), color: it.problems ? COL.problem : COL[it.kind], lines, tags, actions };
+}
+const keyOf = (p) => p.kind === 'base' ? `b:${p.name}` : p.w ? `w:${p.w.join(',')}` : null;
+function drawSel() {
+  const sel = selInfo(), sh = $('selsheet');
+  sh.hidden = !sel; $('legend').hidden = !!sel;
+  if (!sel) return;
+  sh.innerHTML = `<div class="handle"></div><div class="selhead"><i style="background:${sel.color}"></i><div style="flex:1;min-width:0"><div class="t">${esc(sel.title)}</div><div class="k">${esc(sel.kind)}</div></div><button class="xbtn" data-act="closesel" aria-label="Close">×</button></div>`
+    + `<div class="lines">${sel.lines.map((l) => `<div>${esc(l)}</div>`).join('')}</div>`
+    + (sel.tags.length ? `<div class="tags">${sel.tags.map((t) => `<span class="tag ${t.cls}">${esc(t.text)}</span>`).join('')}</div>` : '')
+    + (sel.actions.length ? `<div class="actions">${sel.actions.map((a) => `<button class="${a.pri ? 'pri' : ''}" data-act="${a.a}" ${Object.entries(a.data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(' ')}>${esc(a.label)}</button>`).join('')}</div>` : '');
+}
+function drawIssue() {
+  const pl = planet(), I = $('issue'); if (!pl) { I.hidden = true; return; }
+  let text = null, data = {};
+  if (S.level === 'base') { const lay = layout(), bad = lay && lay.items.find((i) => i.problems);
+    if (bad && S.sel !== `o:${bad.i}`) { text = `${bad.kind.replace('extractor-', '')} extractor: ${bad.problems.join(', ')} — ${fdist(Math.hypot(bad.e, bad.n))} ${compass(bearing(bad.e, bad.n))}`; data = { i: bad.i }; } }
+  else { const b = pl.points.find((p) => p.kind === 'base' && p.loose); if (b && !S.sel) { text = `${b.name}: ${plural(b.loose, 'loose extractor')}`; data = { base: b.name }; } }
+  I.hidden = !text;
+  if (text) { I.innerHTML = `<span class="tag bad">Loose</span><span class="t">${esc(text)}</span>`; I.dataset.base = data.base || ''; I.dataset.i = data.i ?? ''; }
+  $('away').classList.toggle('down', !!text);
+}
+function drawLegend() {
+  const pl = planet(), L = $('legend'); if (!pl) { L.innerHTML = ''; return; }
+  const lay = layout(); let kinds, segs = [];
+  if (lay) { const order = ['extractor-mineral', 'extractor-gas', 'depot', 'power', 'refiner', 'teleporter', 'plants', 'computer', 'structure'];
+    kinds = [...new Set(lay.items.map((i) => i.kind))].sort((a, b) => order.indexOf(a) - order.indexOf(b)); segs = [...new Set(lay.segments.map((s) => s.kind))]; }
+  else kinds = ['base', 'exocraft', 'settlement', 'deposit'].filter((k) => pl.points.some((p) => p.kind === k));
+  const chip = (k, line) => `<button class="glass ${S.hidden.has(k) ? 'off' : ''}" data-act="kind" data-kind="${k}"><i class="${line ? 'line' : ''}" style="background:${COL[k]}"></i>${LABEL[k] || k}</button>`;
+  const near = onThisPlanet() && LIVE.nearby && LIVE.nearby.length ? `<button class="glass live" data-act="nearby">◎ Nearby <span class="mono" style="opacity:.6">${LIVE.nearby.length}</span></button>` : '';
+  L.innerHTML = near + kinds.map((k) => chip(k, false)).join('') + segs.map((k) => chip(k, true)).join('');
+}
+function drawLivePill() {
+  const P = $('livePill');
+  if (!LIVE || LIVE.state === 'none') { P.className = 'pill off'; P.textContent = '○ no live data'; P.title = (LIVE && LIVE.error) || ''; return; }
+  const where = LIVE.on_planet ? (LIVE.names && LIVE.names.planet) || 'a planet' : locName(LIVE.location).toLowerCase();
+  if (LIVE.state === 'live') { P.className = 'pill ok'; P.textContent = `● live · ${where}`; }
+  else { P.className = 'pill warn'; P.textContent = `⚠ stale ${fdur(LIVE.age)}`; P.title = where; }
+}
+function drawAway() {
+  const A = $('away'), pl = planet();
+  if (!LIVE || LIVE.state === 'none' || !pl || onThisPlanet() || !LIVE.on_planet) { A.hidden = true; return; }
+  const there = MAP.planets.find((p) => p.address === LIVE.address);
+  A.innerHTML = `<span>You're on <b>${esc(there ? there.planet_name || there.label : 'another planet')}</b></span><button data-act="showme">Show</button>`;
+  A.hidden = false;
+}
+function drawGoto() {
+  const G = $('goto'), t = LIVE && LIVE.target;
+  if (!S.target || !t) { G.hidden = true; return; }
+  G.hidden = false;
+  G.innerHTML = t.error ? `<span></span><span>${esc(S.target.label)}: ${esc(t.error)}</span><button data-act="target" data-key="${esc(S.target.key)}">×</button>`
+    : `${arrow(t.turn)}<span><b>${fdist(t.dist)}</b> ${turnWord(t.turn)} ${height(t.h)}<small>${esc(S.target.label)} · ${compass(t.bearing)} ${Math.round(t.bearing)}°</small></span><button data-act="target" data-key="${esc(S.target.key)}" title="Stop navigating">×</button>`;
+}
+
+// ---- Farms ----
+function farmList() {
+  if (!J || !J.farms) return [];
+  const dt = (Date.now() - jsonAt) / 1000;
+  return Object.entries(J.farms).map(([id, f]) => {
+    const rate = (f.rate_items_per_hour || 0) / 3600, cap = f.capacity_items || 1;
+    const items = Math.min(cap, (f.projected_items ?? f.stored_items ?? 0) + rate * dt), ratio = items / cap, full = ratio >= 0.9995;
+    const left = full || !rate ? 0 : (cap - items) / rate;
+    const n = (f.extractors || 0) + (f.gas_extractors || 0), lo = layoutOf(f.base), loose = lo ? lo.lay.items.filter((i) => i.problems && i.kind === `extractor-${f.kind}`).length : 0;
+    return { id, ...f, rate, items, ratio, full, left, n, loose, lo };
+  }).sort((a, b) => (a.full - b.full) || (a.left - b.left) || a.name.localeCompare(b.name));
+}
+const farmsAt = (base) => farmList().filter((f) => f.base === base);
+function farmCard(f) {
+  return `<button class="card" data-act="farm" data-farm="${esc(f.id)}" data-fid="${esc(f.id)}">
+    <div class="top"><div style="min-width:0"><div class="name">${esc(f.name)}${f.loose ? `<span class="tag bad">⚠ ${f.loose} loose</span>` : ''}</div>
+      <div class="sub">${esc(f.base)} · ${f.kind} · ${Math.round(f.rate * 3600)}/h ${f.rate_measured ? 'measured' : 'assumed C-class'}</div></div>
+      <span class="state ${f.full ? 'full' : ''}" data-f="state">${f.full ? 'Full · collect' : 'Full in ' + fdur(f.left)}</span></div>
+    <div class="bar"><i data-f="bar" style="width:${(f.ratio * 100).toFixed(1)}%"></i></div>
+    <div class="foot"><span class="mono" data-f="items">${fnum(f.items)} / ${fnum(f.capacity_items)}</span><span>${plural(f.n, 'extractor')} · ${plural(f.depots, 'depot')}</span></div></button>`;
+}
+function renderFarms() {
+  const P = $('page');
+  if (S.farm) return renderFarm(P);
+  const farms = farmList(), full = farms.filter((f) => f.full), filling = farms.filter((f) => !f.full && f.rate > 0);
+  const next = filling.length ? Math.min(...filling.map((f) => f.left)) : null;
+  P.innerHTML = header(`<span class="eyebrow">Bases · projected</span>`, 'Extraction farms', J ? `Last save ${clock(J.save.timestamp)} · fills keep rising between saves` : 'Waiting for the exporter')
+    + `<div class="tiles"><div class="tile"><div class="l">Full</div><div class="v">${full.length} / ${farms.length}</div></div><div class="tile"><div class="l">Next full</div><div class="v" data-f="next">${next === null ? '—' : fdur(next)}</div></div><div class="tile"><div class="l">Loose</div><div class="v ${looseTotal() ? 'bad' : ''}">${looseTotal()}</div></div></div>`
+    + `<div class="cards">${farms.map(farmCard).join('')}</div>` + (farms.length ? '' : `<div class="empty">No extraction farms in the save.</div>`);
+}
+function renderFarm(P) {
+  const f = farmList().find((x) => x.id === S.farm);
+  if (!f) { P.innerHTML = header(`<button class="back" data-act="farms">‹ Farms</button>`, 'Farm', 'Not in this save') + `<div class="empty">This farm is not in the current save.</div>`; return; }
+  const lay = f.lo && f.lo.lay, exs = lay ? lay.items.filter((i) => i.kind === `extractor-${f.kind}`) : [];
+  const pw = lay && lay.power && lay.power.status !== 'none' ? lay.power : null;
+  const kp = (v) => `${fnum(v)} kP`;
+  const rows = pw ? [['Extractors', `${pw.extractors} × 50 = ${kp(pw.demand_kp)}`]] : [];
+  if (pw) { if (pw.em) rows.push(['Electromagnetic generators', `${pw.em}: ${kp(pw.em_kp[0])}–${kp(pw.em_kp[1])}`]); if (pw.solar) rows.push(['Solar (daytime)', `${pw.solar}: ${kp(pw.solar_kp)}`]);
+    if (pw.bio) rows.push(['Biofuel (if fuelled)', `${pw.bio}: ${kp(pw.bio_kp)}`]); if (pw.batteries) rows.push(['Batteries at last save', `${pw.charge_pct}%` + (pw.battery_minutes ? ` · ${pw.battery_minutes} min of extraction` : '')]);
+    if (pw.other_up_to_kp) rows.push(['Other powered parts, if wired', `up to ${kp(pw.other_up_to_kp)}`]); }
+  const pcls = pw ? (pw.status === 'good' ? 'ok' : pw.status === 'warning' ? 'warn' : 'bad') : '';
+  P.innerHTML = header(`<button class="back" data-act="farms">‹ Farms</button>`, esc(f.name), `${esc(f.base)} · ${f.kind} · ${plural(f.n, 'extractor')} · ${plural(f.depots, 'depot')}`)
+    + `<div class="hero"><div class="row"><span class="eyebrow" style="color:var(--brand)">Fill · projected</span><span class="state ${f.full ? 'full' : ''}" data-f="state">${f.full ? 'Full · collect' : 'Full in ' + fdur(f.left)}</span></div>
+       <div class="big"><span class="pct" data-f="pct">${(f.ratio * 100).toFixed(1)}%</span><span class="of" data-f="items">${fnum(f.items)} / ${fnum(f.capacity_items)}</span></div>
+       <div class="bar"><i data-f="bar" style="width:${(f.ratio * 100).toFixed(1)}%"></i></div></div>
+       <div class="tiles two"><div class="tile"><div class="l">Rate</div><div class="v sm">${Math.round(f.rate * 3600)}/h</div><div class="n">${f.rate_measured ? 'measured from saves' : 'assumed C-class'}</div></div>
+       <div class="tile"><div class="l">Full in</div><div class="v sm" data-f="left">${f.full ? 'now' : fdur(f.left)}</div><div class="n">from the save's clock</div></div></div>`
+    + (exs.length ? `<div class="sect"><span>Extractors</span><span>tap to locate</span></div><div class="list">${exs.map((x, i) => {
+        const d = Math.hypot(x.e, x.n), bad = !!x.problems;
+        return `<button class="r" data-act="locate" data-base="${esc(f.base)}" data-i="${x.i}"><i style="background:${bad ? COL.problem : COL[x.kind]}"></i><div style="min-width:0"><div class="n">Extractor ${i + 1}</div><div class="w">${fdist(d)} ${compass(bearing(x.e, x.n))} of the computer</div>${bad ? `<div class="p">⚠ ${esc(x.problems.join(' · '))}</div>` : ''}</div>
+          <div class="f">${x.fill !== undefined ? `<span>${x.fill}/250</span><div class="bar thin"><i class="${bad ? 'bad' : ''}" style="width:${x.fill / 2.5}%"></i></div>` : `<span class="q">${bad ? 'not filling' : 'in the network'}</span>`}</div></button>`; }).join('')}</div>`
+       + (f.gas_extractors && f.extractors === 0 && farmsAt(f.base).filter((o) => o.kind === f.kind).length > 1 ? `<div class="note">All ${f.kind} extractors at ${esc(f.base)}; the save does not say which cluster each belongs to.</div>` : '') : '')
+    + (pw ? `<div class="pcard"><div class="row"><span style="font-size:14px;font-weight:600">Power</span><span class="tag ${pcls}">${POWER[pw.status]} ${esc(pw.headline)}</span></div><div class="why">${esc(pw.why || '')}</div><div>${rows.map((r) => `<div class="kv"><span>${r[0]}</span><span>${r[1]}</span></div>`).join('')}</div></div>` : '')
+    + (lay ? `<div class="cta"><button data-act="openbase" data-planet="${esc(f.lo.planet.address)}" data-base="${esc(f.base)}">Show base layout on map</button></div>`
+           : `<div class="note">Per-extractor detail appears once this base's layout is in the save.</div>`);
+}
+// every second: the projected numbers move, the DOM stays
+function tickFarms() {
+  if (S.tab !== 'farms' || !J) return;
+  const farms = farmList();
+  if (S.farm) { const f = farms.find((x) => x.id === S.farm); if (!f) return; const P = $('page');
+    P.querySelectorAll('[data-f="state"]').forEach((e) => { e.textContent = f.full ? 'Full · collect' : 'Full in ' + fdur(f.left); e.className = `state ${f.full ? 'full' : ''}`; });
+    P.querySelectorAll('[data-f="pct"]').forEach((e) => e.textContent = (f.ratio * 100).toFixed(1) + '%');
+    P.querySelectorAll('[data-f="items"]').forEach((e) => e.textContent = `${fnum(f.items)} / ${fnum(f.capacity_items)}`);
+    P.querySelectorAll('[data-f="bar"]').forEach((e) => e.style.width = (f.ratio * 100).toFixed(1) + '%');
+    P.querySelectorAll('[data-f="left"]').forEach((e) => e.textContent = f.full ? 'now' : fdur(f.left));
+    return; }
+  for (const f of farms) { const c = document.querySelector(`[data-fid="${CSS.escape(f.id)}"]`); if (!c) continue;
+    const st = c.querySelector('[data-f="state"]'); st.textContent = f.full ? 'Full · collect' : 'Full in ' + fdur(f.left); st.className = `state ${f.full ? 'full' : ''}`;
+    c.querySelector('[data-f="bar"]').style.width = (f.ratio * 100).toFixed(1) + '%'; c.querySelector('[data-f="items"]').textContent = `${fnum(f.items)} / ${fnum(f.capacity_items)}`; }
+  const filling = farms.filter((f) => !f.full && f.rate > 0), nx = document.querySelector('[data-f="next"]');
+  if (nx) nx.textContent = filling.length ? fdur(Math.min(...filling.map((f) => f.left))) : '—';
+}
+
+// ---- Inventory ----
+function invData() {
+  if (!J) return { all: [], places: {} };
+  const places = {};
+  for (const l of J.locations || []) (places[l.id] = places[l.id] || []).push(l);
+  const all = Object.entries(J.items).map(([id, it]) => ({ id, name: it.item, type: it.type, total: it.total, stacks: it.stacks, places: (places[id] || []).slice().sort((a, b) => b.amount - a.amount) }));
+  return { all, places };
+}
+function renderInv() {
+  const P = $('page'), { all } = invData();
+  const stacks = all.reduce((a, i) => a + (i.stacks || 0), 0);
+  P.innerHTML = `<header class="hdr"><div class="row"><span class="eyebrow">Where is it</span><span class="pills">${pillSave()}</span></div><h1>Inventory</h1><div class="sub">${plural(all.length, 'kind')} · ${plural(stacks, 'stack')} · every container</div>
+    <div class="search"><span style="color:var(--dim);font-size:15px">⌕</span><input id="q" type="search" autocomplete="off" autocapitalize="off" enterkeyhint="search" placeholder="Item or blueprint — try “ion” or “copper”" value="${esc(S.query)}"><button class="xbtn" data-act="clearq" aria-label="Clear" ${S.query ? '' : 'hidden'}>×</button></div>
+    <div class="chips" id="invchips"></div></header><div id="invlist" style="border-top:1px solid var(--line)"></div>`;
+  $('q').addEventListener('input', (e) => { S.query = e.target.value; P.querySelector('[data-act="clearq"]').hidden = !S.query; renderInvList(); });
+  renderInvList();
+}
+function renderInvList() {
+  const { all } = invData(), q = S.query.trim().toLowerCase();
+  const match = all.filter((i) => !q || i.name.toLowerCase().includes(q) || i.id.toLowerCase().includes(q));
+  const types = ['All', ...[...new Set(all.map((i) => i.type))].sort()];
+  if (!types.includes(S.type)) S.type = 'All';
+  $('invchips').innerHTML = types.map((t) => `<button class="${S.type === t ? 'on' : ''}" data-act="type" data-type="${t}">${t}<span>${match.filter((i) => t === 'All' || i.type === t).length}</span></button>`).join('');
+  const rows = match.filter((i) => S.type === 'All' || i.type === S.type).sort((a, b) => b.total - a.total);
+  const tot = Object.fromEntries(all.map((i) => [i.id, i]));
+  const where = (id) => { const it = tot[id]; return it && it.places.length ? it.places.slice(0, 2).map((p) => `${p.location} ${fnum(p.amount)}`).join(', ') : 'none anywhere'; };
+  const bps = q.length < 2 || !J.blueprints ? [] : Object.values(J.blueprints).filter((b) => b.item.toLowerCase().includes(q)).sort((a, b) => a.item.length - b.item.length).slice(0, 3).map((b) => {
+    const ings = b.ingredients.map((g) => { const have = tot[g.id] ? tot[g.id].total : 0, ok = have >= g.amount;
+      return `<div class="g"><span class="nm">${esc(g.item)} <span>×${fnum(g.amount)}</span></span><span class="tag ${ok ? 'ok' : 'warn'}" style="justify-self:end">${ok ? 'OK' : `Short ${fnum(g.amount - have)}`}</span><span class="wh">have ${fnum(have)} · ${esc(where(g.id))}</span></div>`; });
+    const can = b.ingredients.every((g) => (tot[g.id] ? tot[g.id].total : 0) >= g.amount);
+    return `<div class="bp"><div class="h"><span class="t">Craft ${esc(b.item)} <small>makes ${b.yield}</small></span><span class="v ${can ? 'ok' : 'warn'}">${can ? 'You can make this' : 'Not yet'}</span></div>${ings.join('')}</div>`; });
+  const list = rows.map((i) => { const open = S.exp === i.id;
+    return `<div class="rowcard"><button data-act="exp" data-id="${esc(i.id)}"><span class="chev">${open ? '▾' : '▸'}</span><div style="min-width:0"><div class="n">${esc(i.name)}</div><div class="s">${i.type} · ${plural(i.places.length, 'place')} · ${plural(i.stacks, 'stack')}</div></div><span class="tot">${fnum(i.total)}</span></button>`
+      + (open ? `<div class="body">${i.places.map((p) => `<div class="place"><div class="l"><span>${esc(p.location)}</span><span>${fnum(p.amount)}</span></div><div class="bar thin"><i style="width:${(p.amount / Math.max(i.total, 1) * 100).toFixed(1)}%"></i></div></div>`).join('')}</div>` : '') + `</div>`; });
+  $('invlist').innerHTML = (bps.length ? `<div class="cards">${bps.join('')}</div>` : '') + `<div class="cards" style="padding-top:${bps.length ? 0 : 8}px">${list.join('')}</div>`
+    + (!rows.length && !bps.length ? `<div class="empty">Nothing in any container matches “${esc(S.query)}”.</div>` : '');
+}
+
+// ---- Build ----
+function renderBuild() {
+  const P = $('page'), pl = (J && J.planner) || {}, cr = (J && J.crafting) || {};
+  const targets = pl.targets || [], can = cr.can_make, almost = cr.by_ingredient || [];
+  const KINDS = { craft: 'Craft', refine: 'Refine', cook: 'Cook' };
+  const kinds = ['All', 'Craft', 'Refine', 'Cook'];
+  const make = (can || []).filter((m) => S.bkind === 'All' || KINDS[m.route] === S.bkind);
+  P.innerHTML = header(`<span class="eyebrow">From stock · known blueprints</span>`, 'Build', 'Intermediates are crafted from stock, so shared bottlenecks count once')
+    + (targets.length ? `<div class="sect"><span>Device planner</span><span>now · after one harvest</span></div><div class="cards tight">${targets.length > 1 ? `<button class="card" data-act="craftall" style="flex-direction:row;align-items:center;justify-content:space-between"><span><span style="font-size:14px;font-weight:600">Build order for ${targets.map((t) => esc(t.item)).join(' + ')}</span><span class="sub" style="display:block">every step from raw materials, sharing the stock</span></span><span style="color:var(--brand);font-size:18px">›</span></button>` : ''}${targets.map((t) => `<button class="bp plan" style="text-align:left" data-act="craft" data-id="${esc(t.id)}"><div class="h"><span class="t">${esc(t.item)} <small style="color:var(--brand)">levels ›</small></span><span class="v" style="color:var(--muted);font-weight:400">worth ${fbig(t.value)} each</span></div>
+        <div class="nums"><div><div class="l">Now</div><div class="v">${t.now}</div></div><div><div class="l">After harvest</div><div class="v ok">${t.after_harvest}</div></div></div>
+        ${t.blocker ? `<div class="blk">Next one needs ${esc(t.blocker.item)} · ${fnum(t.blocker.have)} of ${fnum(t.blocker.need)}</div>` : '<div class="blk ok">Nothing in the way</div>'}</button>`).join('')}</div>` : '')
+    + `<div class="sect"><span>Make now</span><span>tap for ingredients</span></div>`
+    + (can ? `<div class="chips pad">${kinds.map((k) => `<button class="${S.bkind === k ? 'on' : ''}" data-act="bkind" data-kind="${k}">${k}<span>${(can || []).filter((m) => k === 'All' || KINDS[m.route] === k).length}</span></button>`).join('')}</div>
+      <div class="cards tight">${make.map((m) => { const open = S.bexp === m.id;
+        return `<div class="rowcard"><button data-act="bexp" data-id="${esc(m.id)}"><span class="chev">${open ? '▾' : '▸'}</span><div style="min-width:0"><div class="n">${esc(m.item)}</div><div class="s">${KINDS[m.route] || m.route}${m.route !== 'craft' ? ` · ${esc(m.recipe)}` : ''}${m.yield > 1 ? ` · makes ${m.yield}` : ''}</div></div><span class="tot">×${m.n >= 999999 ? '1M+' : fnum(m.n)}</span></button>`
+          + (open ? `<div class="body" style="gap:4px;padding-top:0"><button class="lvbtn" data-act="craft" data-id="${esc(m.id)}">Every level ›</button></div>` : '')
+          + (open ? `<div class="body" style="gap:4px">${m.needs.map((g) => `<div class="ing"><span>${esc(g.item)} <small>${fnum(g.amount)} each</small></span><span>have ${fnum(g.have)}</span></div>`).join('')}</div>` : '') + `</div>`; }).join('')}</div>`
+      + (!make.length ? `<div class="empty">Nothing in stock makes a${S.bkind === 'All' ? 'nything' : ' ' + S.bkind.toLowerCase() + ' recipe'} right now.</div>` : '')
+      : `<div class="note">${cr.computed_at === null || cr.computed_at === undefined ? 'The crafting search is still running; this fills in on the next refresh.' : 'This exporter does not report what can be made now (update it to get the Make now list).'}</div>`)
+    + `<div class="sect"><span>Almost craftable</span><span>by what is in the way</span></div><div class="cards tight" style="padding-bottom:12px">${almost.map((a) => `<div class="card almost"><div class="h"><span class="t">${esc(a.ingredient)} <small>have ${fnum(a.have)}</small></span><span class="c">${plural(a.items.length, 'blueprint')}</span></div><div class="l">${a.items.map((i) => `<button class="lnk" data-act="craft" data-id="${esc(i.item)}">${esc(i.item)}</button> short ${fnum(i.short)}`).join(' · ')}</div></div>`).join('')}</div>`
+    + (!almost.length ? `<div class="empty">Every known blueprint can be made, or the search has not run yet.</div>` : '');
+}
+
+// ---- Build breakdown (/api/craft): the build order, bottom up, and every level as a tree, stock first ----
+const CRAFT = { key: null, data: null, err: null, seq: 0 };
+const ROUTE = { craft: 'Craft', refine: 'Refine', cook: 'Cook' };
+const craftSpec = () => S.craft.map(([i, n]) => `${i}:${n}`).join(',');
+async function loadCraft() {
+  const key = `${craftSpec()}|${jsonAt}`;
+  if (CRAFT.key === key) return;
+  CRAFT.key = key; CRAFT.err = null; const seq = ++CRAFT.seq;
+  try {
+    const r = await fetch(`/api/craft?items=${encodeURIComponent(craftSpec())}`, { cache: 'no-store' });
+    const d = await r.json();
+    if (seq !== CRAFT.seq) return;
+    if (d.error) { CRAFT.err = d.error; CRAFT.data = null; } else { d.spec = craftSpec(); CRAFT.data = d; }
+  } catch (e) { if (seq !== CRAFT.seq) return; CRAFT.err = String(e.message || e); CRAFT.data = null; }
+  if (S.tab === 'build' && S.craft) renderCraft();
+}
+const needsText = (m) => m.needs.map((x) => `${fnum(x.amount)} ${esc(x.item)}`).join(' + ');
+function renderCraft() {
+  const P = $('page'), d = CRAFT.data && CRAFT.data.spec === craftSpec() ? CRAFT.data : null;
+  loadCraft();
+  const names = d ? d.targets.map((t) => t.item) : S.craft.map(([i]) => i);
+  const title = names.join(' + ');
+  const qty = S.craft.map(([id, n], i) => { const t = d && d.targets[i], mx = t && t.max;
+    return `<div class="qty"><span class="lbl">${esc(t ? t.item : id)}${mx != null ? ` · most from stock now ${mx >= 999999 ? '1M+' : fnum(mx)}` : ''}</span>`
+      + `<button class="step" data-act="craftn" data-i="${i}" data-d="-1" aria-label="One fewer">−</button><span class="n">${fnum(n)}</span><button class="step" data-act="craftn" data-i="${i}" data-d="1" aria-label="One more">+</button>`
+      + `<div class="chips">${[1, 5].map((k) => `<button class="${n === k ? 'on' : ''}" data-act="craftn" data-i="${i}" data-n="${k}">×${k}</button>`).join('')}${mx > 0 && mx < 10000 ? `<button class="${n === mx ? 'on' : ''}" data-act="craftn" data-i="${i}" data-n="${mx}">max ${fnum(mx)}</button>` : ''}</div></div>`; }).join('');
+  let body;
+  if (CRAFT.err) body = `<div class="empty">${esc(CRAFT.err)}</div>`;
+  else if (!d) body = `<div class="empty">Working out every level…</div>`;
+  else {
+    const all = d.steps.flatMap((st) => st.items), count = (r) => all.filter((m) => m.route === r).reduce((a, m) => a + m.crafts, 0);
+    const work = [['craft', 'craft'], ['refine', 'refiner op'], ['cook', 'cook']].map(([r, w]) => count(r) && plural(count(r), w)).filter(Boolean).join(' · ');
+    const verdict = d.ok ? `<span class="v ok">You can make ${d.targets.length > 1 || d.targets[0].qty > 1 ? 'these' : 'this'}</span>` : `<span class="v warn">Short of ${plural(d.short.length, 'material')}</span>`;
+    body = `<div class="cards tight" style="padding-top:12px"><div class="bp"><div class="h"><span class="t">${d.targets.map((t) => `${fnum(t.qty)} × ${esc(t.item)}`).join(' + ')}</span>${verdict}</div>`
+      + `<div style="font-size:12px;color:var(--muted)">${plural(d.steps.length, 'step')} · ${work || 'nothing to make'}</div>`
+      + d.short.map((x) => `<div class="g"><span class="nm">${esc(x.item)}</span><span class="tag warn" style="justify-self:end">Short ${fnum(x.amount)}</span><span class="wh">have ${fnum(x.have)} · nothing in stock makes the rest</span></div>`).join('')
+      + `</div></div>`
+      + `<div class="chips pad" style="padding-top:14px"><button class="${S.cview === 'order' ? 'on' : ''}" data-act="cview" data-v="order">Build order</button><button class="${S.cview === 'tree' ? 'on' : ''}" data-act="cview" data-v="tree">Every level</button></div>`;
+    if (S.cview === 'tree') body += `<div class="sect" style="padding-top:6px"><span>Every level</span><span>tap to fold · stock first</span></div><div class="tree" id="tree"></div>`;
+    else body += d.steps.map((st, i) => `<div class="sect" style="padding-top:${i ? 16 : 6}px"><span>Step ${st.step}${i === 0 ? ' · from raw materials' : i === d.steps.length - 1 ? ' · the build' : ''}</span><span>${plural(st.items.length, 'item')}</span></div>`
+      + `<div class="tree">${st.items.map((m) => `<div class="tn step${m.target ? ' tgt' : ''}"><span class="q">${fnum(m.make)}</span><div style="min-width:0"><div class="nm">${esc(m.item)}</div>`
+        + `<div class="how"><b>${ROUTE[m.route] || m.route}</b>${m.route !== 'craft' ? ` · ${esc(m.recipe)}` : ''} ×${fnum(m.crafts)} · ${needsText(m)}${m.crafts > 1 ? ' each' : ''}${m.yield > 1 ? ` · makes ${m.yield}` : ''}</div>`
+        + `${m.from_stock ? `<div class="how">uses ${fnum(m.from_stock)} you hold first, of ${fnum(m.have)}</div>` : ''}</div></div>`).join('')}</div>`).join('');
+    body += `<div class="sect"><span>Raw materials used</span><span>of what you hold</span></div><div class="cards tight" style="padding-bottom:14px"><div class="rowcard" style="padding:6px 12px">`
+      + d.raw.map((x) => `<div class="ing" style="padding:5px 0;border-bottom:1px solid var(--line)"><span>${esc(x.item)}</span><span>${fnum(x.amount)} <small>of ${fnum(x.have)}</small></span></div>`).join('') + `</div></div>`;
+  }
+  P.innerHTML = `<header class="hdr"><div class="row"><button class="back" data-act="craftback">‹ Build</button><span class="pills">${pillSave()}</span></div><h1 style="white-space:normal">${esc(title)}</h1><div class="sub" style="white-space:normal">Bottom up from raw materials, net of what you hold; an ingredient used twice is counted once</div></header>`
+    + qty + body;
+  if (d && S.cview === 'tree') drawTree();
+}
+function drawTree() {
+  const T = $('tree'), d = CRAFT.data; if (!T || !d) return;
+  const rows = [];
+  function walk(n, depth, path) {
+    const kids = n.children.length > 0, open = kids && !S.closed.has(path);
+    let how, amt;
+    if (n.short) { how = `have ${fnum(n.have)}${n.from_stock ? ` · ${fnum(n.from_stock)} from stock` : ''}`; amt = `<span class="amt short">${fnum(n.short)}<small>short</small></span>`; }
+    else if (n.make) { how = `<b>${ROUTE[n.route] || n.route}</b>${n.route !== 'craft' ? ` · ${esc(n.recipe)}` : ''} ×${fnum(n.crafts)}${n.yield > 1 ? ` · makes ${n.yield} each` : ''}${n.from_stock ? ` · ${fnum(n.from_stock)} from stock` : ''}`;
+      amt = `<span class="amt make">${fnum(n.make)}<small>make</small></span>`; }
+    else { how = `from stock · have ${fnum(n.have)}`; amt = `<span class="amt stock">${fnum(n.from_stock)}<small>stock</small></span>`; }
+    // one faint guide per ancestor level, so siblings deep in the tree still line up with their parent
+    const guides = Array.from({ length: depth }, (_, i) => `linear-gradient(var(--glass-border-strong), var(--glass-border-strong)) ${17 + i * 16}px 0 / 1px 100% no-repeat`).join(', ');
+    rows.push(`<button class="tn d${depth}" ${kids ? `data-act="node" data-path="${path}"` : 'tabindex="-1"'} style="padding-left:${12 + depth * 16}px;${kids ? '' : 'cursor:default;'}${guides ? `background:${guides};` : ''}">`
+      + `<span class="chev">${kids ? (open ? '▾' : '▸') : ''}</span><div style="min-width:0"><div class="nm"><span class="lv">L${depth}</span>${esc(n.item)}<small>×${fnum(n.need)}</small></div><div class="how">${how}</div></div>${amt}</button>`);
+    if (open) n.children.forEach((c, i) => walk(c, depth + 1, `${path}.${i}`));
+  }
+  d.trees.forEach((t, i) => walk(t, 0, String(i)));
+  T.innerHTML = rows.join('');
+}
+
+// ---- sheets ----
+function openSheet(title, sub, rowsHtml) {
+  $('sheet').hidden = false;
+  $('sheet').innerHTML = `<div class="scrim" data-act="closesheet"><div class="sheet" data-stop><div class="handle"></div><div class="th"><span class="t">${title}${sub ? `<small>${sub}</small>` : ''}</span><button class="xbtn" data-act="closesheet">×</button></div><div class="rows nms-scroll">${rowsHtml}</div></div></div>`;
+}
+function planetsSheet() {
+  const rows = MAP.planets.map((p) => { const loose = p.points.reduce((a, q) => a + (q.loose || 0), 0), here = LIVE && LIVE.on_planet && LIVE.address === p.address;
+    return `<button class="srow ${p.address === S.planet ? 'on' : ''}" data-act="openplanet" data-planet="${esc(p.address)}"><i style="background:${here ? 'var(--success)' : loose ? 'var(--danger)' : p.bases.length ? COL.base : 'var(--dim)'}"></i><div style="min-width:0"><div class="n">${esc(p.planet_name || p.label)}</div><div class="s">${p.system_name ? esc(p.system_name) + ' · ' : ''}${p.bases.length ? plural(p.bases.length, 'base') : 'no bases'}${p.bases.length && p.planet_name ? ' · ' + esc(p.label) : ''}${here ? ' · you are here' : ''}${loose ? ` · ⚠ ${loose} loose` : ''}</div></div><span class="glyphs">${esc(p.portal || '')}</span></button>`; });
+  openSheet('Planets', `${MAP.planets.length} with bases or visits`, rows.join(''));
+}
+function nearbySheet() {
+  const rows = (LIVE.nearby || []).map((r) => { const isBase = r.kind === 'base', lab = isBase ? r.base : `${LABEL[r.kind] || r.kind} · ${r.base}`;
+    return `<button class="srow ${S.target && S.target.key === r.key ? 'on' : ''}" data-act="target" data-key="${esc(r.key)}" data-label="${esc(lab)}">${arrow(r.turn)}<div style="min-width:0"><div class="n">${esc(isBase ? r.base : LABEL[r.kind] || r.kind)}</div><div class="s">${isBase ? 'Base' : esc(r.base)}</div></div><span class="d">${fdist(r.dist)}<small>${height(r.h)}</small></span></button>`; });
+  const far = (LIVE.bases || []).filter((b) => !(LIVE.nearby || []).some((n) => n.key === b.key));
+  openSheet('Nearby', LIVE.state === 'live' ? 'arrows are relative to your facing' : 'stale', rows.join('') + (far.length ? `<div class="sect" style="padding:10px 8px 4px"><span>Other bases here</span></div>` + far.map((r) => `<button class="srow" data-act="target" data-key="${esc(r.key)}" data-label="${esc(r.base)}">${arrow(r.turn)}<div style="min-width:0"><div class="n">${esc(r.base)}</div><div class="s">Base</div></div><span class="d">${fdist(r.dist)}</span></button>`).join('') : ''));
+}
+let toastT = null;
+function toast(text) { const T = $('toast'); T.textContent = text; T.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { T.hidden = true; }, 2200); }
+
+// ---- actions (every tappable thing carries data-act) ----
+const ACT = {
+  tab: (d) => { if (d.tab === 'app') { SHELL && SHELL.openSettings(); return; } go({ tab: d.tab, farm: d.tab === 'farms' ? null : S.farm }); },
+  planets: () => planetsSheet(),
+  openplanet: (d) => { closeSheet(); go({ tab: 'map', planet: d.planet, level: 'planet', base: null }); },
+  planet: () => go({ level: 'planet', base: null }),
+  openbase: (d) => go({ tab: 'map', planet: d.planet || S.planet, level: 'base', base: d.base }),
+  farms: () => go({ tab: 'farms', farm: null }),
+  farm: (d) => go({ tab: 'farms', farm: d.farm }),
+  locate: (d) => { const lo = layoutOf(d.base); if (!lo) return; go({ tab: 'map', planet: lo.planet.address, level: 'base', base: d.base }); const it = lo.lay.items.find((i) => i.i === +d.i); if (it) { S.sel = `o:${it.i}`; zoomTo(it.e, -it.n, 60); } },
+  issue: (d, a) => { if (a.dataset.base) { go({ level: 'base', base: a.dataset.base }); const lay = layout(), bad = lay && lay.items.find((i) => i.problems); if (bad) { S.sel = `o:${bad.i}`; zoomTo(bad.e, -bad.n, 60); } }
+    else if (a.dataset.i !== '') { const lay = layout(), it = lay && lay.items.find((i) => i.i === +a.dataset.i); if (it) { S.sel = `o:${it.i}`; zoomTo(it.e, -it.n, 60); } } },
+  zoom: (d) => { S.follow = false; zoomAt(+d.k); $('findme').classList.remove('on'); },
+  fit: () => { S.follow = false; $('findme').classList.remove('on'); fitAll(); },
+  findme: () => { if (!me()) return; S.follow = !S.follow; $('findme').classList.toggle('on', S.follow); if (S.follow) centreOnMe(); },
+  showme: () => showMe(),
+  kind: (d) => { if (S.hidden.has(d.kind)) S.hidden.delete(d.kind); else S.hidden.add(d.kind); drawMap(); drawLegend(); },
+  closesel: () => { S.sel = null; drawMap(); drawSel(); drawIssue(); },
+  target: (d) => { closeSheet(); if (S.target && S.target.key === d.key) { S.target = null; toast('Navigation stopped'); } else { S.target = { key: d.key, label: d.label || (S.target && S.target.label) || '' }; toast(`Navigating to ${S.target.label}`); }
+    S.sel = null; drawSel(); drawIssue(); pollLive(true); },
+  nearby: () => nearbySheet(),
+  closesheet: () => closeSheet(),
+  clearq: () => { S.query = ''; $('q').value = ''; $('q').focus(); document.querySelector('[data-act="clearq"]').hidden = true; renderInvList(); },
+  type: (d) => { S.type = d.type; renderInvList(); },
+  exp: (d) => { S.exp = S.exp === d.id ? null : d.id; renderInvList(); },
+  bkind: (d) => { S.bkind = d.kind; renderBuild(); },
+  bexp: (d) => { S.bexp = S.bexp === d.id ? null : d.id; renderBuild(); },
+  craft: (d) => { S.closed = new Set(); go({ tab: 'build', craft: [[d.id, 1]] }); },
+  craftall: () => { S.closed = new Set(); const ts = (J.planner.targets || []); go({ tab: 'build', craft: ts.map((t) => [t.id, Math.max(1, t.now || 1)]) }); },
+  craftback: () => go({ tab: 'build', craft: null }),
+  craftn: (d) => { const i = +d.i, cur = S.craft[i][1], n = Math.max(1, Math.min(10000, d.n ? +d.n : cur + (+d.d)));
+    if (n === cur) return; const c = S.craft.map((x) => [...x]); c[i][1] = n; go({ craft: c }, { push: false }); history.replaceState(null, '', hash()); },
+  cview: (d) => { S.cview = d.v; renderCraft(); },
+  node: (d) => { S.closed.has(d.path) ? S.closed.delete(d.path) : S.closed.add(d.path); drawTree(); },
+};
+function closeSheet() { $('sheet').hidden = true; $('sheet').innerHTML = ''; }
+function zoomTo(x, y, w) { const box = wrapBox(), h = w * box.height / Math.max(box.width, 1); setView({ x: x - w / 2, y: y - h / 2, w, h }); drawSel(); drawIssue(); }
+document.addEventListener('click', (e) => {
+  const stop = e.target.closest('[data-stop]'), a = e.target.closest('[data-act]');
+  if (!a || (stop && !stop.contains(a) && a.dataset.act === 'closesheet')) return;
+  if (a.dataset.act === 'closesheet' && stop && a !== e.target.closest('.xbtn')) return;    // taps inside the sheet do not close it
+  const fn = ACT[a.dataset.act]; if (fn) fn(a.dataset, a, e);
+});
+$('sheet').addEventListener('click', (e) => { if (e.target.classList.contains('scrim')) closeSheet(); });
+function select(id) { S.sel = id; drawMap(); drawSel(); drawIssue(); }
+
+// ---- map gestures: one finger pans, two pinch, the wheel zooms; a still tap selects ----
+(() => {
+  const svg = $('svg'), ptrs = new Map(); let pan = null, pinch = null, moved = 0;
+  const pos = (e) => ({ x: e.clientX, y: e.clientY });
+  svg.addEventListener('pointerdown', (e) => { svg.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, pos(e)); moved = 0;
+    if (ptrs.size === 1) pan = { ...pos(e), view: { ...view } };
+    else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, view: { ...view } }; pan = null; } });
+  svg.addEventListener('pointermove', (e) => { if (!ptrs.has(e.pointerId) || !view) return; ptrs.set(e.pointerId, pos(e)); const r = wrapBox();
+    if (ptrs.size === 2 && pinch) { const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y), k = Math.min(Math.max(pinch.d / Math.max(d, 1), 0.02), 50);
+      const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, v0 = pinch.view, w = v0.w * k, h = v0.h * k;
+      const sx = (pinch.mid.x - r.left) / r.width, sy = (pinch.mid.y - r.top) / r.height, mx = v0.x + sx * v0.w, my = v0.y + sy * v0.h;
+      const cx = (mid.x - r.left) / r.width, cy = (mid.y - r.top) / r.height; moved = 99; S.follow = false; $('findme').classList.remove('on');
+      setView({ x: mx - cx * w, y: my - cy * h, w, h }, false); }
+    else if (ptrs.size === 1 && pan) { const dx = e.clientX - pan.x, dy = e.clientY - pan.y; moved = Math.max(moved, Math.hypot(dx, dy)); if (moved < 4) return;
+      const k = pan.view.w / r.width; if (S.follow) { S.follow = false; $('findme').classList.remove('on'); } setView({ ...pan.view, x: pan.view.x - dx * k, y: pan.view.y - dy * k }, false); } });
+  const up = (e) => { ptrs.delete(e.pointerId);
+    if (ptrs.size === 0) { pan = null; if (pinch || moved > 4) drawMap(); pinch = null; }
+    else if (ptrs.size === 1) { const [a] = [...ptrs.values()]; pinch = null; pan = { ...a, view: { ...view } }; } };
+  svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
+  svg.addEventListener('wheel', (e) => { e.preventDefault(); if (view) zoomAt(e.deltaY > 0 ? 1.25 : 0.8, e.clientX, e.clientY); }, { passive: false });
+  svg.addEventListener('click', (e) => { if (moved > 6) return; const t = e.target.closest('[data-hit]'); select(t ? t.dataset.hit : null); });
+  svg.addEventListener('dblclick', (e) => { e.preventDefault(); zoomAt(0.5, e.clientX, e.clientY); });
+  new ResizeObserver(() => { if (S.tab === 'map' && view) { const box = wrapBox(); setView({ ...view, h: view.w * box.height / Math.max(box.width, 1) }); } }).observe($('mapwrap'));
+})();
+
+// ---- live position (/api/live), polled while the map is on screen ----
+let pollT = null, pollSeq = 0, reloadedFor = null;
+async function pollLive(now = false) {
+  clearTimeout(pollT);
+  const seq = ++pollSeq;
+  if (document.hidden || S.tab !== 'map') { pollT = setTimeout(pollLive, 2000); return; }
+  try {
+    const q = new URLSearchParams();
+    if (S.level === 'base' && S.base) q.set('base', S.base);
+    if (S.target) q.set('target', S.target.key);
+    const got = await api('/api/live?' + q);
+    if (seq !== pollSeq) return;
+    LIVE = got;
+    // show the player's planet the first time we see them on one (unless the URL chose a view), then follow them to other planets while Centre is on
+    if (LIVE.on_planet && MAP && !MAP.planets.some((p) => p.address === LIVE.address) && reloadedFor !== LIVE.address) { reloadedFor = LIVE.address; await loadMap(); }
+    if (LIVE.on_planet && MAP && planet() && LIVE.address !== S.planet && ((!S.placed && !S.userChose) || S.follow)) { S.placed = true; if (showMe(false)) return pollLive(); }
+    if (S.follow && onThisPlanet() && S.level === 'planet') { const near = (LIVE.bases || [])[0]; if (near && near.dist < 300 && planet().layouts[near.base]) { go({ level: 'base', base: near.base }, { push: false }); return pollLive(); } }
+    drawLivePill(); drawAway(); drawGoto(); drawLive();
+    if (S.follow) centreOnMe();
+    if (!$('selsheet').hidden && S.sel) drawSel();
+    if ($('legend').innerHTML.includes('data-act="nearby"') !== !!(onThisPlanet() && LIVE.nearby && LIVE.nearby.length)) drawLegend();
+  } catch (e) {
+    if (seq !== pollSeq) return;
+    LIVE = { state: 'none', error: String(e.message || e) };
+    drawLivePill();
+  }
+  pollT = setTimeout(pollLive, LIVE && LIVE.state === 'live' ? 1000 : 3000);
+}
+function showMe(push = true) {
+  if (!LIVE || !LIVE.on_planet || !MAP) { if (LIVE && !LIVE.on_planet) toast(`You're ${locName(LIVE.location).toLowerCase()} · ${LIVE.why || ''}`); return false; }
+  const pl = MAP.planets.find((p) => p.address === LIVE.address);
+  if (!pl) { loadMap().then(() => showMe(push)); return false; }
+  const near = (LIVE.bases || [])[0], base = near && near.dist < 300 && pl.layouts[near.base] ? near.base : null;
+  go({ tab: 'map', planet: pl.address, level: base ? 'base' : 'planet', base }, { push });
+  S.follow = true; $('findme').classList.add('on');
+  return true;
+}
+
+// ---- the fold: the engine's media queries when it has them, else what the Android shell reports ----
+window.nmsFold = (f) => {
+  const h = document.documentElement;
+  h.dataset.posture = f.posture || 'none'; h.dataset.fold = f.orientation || '';
+  if (f.left !== undefined && f.orientation === 'vertical') h.style.setProperty('--fold-gap', `${Math.max(16, Math.round(f.right - f.left) + 28)}px`);
+  else h.style.removeProperty('--fold-gap');
+};
+if (SHELL && SHELL.fold) { try { window.nmsFold(JSON.parse(SHELL.fold())); } catch (e) { /* no fold yet */ } }
+
+// ---- clocks ----
+setInterval(() => {
+  if (document.hidden) return;
+  document.querySelectorAll('.saveage').forEach((e) => { e.textContent = J ? `● save ${fdur(elapsed())} ago` : '● no save yet'; e.className = `pill saveage ${!J ? 'off' : elapsed() < 1800 ? 'ok' : 'warn'}`; });
+  tickFarms();
+}, 1000);
+setInterval(() => { if (!document.hidden) loadJson(); }, 60000);
+setInterval(() => { if (!document.hidden) loadMap(); }, 300000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { if (Date.now() - jsonAt > 30000) loadJson(); if (Date.now() - mapAt > 120000) loadMap(); pollLive(true); } });
+
+readHash();
+render();
+loadMap().then(() => loadJson()).then(() => pollLive(true));
+</script>
+</body>
+</html>
