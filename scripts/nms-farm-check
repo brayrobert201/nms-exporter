@@ -10,11 +10,6 @@ For each extractor it checks:
 
 - **not piped**    no pipeline end within reach: it fills its own 250 and stops
 - **no depot**     piped, but nothing on its pipe network is a supply depot
-- **split off**    traced onto a network by geometry, but it alone carries a
-                   different fill, so the game does not count it as connected
-                   (a gap the geometry tolerance hides). A *group* of
-                   extractors sharing a different fill is a separate network
-                   that happens to touch (stacked layers), and is not flagged.
 - **no wire**      no power line ends at it (both extractor types need 50 kP)
 - **never filled** its buffer is empty: unpowered, off the hotspot, or just
                    built. On a network all extractors share one fill, so a

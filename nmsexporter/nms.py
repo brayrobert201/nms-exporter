@@ -70,12 +70,12 @@ def _pipe_networks(units: list, pipes: list, tol: float = 3.2, unit_tol: float =
     (At is not normalised; its length is the segment length). Ends within
     `tol` of a unit or of another pipe end are joined (the game's connection
     distance is 3). Joining units that merely touch (`unit_tol`) is off by
-    default: it lumps neighbouring networks' depot rows together. Components
-    are then split by extractor fill: the extractors on one network always
-    carry the same fill (observed on every base), so two extractors with
-    different fills are on different networks whatever the geometry says;
-    depot fills vary along a network, so depots follow the extractor group
-    whose centre is nearest."""
+    default: it lumps neighbouring networks' depot rows together. Geometry is
+    the whole answer: fills are NOT a connection signal. Units on one network
+    gain in lockstep but keep the offsets they started with, so a working
+    network shows many fills (Cobalt Oxygen, two saves 204 s apart: three
+    traced networks, every unit in each rising by the same amount). An
+    earlier split-by-fill step invented a dozen one-extractor networks there."""
     parent: dict = {}
 
     def find(x):
@@ -107,26 +107,7 @@ def _pipe_networks(units: list, pipes: list, tol: float = 3.2, unit_tol: float =
     comps: dict = {}
     for j, u in enumerate(units):
         comps.setdefault(find(("u", j)), []).append(u)
-    out = []
-    for comp in comps.values():
-        out.extend(_split_by_fill(comp))
-    return out
-
-
-def _split_by_fill(comp: list) -> list:
-    """Split one traced component where the extractors' fills disagree."""
-    fill = lambda o: o.get("UserData", 0) >> 32
-    exts = [o for o in comp if o["ObjectID"] in EXTRACTORS]
-    depots = [o for o in comp if o["ObjectID"] not in EXTRACTORS]
-    levels = sorted({fill(o) for o in exts})
-    if len(levels) <= 1:
-        return [comp]
-    groups = {lv: [o for o in exts if fill(o) == lv] for lv in levels}
-    centres = {lv: _centre(g) for lv, g in groups.items()}
-    for o in depots:
-        lv = min(levels, key=lambda l: _dist(o["Position"], centres[l]))
-        groups[lv].append(o)
-    return list(groups.values())
+    return list(comps.values())
 
 
 GAME_MODES = {1: "Normal", 2: "Creative", 3: "Survival", 4: "Permadeath", 5: "Ambient"}

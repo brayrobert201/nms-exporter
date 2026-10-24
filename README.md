@@ -197,7 +197,7 @@ questions, the stored sources every claim rests on, and research runs. Start at
   paths, unpack and convert them, search them, and store an excerpt as a
   source under `research/sources/game-data/<build>/`.
 - `scripts/nms-farm-check [base]` - extractors that are loose (not piped, no
-  depot, split off their network, no wire, never filled), with their position
+  depot, no wire, never filled), with their position
   relative to the base computer and the nearest working network.
 - `scripts/research-fetch URL --slug --why` - store a web page verbatim with
   provenance under `research/sources/web/`.

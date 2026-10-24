@@ -1,8 +1,12 @@
 """Extractor hook-up checks shared by scripts/nms-farm-check and the /map page.
 
 check_base(base) -> one row per extractor with its problems: not piped, no
-depot, split off (alone on a fill the rest of its traced network does not
-share), no wire, never filled. Power is not traced to a generator: on working
+depot, no wire, never filled. Networks come from pipe geometry alone. Fill
+levels say nothing about connection within one save: units on one network gain
+in lockstep but keep the offsets they started with, so a working network shows
+many different fills (verified 2026-10-22 on Cobalt Oxygen across two saves).
+A former "split off" check that read differing fills as disconnection was wrong
+and is removed. Power is not traced to a generator: on working
 farms the saved wires stop 4-15 m short of the generators (power passes through
 parts or snap points the save does not describe). See the script's docstring.
 Standard library only.
@@ -99,16 +103,12 @@ def check_base(b: dict) -> list:
     for comp in pipe_comp.values():
         cexts = [o for o in comp if o["ObjectID"] in EXTRACTORS]
         has_depot = any(o["ObjectID"] == DEPOT for o in comp)
-        fills = [fill(o) for o in cexts]
-        lone = {f for f in set(fills) if fills.count(f) == 1} if len(set(fills)) > 1 else set()
         for o in cexts:
             problems = []
             if id(o) not in piped:
                 problems.append("not piped")
             elif not has_depot:
                 problems.append("no depot")
-            if id(o) in piped and fill(o) in lone:
-                problems.append("split off")
             if id(o) not in wired:
                 problems.append("no wire")
             if fill(o) == 0:
