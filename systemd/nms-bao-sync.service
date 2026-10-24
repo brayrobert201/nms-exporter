@@ -1,0 +1,12 @@
+# Refresh the save-backup S3 key from OpenBao (holly AppRole -> kv/garage/nms-saves).
+[Unit]
+Description=Sync nms-exporter's S3 key from OpenBao
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/nms-exporter/scripts/nms-bao-sync.py
+PrivateTmp=yes
+ProtectHome=yes
+NoNewPrivileges=yes

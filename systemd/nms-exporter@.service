@@ -15,6 +15,9 @@ ExecStart=/opt/nms-exporter/.venv/bin/python /opt/nms-exporter/nms_exporter.py
 Environment=NMS_EXPORTER_HOST=0.0.0.0
 Environment=NMS_EXPORTER_PORT=9877
 Environment=PYTHONUNBUFFERED=1
+# Optional: S3 credentials for the versioned save backup (NMS_S3_ACCESS_KEY,
+# NMS_S3_SECRET_KEY; root-owned, mode 600). Absent, the backup stays disabled.
+EnvironmentFile=-/etc/nms-exporter/s3.env
 # Optional: the nms-db Postgres login (PGHOST, PGUSER, PGPASSWORD, ...; written by
 # nms-bao-sync, mode 600). Absent, the map's history APIs answer 503.
 EnvironmentFile=-/etc/nms-exporter/db.env

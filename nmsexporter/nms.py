@@ -24,6 +24,7 @@ import urllib.request
 
 from . import nmssave
 from .planner import Planner
+from .s3backup import SaveBackup
 from .crafting import Crafting
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -185,6 +186,7 @@ class Collector:
         self.state = self._load_state()
         self.decode_seconds = 0.0
         self.decodes, self.decode_failures = 0, 0
+        self.backup = SaveBackup()
 
     # -- files ---------------------------------------------------------------
     def _load_tables(self) -> dict:
@@ -217,6 +219,7 @@ class Collector:
         """Re-decode if the newest save changed. Cheap when it has not."""
         with self._lock:
             save_dir = find_save_dir()
+            self.backup.kick(save_dir)       # versioned copy to S3; background, never raises
             path = newest_save(save_dir) if save_dir else ""
             if not path:
                 self.snapshot = {"errors": {"save": f"no save files under {save_dir or '(no save dir found)'}"}}
@@ -995,6 +998,7 @@ class Collector:
         """Snapshot plus time-dependent fields, evaluated at `now`."""
         now = now or time.time()
         snap = json.loads(json.dumps(self.snapshot, default=list))   # cheap deep copy
+        snap["backup"] = self.backup.status()
         if "save" not in snap or not snap["save"]:
             return snap
         snap["now"] = now
@@ -1070,6 +1074,12 @@ class Collector:
         m("nms_collector_decodes_total", "Save files decoded since start.", "counter", [({}, self.decodes)])
         m("nms_collector_decode_failures_total", "Save files that failed to decode.", "counter", [({}, self.decode_failures)])
         m("nms_collector_decode_duration_seconds", "Time to decode the last save.", "gauge", [({}, round(self.decode_seconds, 3))])
+        b = self.backup
+        m("nms_backup_enabled", "Save backup to S3 configured (1) or not (0).", "gauge", [({"bucket": b.bucket}, 1 if b.enabled else 0)])
+        m("nms_backup_uploads_total", "Save files uploaded to S3 since start.", "counter", [({}, b.uploads)])
+        m("nms_backup_errors_total", "Backup runs that failed since start.", "counter", [({}, b.errors)])
+        m("nms_backup_last_success_seconds", "Unix time of the last successful upload.", "gauge",
+          [({}, int(b.last_upload))] if b.last_upload else [])
         if not ok:
             return "\n".join(L) + "\n"
 

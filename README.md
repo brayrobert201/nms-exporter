@@ -154,6 +154,37 @@ exporter fetches a fresh one on first run if it can.
 `/opt/nmstools` (hgpaktool, MBINCompiler-linux, a .NET 8 runtime); the extractor
 defaults to it.
 
+## Save backup to S3
+
+Every save the game writes (and `accountdata.hg`) is uploaded with its `mf_`
+manifest to the `nms-saves` bucket on Garage, keyed by the file's own mtime:
+`<st_dir>/<stem>/<YYYYmmddTHHMMSSZ>/<stem>.hg` and `.../mf_<stem>.hg`. Garage has
+no object versioning, so each version is its own key; uploads are idempotent.
+The newest save of any slot is always at `current/save.hg`, `current/mf_save.hg`
+and `current/info.json` (which slot file it is, its mtime, sha256 and versioned key),
+overwritten in place.
+Retention: everything for 7 days, the newest per hour to 30 days, the newest per
+day after that (pruned every 6 hours). `nmsexporter/s3backup.py`, standard
+library only (SigV4 checked against AWS's published examples).
+
+Credentials live in OpenBao at `kv/garage/nms-saves` and reach the service as
+`/etc/nms-exporter/s3.env` (root, mode 600), which the unit reads with
+`EnvironmentFile=-`. `nms-bao-sync.timer` (boot + every 6h, root) keeps it current:
+`scripts/nms-bao-sync.py` logs in with the `holly` AppRole (role_id/secret_id in
+`/etc/nms-exporter/bao/`, root-only; secret_id never expires; token 15 min, revoked
+after use), reads only that secret (policy `holly-nms-saves` in the homelab repo),
+rewrites s3.env when it changed and restarts the exporter. The file looks like:
+
+```
+NMS_S3_ACCESS_KEY=GK...
+NMS_S3_SECRET_KEY=...
+# optional: NMS_S3_ENDPOINT=http://127.0.0.1:3900  NMS_S3_BUCKET=nms-saves  NMS_S3_REGION=garage
+```
+
+Status is in `/json` (`backup`) and `/metrics` (`nms_backup_*`). To restore: close
+the game, turn Steam Cloud off for No Man's Sky, copy both files of a version
+back into the save directory.
+
 ## Planner, history and the shell
 
 - `/json` carries a `planner` section: how many Fusion Ignitors and Stasis Devices
