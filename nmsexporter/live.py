@@ -83,6 +83,24 @@ def read_sample():
         return None, f"live.json: {e}"
 
 
+# Which set of game controls applies, for the Stream Deck pages (scripts/nms-streamdeck):
+# piloting a ship (SHIP_LOCATIONS, the corvette's pilot seat included), driving an exocraft,
+# or on foot everywhere else, which takes in walking around the corvette ("Freighter").
+VEHICLE_LOCATIONS = {"PlanetInVehicle"}
+
+
+def control_mode() -> dict:
+    """{"mode": "ship" | "exocraft" | "foot" | None, "location", "age"}; mode is None
+    when there is no live sample younger than STALE_S."""
+    sample, err = read_sample()
+    if sample is None:
+        return {"mode": None, "location": None, "age": None, "error": err}
+    age = time.time() - sample.get("t", 0)
+    loc = sample.get("location")
+    mode = ("ship" if loc in SHIP_LOCATIONS else "exocraft" if loc in VEHICLE_LOCATIONS else "foot")
+    return {"mode": mode if age <= STALE_S else None, "location": loc, "age": round(age, 1), "error": None}
+
+
 class Trail:
     """The last two days of trail, from nms-db (db.py), read incrementally."""
 

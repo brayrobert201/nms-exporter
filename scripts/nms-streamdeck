@@ -1,0 +1,334 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# dependencies = ["pillow", "numpy", "opencv-python-headless"]
+# ///
+"""Build the No Man's Sky pages for OpenDeck on a 15-key Stream Deck.
+
+    scripts/nms-streamdeck icons     # cut and draw the key images into streamdeck/icons/
+    scripts/nms-streamdeck install   # install the plugin and profiles (quit OpenDeck first)
+
+One OpenDeck profile, NMS, whose keys belong to the NMS Deck plugin
+(streamdeck/plugin/): it shows the On Foot, Exocraft or Ship page as the
+exporter's /api/mode says the player is, with the game's default keyboard
+bindings (metadata/input/bindings/gcinputbindings_win_keyboard of build
+26277414) held down for as long as the deck key is held. The bottom row pages
+by hand with the outer keys (until the mode next changes) and returns to the
+Default profile from the middle one. The Default profile gets the NMS and Holly
+conky icons and a key into the NMS profile.
+
+(A plugin draws the pages instead of one profile per page because OpenDeck only
+takes profile switches from its own starter pack.)
+
+Key art is cut from streamdeck/source/deck-xl.webp (a store screenshot of a
+Stream Deck XL profile); keys it has no art for are drawn in the same style by
+inpainting a cut tile's glyph and label and drawing a Font Awesome glyph.
+"""
+import json
+import shutil
+import sys
+from pathlib import Path
+
+import cv2
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+HERE = Path(__file__).resolve().parents[1] / "streamdeck"
+SRC, ICONS = HERE / "source", HERE / "icons"
+OPENDECK = Path.home() / ".config/opendeck"
+DEVICE = "sd-A00TA3302L4VGA"
+COLS = 5
+
+FA = "/usr/share/fonts/truetype/font-awesome/fa-6.7.2-solid-900.ttf"
+LABEL_FONT = "/usr/share/fonts/truetype/lato/Lato-Semibold.ttf"
+
+# Tiles on the XL screenshot: 112 px squares on a 128 px grid from (856, 185).
+CUT = {
+    "on_foot": (0, 0), "ship": (0, 1), "exocraft": (0, 2),
+    "visor": (1, 0), "scan": (1, 1), "torch": (1, 2), "melee": (1, 3), "reload": (1, 4),
+    "weapon_mode": (1, 5), "alt_weapon": (1, 6), "quick_menu": (1, 7),
+    "pulse": (2, 0), "land_exit": (2, 1), "galaxy_map": (2, 2), "system_map": (2, 3),
+    "prev_target": (2, 4), "next_target": (2, 5), "closest_target": (2, 6), "ship_power": (2, 7),
+    "inventory": (3, 0), "options": (3, 1), "build_menu": (3, 2), "hud": (3, 3),
+    "auto_walk": (3, 4), "survey_prev": (3, 5), "survey_next": (3, 6), "chat": (3, 7),
+}
+# Accent hues (degrees) of the folder colours on the screenshot.
+HUE = {"foot": 36, "exo": 102, "ship": 177}
+
+# Drawn keys: name -> (template tile, page hue or None for slate, FA codepoint, label lines[, glyph px]).
+DRAWN = {
+    "exo_exit": ("scan", "exo", 0xF2F5, ["Exit"]),
+    "exo_jump": ("scan", "exo", 0xF102, ["Jump"]),
+    "exo_dive": ("scan", "exo", 0xF103, ["Dive"]),
+    "exo_horn": ("scan", "exo", 0xF0A1, ["Horn"]),
+    "exo_mark": ("scan", "exo", 0xF276, ["Add", "Point"]),
+    "exo_unmark": ("scan", "exo", 0xF12D, ["Clear", "Point"]),
+    "free_look": ("scan", "ship", 0xF06E, ["Free", "Look"]),
+    "back": ("hud", None, 0xF015, ["Back"]),
+}
+for page, label in (("foot", ["On Foot"]), ("exo", ["Exocraft"]), ("ship", ["Ship"])):
+    DRAWN[f"to_{page}_l"] = ("scan", page, 0xF0D9, label, 44)
+    DRAWN[f"to_{page}_r"] = ("scan", page, 0xF0DA, label, 44)
+
+
+def bgr(img: Image.Image) -> np.ndarray:
+    return cv2.cvtColor(np.asarray(img.convert("RGB")), cv2.COLOR_RGB2BGR)
+
+
+def rgb(arr: np.ndarray) -> Image.Image:
+    return Image.fromarray(cv2.cvtColor(arr, cv2.COLOR_BGR2RGB))
+
+
+def cut_tiles() -> dict[str, Image.Image]:
+    sheet = Image.open(SRC / "deck-xl.webp").convert("RGB")
+    return {
+        name: sheet.crop((857 + 128 * c, 186 + 128 * r, 967 + 128 * c, 296 + 128 * r))
+        for name, (r, c) in CUT.items()
+    }
+
+
+def recolour(img: Image.Image, hue: int) -> Image.Image:
+    """Move the gold and teal accents (not the slate or navy) to another hue."""
+    hsv = cv2.cvtColor(bgr(img), cv2.COLOR_BGR2HSV)
+    h, s = hsv[..., 0].astype(int) * 2, hsv[..., 1]
+    accent = (s > 60) & (((h > 15) & (h < 60)) | ((h > 150) & (h < 200)))
+    hsv[..., 0] = np.where(accent, hue // 2, hsv[..., 0])
+    return rgb(cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR))
+
+
+def accent_colour(img: Image.Image) -> tuple[int, int, int]:
+    px = np.asarray(img.convert("RGB")).reshape(-1, 3).astype(int)
+    vivid = px[(px.max(1) > 150) & (px.max(1) - px.min(1) > 60)]
+    if not len(vivid):
+        vivid = px[px.sum(1) > np.percentile(px.sum(1), 97)]
+    return tuple(int(v) for v in np.median(vivid, 0))
+
+
+def blank(img: Image.Image) -> Image.Image:
+    """Inpaint away the glyph inside the badge and the label under it."""
+    a = bgr(img)
+    w = a.shape[1]
+    lum = cv2.cvtColor(a, cv2.COLOR_BGR2GRAY)
+    mask = np.zeros_like(lum)
+    yy, xx = np.mgrid[: lum.shape[0], : w]
+    glyph = (np.hypot(xx - w / 2, yy - 42) < 21) & (lum > 70)
+    label = (yy > 82) & (xx > 14) & (xx < w - 14) & (lum > 45)
+    mask[glyph | label] = 255
+    mask = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=2)
+    return rgb(cv2.inpaint(a, mask, 5, cv2.INPAINT_TELEA))
+
+
+def draw(base: Image.Image, codepoint: int, lines: list[str], size: int = 30) -> Image.Image:
+    k = 4  # draw large, then shrink
+    W = base.width * k
+    accent = accent_colour(base)
+    out = base.resize((W, W), Image.LANCZOS).convert("RGBA")
+
+    glyph = Image.new("L", (W, W))
+    font = ImageFont.truetype(FA, size * k)
+    ImageDraw.Draw(glyph).text((W / 2, 42 * k), chr(codepoint), font=font, fill=255, anchor="mm")
+    glow = Image.new("RGBA", (W, W), accent + (0,))
+    glow.putalpha(glyph.filter(ImageFilter.GaussianBlur(5 * k)).point(lambda v: min(255, v * 2)))
+    out = Image.alpha_composite(out, glow)
+    cream = tuple(min(255, int(c * 0.2 + 255 * 0.8)) for c in accent)
+    face = Image.new("RGBA", (W, W), cream + (0,))
+    face.putalpha(glyph)
+    out = Image.alpha_composite(out, face)
+
+    d = ImageDraw.Draw(out)
+    lf = ImageFont.truetype(LABEL_FONT, 16 * k)
+    ys = [99] if len(lines) == 1 else [85, 100]
+    for y, text in zip(ys, lines):
+        d.text((W / 2, y * k), text, font=lf, fill=accent, anchor="mm")
+    return out.convert("RGB").resize(base.size, Image.LANCZOS)
+
+
+def squared(path: Path, ground=(0, 0, 0), size: int = 144) -> Image.Image:
+    img = Image.open(path).convert("RGBA")
+    img.thumbnail((size, size), Image.LANCZOS)
+    out = Image.new("RGBA", (size, size), ground + (255,))
+    out.alpha_composite(img, ((size - img.width) // 2, (size - img.height) // 2))
+    return out.convert("RGB")
+
+
+def build_icons() -> None:
+    ICONS.mkdir(parents=True, exist_ok=True)
+    tiles = cut_tiles()
+    for name, img in tiles.items():
+        img.save(ICONS / f"{name}.png")
+        for page, hue in HUE.items():
+            recolour(img, hue).save(ICONS / f"{name}.{page}.png")
+    for name, (template, page, codepoint, lines, *size) in DRAWN.items():
+        base = blank(tiles[template])
+        if page:  # otherwise the template's own colour (slate for "hud")
+            base = recolour(base, HUE[page])
+        draw(base, codepoint, lines, *size).save(ICONS / f"{name}.png")
+    # The NMS atlas mark is black on transparent: it needs a light key.
+    squared(SRC / "nms.png", (235, 235, 235)).save(ICONS / "nms.png")
+    squared(SRC / "holly.webp").save(ICONS / "holly.png")
+    print(f"{len(list(ICONS.glob('*.png')))} images in {ICONS}")
+
+
+# Pages: 15 keys each, row-major. (image, game key); None is the bottom-row
+# navigation: page arrows at 10 and 14, back to the Default profile at 12.
+# Cut images take the page's colour. Game keys are xdotool key names or the
+# plugin's short names (nmsdeck.py XKEY).
+PAGES = {
+    "foot": ("On Foot", [
+        ("visor", "f"), ("survey_prev", "1"), ("survey_next", "3"), ("scan", "c"), ("torch", "t"),
+        ("melee", "q"), ("weapon_mode", "g"), ("alt_weapon", "b"), ("quick_menu", "x"), ("build_menu", "z"),
+        None, ("system_map", "v"), None, ("auto_walk", "k"), None,
+    ]),
+    "exocraft": ("Exocraft", [
+        ("exo_exit", "e"), ("scan", "c"), ("visor", "f"), ("survey_prev", "1"), ("survey_next", "3"),
+        ("quick_menu", "x"), ("exo_jump", "space"), ("exo_dive", "q"), ("exo_horn", "ctrl"), ("weapon_mode", "g"),
+        None, ("exo_mark", "v"), None, ("exo_unmark", "b"), None,
+    ]),
+    "ship": ("Ship", [
+        ("land_exit", "e"), ("pulse", "space"), ("galaxy_map", "m"), ("system_map", "v"), ("quick_menu", "x"),
+        ("scan", "c"), ("prev_target", ","), ("closest_target", "t"), ("next_target", "."), ("ship_power", "/"),
+        None, ("weapon_mode", "g"), None, ("free_look", "alt"), None,
+    ]),
+}
+ORDER = list(PAGES)  # the arrows' cycle; the page names are /api/mode's modes
+HUE_OF = {"foot": "foot", "exocraft": "exo", "ship": "ship"}
+PROFILE = "NMS"
+BACK = 12
+MODE_URL = "http://127.0.0.1:9877/api/mode"
+STARTER = "com.amansprojects.starterpack.sdPlugin"
+NMSDECK = "com.bob.nmsdeck.sdPlugin"
+PLUGIN_SRC = HERE / "plugin"
+
+
+def page_images() -> dict[str, list[str | None]]:
+    """Icon file name for every slot of every page (None for Back, which is not the plugin's)."""
+    out = {}
+    for i, page in enumerate(ORDER):
+        names = []
+        for pos, key in enumerate(PAGES[page][1]):
+            if key:
+                name = key[0]
+                names.append(f"{name}.{HUE_OF[page]}.png" if name in CUT else f"{name}.png")
+            elif pos == BACK:
+                names.append(None)
+            else:
+                step = -1 if pos == 10 else 1
+                to = ORDER[(i + step) % len(ORDER)]
+                names.append(f"to_{HUE_OF[to]}_{'l' if step < 0 else 'r'}.png")
+        out[page] = names
+    return out
+
+
+def install_plugin() -> None:
+    """Copy the plugin with its pages.json and the icons the pages use."""
+    dest = OPENDECK / "plugins" / NMSDECK
+    shutil.rmtree(dest, ignore_errors=True)
+    (dest / "icons").mkdir(parents=True)
+    for f in ("nmsdeck.py", "manifest.json"):
+        shutil.copy2(PLUGIN_SRC / f, dest / f)
+    shutil.copy(ICONS / "nms.png", dest / "icons" / "plugin.png")
+    images = page_images()
+    pages = {}
+    for i, page in enumerate(ORDER):
+        keys = []
+        for pos, (key, image) in enumerate(zip(PAGES[page][1], images[page])):
+            if image:
+                shutil.copy(ICONS / image, dest / "icons" / image)
+            if key:
+                keys.append({"image": f"icons/{image}", "key": key[1]})
+            elif pos == BACK:
+                keys.append(None)
+            else:
+                keys.append({"image": f"icons/{image}", "nav": -1 if pos == 10 else 1})
+        pages[page] = {"title": PAGES[page][0], "keys": keys}
+    (dest / "pages.json").write_text(json.dumps({"order": ORDER, "mode_url": MODE_URL, "pages": pages}, indent=1))
+    print(f"plugin installed in {dest}")
+
+
+def action(plugin: str, uuid: str) -> dict:
+    """An action as OpenDeck stores it in a profile, from the plugin manifest."""
+    manifest = json.loads((OPENDECK / "plugins" / plugin / "manifest.json").read_text())
+    a = next(a for a in manifest["Actions"] if a["UUID"] == uuid)
+    icon = f"plugins/{plugin}/{a['Icon']}.png"
+    pi = a.get("PropertyInspectorPath")
+    return {
+        "controllers": a["Controllers"],
+        "disable_automatic_states": False,
+        "encoder": None,
+        "icon": icon,
+        "name": a["Name"],
+        "plugin": plugin,
+        "property_inspector": f"plugins/{plugin}/{pi}" if pi else "",
+        "states": [state(icon)],
+        "supported_in_multi_actions": a["SupportedInMultiActions"],
+        "tooltip": a["Tooltip"],
+        "uuid": a["UUID"],
+        "visible_in_action_list": True,
+    }
+
+
+def state(image: str, text: str = "") -> dict:
+    return {
+        "alignment": "bottom", "background_colour": "#000000", "colour": "#FFFFFF",
+        "family": "Liberation Sans", "image": image, "image_scale": 100, "name": "",
+        "show": True, "size": 16, "stroke_colour": "#000000", "stroke_size": 3,
+        "style": "Regular", "text": text, "underline": False,
+    }
+
+
+def instance(profile: str, position: int, plugin: str, uuid: str, settings: dict, image: Path) -> dict:
+    """A key, with its image copied to where OpenDeck looks for "0.png"."""
+    context = f"Keypad.{position}.0"
+    dest = OPENDECK / "images" / DEVICE / profile / context
+    dest.mkdir(parents=True, exist_ok=True)
+    shutil.copy(image, dest / "0.png")
+    return {
+        "action": action(plugin, uuid), "children": None, "context": context, "current_state": 0,
+        "settings": settings, "states": [state("0.png")],
+    }
+
+
+def switch(profile: str) -> dict:
+    return {"device": DEVICE, "profile": profile}
+
+
+def install() -> None:
+    import subprocess
+    import time
+
+    if subprocess.run(["pgrep", "-x", "opendeck"], capture_output=True).returncode == 0:
+        sys.exit("OpenDeck is running and would overwrite the profiles: quit it first")
+    if not ICONS.exists():
+        build_icons()
+    backup = OPENDECK.with_name(f"opendeck.bak-{time.strftime('%Y%m%d-%H%M%S')}")
+    shutil.copytree(OPENDECK, backup, ignore=shutil.ignore_patterns("plugins"))
+    print(f"backed up to {backup}")
+    install_plugin()
+
+    profiles, images = OPENDECK / "profiles" / DEVICE, OPENDECK / "images" / DEVICE
+    for old in ("NMS", PROFILE):  # the earlier one-profile-per-page layout lived in NMS/
+        shutil.rmtree(profiles / old, ignore_errors=True)
+        shutil.rmtree(images / old, ignore_errors=True)
+    swp = "com.amansprojects.starterpack.switchprofile"
+    first = page_images()[ORDER[0]]
+    keys = [instance(PROFILE, pos, STARTER, swp, switch("Default"), ICONS / "back.png") if pos == BACK
+            else instance(PROFILE, pos, NMSDECK, "com.bob.nmsdeck.key", {"slot": pos}, ICONS / first[pos])
+            for pos in range(15)]
+    (profiles / f"{PROFILE}.json").write_text(json.dumps({"keys": keys, "sliders": [], "infobars": []}, indent=2))
+    print(f"{PROFILE}: 15 keys, following {MODE_URL}")
+
+    # Default: the conky keys get their icons, and key 3 opens the NMS profile.
+    path = profiles / "Default.json"
+    default = json.loads(path.read_text())
+    for pos, icon in ((0, "nms.png"), (1, "holly.png")):
+        key = default["keys"][pos]
+        dest = images / "Default" / key["context"]
+        dest.mkdir(parents=True, exist_ok=True)
+        shutil.copy(ICONS / icon, dest / "0.png")
+        key["states"][0].update(image="0.png", text="")
+    default["keys"][3] = instance("Default", 3, STARTER, swp, switch(PROFILE), ICONS / "on_foot.png")
+    path.write_text(json.dumps(default, indent=2))
+    print(f"Default: NMS and Holly icons, key 4 opens {PROFILE}")
+
+
+if __name__ == "__main__":
+    {"icons": build_icons, "install": install}[sys.argv[1]]()

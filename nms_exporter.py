@@ -26,7 +26,7 @@ from urllib.parse import unquote_plus  # noqa: E402
 import psycopg  # noqa: E402
 
 from nmsexporter import db, maps  # noqa: E402
-from nmsexporter.live import LIVE_DIR, Live  # noqa: E402
+from nmsexporter.live import LIVE_DIR, Live, control_mode  # noqa: E402
 from nmsexporter.systems import portal  # noqa: E402
 from nmsexporter.nms import Collector  # noqa: E402
 
@@ -153,6 +153,8 @@ class Handler(BaseHTTPRequestHandler):
                     pl["tile_colours"] = (live.finds.planets.get(a) or {}).get("tile_colours") if a is not None else None
                 return self._send(json.dumps(m).encode(),
                                   "application/json")
+            if path == "/api/mode":  # polled by the Stream Deck plugin; no save refresh
+                return self._send(json.dumps(control_mode()).encode(), "application/json")
             if path == "/api/live":
                 return self._send(json.dumps(live.build(collector.raw_bases, unquote_plus(params.get("base", "")) or None,
                                                         unquote_plus(params.get("target", "")) or None,

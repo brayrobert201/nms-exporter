@@ -1,0 +1,21 @@
+{
+	"Name": "NMS Deck",
+	"Description": "No Man's Sky keys that follow the game: on foot, exocraft or ship, from the nms-exporter's /api/mode",
+	"Author": "bob",
+	"Version": "1.0.0",
+	"Icon": "icons/plugin",
+	"Category": "No Man's Sky",
+	"CodePathLin": "nmsdeck.py",
+	"OS": [{ "Platform": "linux" }],
+	"Actions": [
+		{
+			"Icon": "icons/plugin",
+			"Name": "NMS Key",
+			"States": [{ "Image": "icons/plugin" }],
+			"Controllers": ["Keypad"],
+			"SupportedInMultiActions": false,
+			"Tooltip": "One slot of the No Man's Sky pages (settings: slot 0-14)",
+			"UUID": "com.bob.nmsdeck.key"
+		}
+	]
+}
