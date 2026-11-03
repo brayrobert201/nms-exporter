@@ -56,6 +56,7 @@ class Systems:
         self.names: dict = {}         # system UA -> name
         self.planet_names: dict = {}  # planet seed -> name
 
+    @db.serialized
     def refresh(self):
         self._last, rows = db.tail("systems", self._last)
         for _, r in rows:

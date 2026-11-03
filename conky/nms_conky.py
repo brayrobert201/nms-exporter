@@ -3,6 +3,8 @@
 
     nms_conky.py left  <section>    # the traveller: money, vitals, fleet, missions, technology, lifetime
     nms_conky.py right <section>    # the bases: refiners, farms, plants, inventory (crafting and tidy exist but are off the screen)
+                                    # in crafting mode (/json crafting_mode, set from the phone) the same sections
+                                    # draw the refinery board: every refiner's load, what to add, stock and output
 
 Each call prints one section as conky markup; left.conf and right.conf stitch
 the sections together with ${execpi}. Data is the exporter's own /json on
@@ -499,7 +501,163 @@ def left_lifetime(d) -> str:
 
 # ================================================================ right: bases ==
 
+def _ref_state(r: dict) -> str:
+    """run | full (output at its cap with input left) | ready (output to collect) | empty."""
+    if r.get("active"):
+        return "run"
+    ins = zip(r.get("projected_inputs") or [], r.get("inputs") or [])
+    if r.get("stalls_at_cap") and any(_ok(h) and h >= (i.get("per_op") or 1) for h, i in ins):
+        return "full"
+    return "ready" if (r.get("projected_output") or 0) > 0 else "empty"
+
+
+_REF_ORDER = {"run": 0, "full": 1, "ready": 2, "empty": 3}
+
+
+def _refs(d) -> list:
+    """Refiners in working order: running (soonest done first), full, ready (fullest first), empty."""
+    refs = [dict(r, state=_ref_state(r)) for r in d.get("refiners") or []]
+    return sorted(refs, key=lambda r: (_REF_ORDER[r["state"]], r.get("remaining_seconds") or 0 if r["state"] == "run" else 0,
+                                       -(r.get("projected_output") or 0), r.get("output") or ""))
+
+
+def _ref_pill(r: dict, bar_px: int = 220) -> str:
+    if r["state"] == "run":
+        return f"{c('series-1')}{bar(r.get('progress'), 'series-1', width=bar_px, px=16)}{font(28, mono=True)}{c('ink-2')} {fdur(r.get('remaining_seconds'))}"
+    if r["state"] == "full":
+        return pill("warning", "full - empty it")      # output slot at its cap with inputs left
+    if r["state"] == "ready":
+        return pill("good", "ready")
+    return pill("idle", "empty")
+
+
+# ------------------------------------------- the refinery board (crafting mode) --
+# Set from the phone (POST /api/mode {"crafting": true}) for a bulk crafting session; the
+# exporter keeps it and /json says crafting_mode. The right screen's sections then draw the
+# refinery instead of farms and plants: the planner and the inventory search stay.
+
+def refinery_summary(d) -> str:
+    refs = _refs(d)
+    by = {k: [r for r in refs if r["state"] == k] for k in _REF_ORDER}
+    nxt = [r.get("remaining_seconds") for r in by["run"] if _ok(r.get("remaining_seconds"))]
+    fills = [i for r in refs for i in (r.get("to_fill") or {}).get("inputs") or []]
+    adds, spare = sum(i.get("add") or 0 for i in fills), sum(i.get("spare") or 0 for i in fills)
+    return (save_line(d) + f"{c('ink-muted')}  ·  {pill('good', 'crafting mode', 26)}{c('ink-muted')}  ·  turn off on the phone"
+            + "\n${voffset 8}" + stats([
+                ("Running", fnum(len(by["run"])), f"next done in {fdur(min(nxt))}" if nxt else "none running"),
+                ("Full - empty it", fnum(len(by["full"])), "output at its cap, input left"),
+                ("Ready to collect", fnum(len(by["ready"])), f"of {len(refs)} refiners  ·  {len(by['empty'])} empty"),
+                ("To add", fnum(adds), f"units over every refiner  ·  {fnum(spare)} spare to take out"),
+            ]))
+
+
+def refinery_board(d) -> str:
+    """Every refiner on two lines: what it makes and where, then the output now and at the
+    end of the run against the slot's cap, each input with what to add (or take out) so the
+    run ends exactly at the cap, and the optimum load for that refiner."""
+    refs = _refs(d)
+    out = [header("Refinery board", f"{c('ink-muted')}{_n(len(refs), 'refiner')}  ·  what to add, where each run ends  ·  projected")]
+    if not refs:
+        out.append(empty("no refiners in the save"))
+        return "\n".join(out)
+    for r in refs:
+        ins = r.get("inputs") or []
+        names = " + ".join(i.get("item", "?") for i in ins)
+        ratio = " + ".join(str(i.get("per_op", "?")) for i in ins) + f" -> {r.get('output_per_op', '?')}"
+        out.append(f"${{voffset 6}}{font(32, bold=True)}{c('ink-1')}{esc(r.get('output', '?'))}"
+                   f"{font(26)}{c('ink-muted')}  from {esc(names)}  ·  {esc(r.get('base') or '?')}  ·  {esc(r.get('recipe', ''))}  ·  {esc(ratio)}"
+                   f"${{goto {MARGIN + 1700}}}{font(28)}{_ref_pill(r)}")
+        parts = [f"{c('ink-2')}output {c('ink-1')}{fnum(r.get('projected_output'))}{c('ink-2')} now, "
+                 f"{c('ink-1')}{fnum(r.get('end_output'))}{c('ink-2')} at end, cap {fnum(r.get('output_cap'))}"]
+        fill = {i["id"]: i for i in (r.get("to_fill") or {}).get("inputs") or []}
+        for i, have in zip(ins, r.get("projected_inputs") or []):
+            f = fill.get(i.get("id")) or {}
+            t = f"{c('ink-2')}{esc(i.get('item', '?'))} {c('ink-1')}{fnum(have)}"
+            if f.get("add"):
+                t += f"{c('good')}  add {fnum(f['add'])}"
+            elif f.get("spare"):
+                t += f"{c('warning')}  take out {fnum(f['spare'])}"
+            parts.append(t)
+        opt = r.get("optimum") or {}
+        if opt.get("inputs"):
+            load = " + ".join(f"{fnum(i.get('amount'))} {i.get('item', '?')}" for i in opt["inputs"])
+            parts.append(f"{c('ink-muted')}optimum {esc(load)} -> {fnum(opt.get('output'))}")
+        out.append(f"${{goto {MARGIN + 40}}}{font(26)}" + f"{c('ink-muted')}  ·  ".join(parts))
+    return "\n".join(out)
+
+
+def _where(d, iid: str, n: int = 2) -> str:
+    """The containers holding most of an item (every stack in a container summed)."""
+    per: dict = {}
+    for l in d.get("locations") or []:
+        if l.get("id") == iid:
+            per[l.get("location", "?")] = per.get(l.get("location", "?"), 0) + (l.get("amount") or 0)
+    top = sorted(per.items(), key=lambda kv: -kv[1])[:n]
+    return ", ".join(f"{where} {fnum(amt)}" for where, amt in top) or "none anywhere"
+
+
+def refinery_stock(d) -> str:
+    """The inputs the loaded recipes take: in stock and where, loaded already, what the
+    top-ups need and how far stock falls short."""
+    refs = d.get("refiners") or []
+    items = d.get("items") or {}
+    agg: dict = {}
+    for r in refs:
+        fill = {i["id"]: i for i in (r.get("to_fill") or {}).get("inputs") or []}
+        for i, have in zip(r.get("inputs") or [], r.get("projected_inputs") or []):
+            a = agg.setdefault(i.get("id"), {"item": i.get("item", "?"), "loaded": 0, "add": 0, "spare": 0, "refiners": 0})
+            f = fill.get(i.get("id")) or {}
+            a["loaded"] += have if _ok(have) else 0
+            a["add"] += f.get("add") or 0
+            a["spare"] += f.get("spare") or 0
+            a["refiners"] += 1
+    out = [header("Refinery stock", f"{c('ink-muted')}what the loaded recipes take  ·  stock against the top-ups")]
+    if not agg:
+        out.append(empty("no refiner has a recipe loaded"))
+        return "\n".join(out)
+    rows = []
+    for iid, a in sorted(agg.items(), key=lambda kv: (-max(0, kv[1]["add"] - ((items.get(kv[0]) or {}).get("total") or 0)), -kv[1]["add"])):
+        stock = (items.get(iid) or {}).get("total") or 0
+        short = max(0, a["add"] - stock)
+        rows.append([f"{esc(a['item'])}{font(24)}{c('ink-muted')}  {_n(a['refiners'], 'refiner')}", fnum(stock), esc(_where(d, iid)),
+                     fnum(a["loaded"]), fnum(a["add"]), f"{c('warning')}{fnum(short)}" if short else f"{c('ink-muted')}--",
+                     fnum(a["spare"]) if a["spare"] else f"{c('ink-muted')}--"])
+    out.append(table(["Input", "In stock", "Where", "Loaded", "To add", "Short", "Spare"], rows,
+                     [MARGIN, MARGIN + 400, MARGIN + 620, MARGIN + 1240, MARGIN + 1440, MARGIN + 1640, MARGIN + 1840], {1, 3, 4, 5, 6}))
+    return "\n".join(out)
+
+
+def refinery_output(d) -> str:
+    """What the refiners hold of each product now and at the end of their runs, the room
+    left under the caps, and the stock already in hand."""
+    refs = d.get("refiners") or []
+    items = d.get("items") or {}
+    agg: dict = {}
+    for r in refs:
+        a = agg.setdefault(r.get("output_id"), {"item": r.get("output", "?"), "now": 0, "end": 0, "cap": 0, "refiners": 0, "opt": []})
+        a["now"] += r.get("projected_output") or 0
+        a["end"] += r.get("end_output") or 0
+        a["cap"] += r.get("output_cap") or 0
+        a["refiners"] += 1
+        a["opt"].append((r.get("optimum") or {}).get("output") or 0)
+    out = [header("Refined output", f"{c('ink-muted')}in the refiners now and at the end of the runs  ·  against stock")]
+    if not agg:
+        out.append(empty("no refiner has a recipe loaded"))
+        return "\n".join(out)
+    rows = []
+    for iid, a in sorted(agg.items(), key=lambda kv: -kv[1]["end"]):
+        opts = sorted(set(a["opt"]))
+        per_load = fnum(opts[0]) if len(opts) == 1 else f"{fnum(opts[0])} to {fnum(opts[-1])}"
+        rows.append([esc(a["item"]), fnum(a["refiners"]), fnum(a["now"]), fnum(a["end"]), fnum(a["cap"]), per_load,
+                     fnum((items.get(iid) or {}).get("total") or 0)])
+    out.append(table(["Output", "Refiners", "Now", "At end", "Caps", "Per load", "In stock"], rows,
+                     [MARGIN, MARGIN + 520, MARGIN + 760, MARGIN + 1000, MARGIN + 1240, MARGIN + 1480, MARGIN + 1800], {1, 2, 3, 4, 5, 6}))
+    return "\n".join(out)
+
+
 def right_summary(d) -> str:
+    if d.get("crafting_mode"):
+        return refinery_summary(d)
     refs = d.get("refiners") or []
     running = [r for r in refs if r.get("active")]
     ready = [r for r in refs if not r.get("active") and (r.get("projected_output") or 0) > 0]
@@ -543,6 +701,8 @@ def right_planner(d) -> str:
 
 
 def right_refiners(d, show: int = 10) -> str:
+    if d.get("crafting_mode"):
+        return refinery_board(d)
     refs = d.get("refiners") or []
     out = [header("Refiners", f"{c('ink-muted')}projected")]
     if not refs:
@@ -573,6 +733,8 @@ def right_refiners(d, show: int = 10) -> str:
 
 
 def right_farms(d) -> str:
+    if d.get("crafting_mode"):
+        return refinery_stock(d)
     farms = sorted((d.get("farms") or {}).values(), key=lambda f: f.get("full_in_seconds") or 0)
     out = [header("Extraction farms", f"{c('ink-muted')}projected")]
     if not farms:
@@ -601,6 +763,8 @@ def right_farms(d) -> str:
 def right_plants(d) -> str:
     """One row per kind of plant: what it gives, how many are planted and ready,
     how much of the harvest is already in stock, and when the rest is due."""
+    if d.get("crafting_mode"):
+        return refinery_output(d)
     bases = list((d.get("plants") or {}).values())
     items = d.get("items") or {}
     total = sum(b.get("total") or 0 for b in bases)
@@ -848,7 +1012,8 @@ def main(argv: list[str]) -> int:
     try:
         d, err, age = load()
         if section == "head":
-            out = masthead(d, err, age, SUBTITLE[screen])
+            sub = "refinery" if screen == "right" and d and d.get("crafting_mode") else SUBTITLE[screen]
+            out = masthead(d, err, age, sub)
         elif d is None:
             out = ""                     # the masthead already says why
         else:

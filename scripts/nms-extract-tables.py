@@ -129,6 +129,10 @@ def parse_items(work, loc):
                     rec["symbol"] = loc[sym]
                 if kind != "Technology" and val(e, "BaseValue") is not None:
                     rec["value"] = num(val(e, "BaseValue"))
+                # A slot holds its stack group's cap times this (Casing 2, Power Cells 20);
+                # left out when it is 1, which is nearly every refinable thing.
+                if kind != "Technology" and val(e, "StackMultiplier") is not None and num(val(e, "StackMultiplier")) != 1:
+                    rec["stack"] = num(val(e, "StackMultiplier"))
                 cost = props(e).get("Cost")
                 if kind == "Product" and cost is not None:
                     rec["price"] = {"low": round(1 + num(val(cost, "LowPriceMod") or 0), 4),
@@ -561,6 +565,7 @@ def main():
             "fleet.traits": "frigate trait id -> display name, the stat it raises and the points it adds (from FrigateTraitStrengths); subtract trait points and level-ups to recover a frigate's base roll",
             "fleet.events_by_duration": "number of expedition events per duration class; an expedition lasts events * event_seconds from StartTime",
             "items.<id>.craft": "crafting blueprint: ingredients per craft and units made per craft (CraftAmountMultiplier)",
+            "items.<id>.stack": "StackMultiplier: a slot holds its stack-size group's cap (difficultyconfig, by the save's Inventory stack limits setting) times this; absent when 1",
             "items.<id>.value": "BaseValue in units; a terminal pays this times the system's modifier, which for products sits between price.low and price.high (1 + LowPriceMod / HighPriceMod); each sale moves the local price by a formula in code, scaled by price.influence",
             "crops.<base part id>": "what one planted crop yields per harvest (item, amount) and the seconds it takes to mature",
             "planets.biomes_by_star": "relative weight of each biome when a planet is rolled under a star colour (BiomeProbability); zero means never",

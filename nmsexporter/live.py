@@ -27,6 +27,7 @@ from collections import Counter, deque
 import psycopg
 
 from . import db, maps, sectors
+from . import systems as systems_mod
 from .finds import Finds
 from .systems import Systems
 
@@ -108,6 +109,7 @@ class Trail:
         self.points: deque = deque(maxlen=TRAIL_KEEP)   # (t, address, rel)
         self._last = 0
 
+    @db.serialized
     def refresh(self):
         self._last, rows = db.tail("trail", self._last, None if self._last else time.time() - 2 * 86400)
         for address, s in rows:
@@ -190,6 +192,7 @@ class Elevation:
         self.charted: dict = {}     # address -> {fine cell path: [first t, last t]} (sectors.py)
         self._last = 0
 
+    @db.serialized
     def refresh(self):
         """New trail rows from nms-db; their address was filled in at ingest (db.Ingest)."""
         self._last, rows = db.tail("trail", self._last)
@@ -375,6 +378,83 @@ class Live:
                   "hotspot-power": (hs.get("Power") or {}).get("range_m")}
         return {"finds": out, "range_m": ranges["hotspot-mineral"], "ranges": ranges,
                 "unmatched_labels": self.finds.chat_labels(address)[1]}
+
+    def planets_api(self, bases: list, here: int | None, tables: dict) -> dict:
+        """Every planet known from any source: a base on it, a visit (trail), facts the mod
+        reported (planet_facts), finds on it, or only its name seen in a logged system.
+        here: any address in the player's system, for distances."""
+        self.elev.refresh()
+        self.finds.refresh(self.elev.timeline)
+        self.systems.refresh()
+        items = tables.get("items") or {}
+        iname = lambda i: (items.get(i) or {}).get("name") or i  # noqa: E731
+        base_names: dict = {}
+        for b in bases:
+            if (b.get("BaseType") or {}).get("PersistentBaseTypes") in maps.SKIP_BASES:
+                continue
+            a = maps._addr(b.get("GalacticAddress"))
+            if a is not None:
+                base_names.setdefault(a, []).append(b.get("Name") or "base")
+        arrived: dict = {}
+        for t, a in self.elev.timeline:
+            first, _ = arrived.get(a, (t, t))
+            arrived[a] = (min(first, t), t)
+        found = {f["address"] for f in self.finds.rows.values()}
+        named = set()
+        for ua, r in self.systems.systems.items():
+            for i, seed in enumerate((r.get("planet_seeds") or [])[:15]):
+                if seed in self.systems.planet_names:
+                    named.add(ua | ((i + 1) << 52))
+        addresses = {a for a in (set(base_names) | set(arrived) | set(self.finds.planets) | found | named)
+                     if a is not None and (a >> 52) & 0xF}
+        hv = systems_mod.voxel(here) if here is not None else None
+        out = []
+        for a in addresses:
+            ua = systems_mod.system_ua(a)
+            sysrec = self.systems.systems.get(ua) or {}
+            facts = dict(self.finds.planets.get(a) or {})
+            if facts:
+                facts.pop("tile_colours", None)
+                facts["substances"] = [iname(i) for i in facts.get("substances") or [] if i]
+                if facts.get("hazard"):
+                    facts["hazard"] = {k: dict(zip(HAZARD_SLOTS, v)) for k, v in facts["hazard"].items()}
+            hotspots, deposits, marks = [], Counter(), []
+            if a in found:
+                for f in self.finds.for_planet(a, tables):
+                    if f["kind"] == "deposit":
+                        deposits[f["resource"] or f["name"] or "?"] += 1
+                    elif f["kind"] == "mark":
+                        marks.append(f["resource"])
+                    else:
+                        hotspots.append({"kind": f["kind"].split("-")[1], "resource": f["resource"], "class": f["class"]})
+            resources = list(facts.get("substances") or [])
+            for r in [h["resource"] for h in hotspots if h["kind"] != "power"] + list(deposits):
+                for one in (r or "").split(" or "):
+                    if one and one not in resources:
+                        resources.append(one)
+            first, last = arrived.get(a, (None, None))
+            same_galaxy = hv is not None and (a >> 32) & 0xFF == (here >> 32) & 0xFF
+            d = math.dist(systems_mod.voxel(ua), hv) * systems_mod.LY_PER_VOXEL if same_galaxy else None
+            out.append({
+                "address": f"0x{a:X}", "index": (a >> 52) & 0xF,
+                "name": self.systems.planet_name(a), "system_name": self.systems.system_name(a),
+                "system": {k: sysrec.get(k) for k in ("economy", "wealth", "conflict", "race", "star", "anomaly",
+                                                      "planets", "pirate", "abandoned")} if sysrec else None,
+                "portal": systems_mod.portal(a), "coords": systems_mod.galactic_coords(a), "galaxy": (a >> 32) & 0xFF,
+                "distance_ly": None if d is None else round(d),
+                "here_system": here is not None and systems_mod.system_ua(here) == ua, "here": here == a,
+                "bases": sorted(base_names.get(a, [])),
+                "has_map": bool(_mine(bases, a)) or a in self.elev.radius,
+                "radius": self.elev.radius.get(a),
+                "facts": facts or None,
+                "first_seen": min((x for x in (first, facts.get("first_seen")) if x), default=None),
+                "last_visit": last,
+                "resources": resources,
+                "hotspots": hotspots, "deposits": dict(deposits), "marks": marks,
+            })
+        out.sort(key=lambda p: (not p["here"], not p["here_system"], p["distance_ly"] is None, p["distance_ly"] or 0,
+                                p["system_name"] or "~", p["index"]))
+        return {"planets": out, "here": None if here is None else f"0x{here:X}"}
 
     def build(self, bases: list, base: str | None = None, target: str | None = None, trail_s: float = 6 * 3600,
               items: dict | None = None, tables: dict | None = None) -> dict:

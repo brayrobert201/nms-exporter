@@ -26,7 +26,7 @@ from urllib.parse import unquote_plus  # noqa: E402
 import psycopg  # noqa: E402
 
 from nmsexporter import db, maps  # noqa: E402
-from nmsexporter.live import LIVE_DIR, Live, control_mode  # noqa: E402
+from nmsexporter.live import LIVE_DIR, Live, control_mode, ua_int  # noqa: E402
 from nmsexporter.systems import portal  # noqa: E402
 from nmsexporter.nms import Collector  # noqa: E402
 
@@ -43,7 +43,7 @@ live = Live()
 ingest = db.Ingest(LIVE_DIR)
 # routes whose whole answer lives in nms-db; /api/live is not one: the position is a file and
 # live.build reports the database's state in its own `db` field
-DB_PATHS = ("/api/elevation", "/api/finds", "/api/sectors", "/api/systems")
+DB_PATHS = ("/api/elevation", "/api/finds", "/api/sectors", "/api/systems", "/api/planets")
 
 
 def db_error() -> str | None:
@@ -69,8 +69,38 @@ def start_db():
                 print(f"nms-db: {ingest.error}; retrying in 30 s", flush=True)
                 time.sleep(30)
         print("nms-db: schema ready, ingesting", flush=True)
+        threading.Thread(target=record_planets, name="nms-planets", daemon=True).start()
         ingest.run()
     threading.Thread(target=run, name="nms-db", daemon=True).start()
+
+
+def save_address() -> int | None:
+    """Where the latest save says the player is, packed like GalacticAddress."""
+    u = collector.snapshot.get("universe") or {}
+    return ua_int({"voxel": [u.get("x"), u.get("y"), u.get("z")], "reality": u.get("galaxy"),
+                   "system": u.get("system"), "planet": u.get("planet")})
+
+
+def record_planets():
+    """Keep each planet's facts while the game runs, not only while a map page polls /api/live:
+    live.build stores them. Only the process holding the ingest lock writes (not the dev copy).
+    First loads the history caches, so no request pays for that (about a minute and a half)."""
+    try:
+        live.elev.refresh()
+        live.finds.refresh(live.elev.timeline)
+        live.systems.refresh()
+        print("history caches loaded", flush=True)
+    except Exception as e:      # noqa: BLE001 - the first request loads them instead
+        print(f"history caches: {type(e).__name__}: {e}", flush=True)
+    while True:
+        time.sleep(15)
+        if ingest._lock_conn is None:
+            continue
+        try:
+            collector.refresh()
+            live.build(collector.raw_bases, items=collector.tables.get("items"), tables=collector.tables)
+        except Exception as e:      # noqa: BLE001 - tried again next time
+            print(f"planet facts: {type(e).__name__}: {e}", flush=True)
 
 
 def page_html(name: str) -> bytes:
@@ -106,7 +136,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path in DB_PATHS and not db.configured():
                 return self._send(json.dumps({"error": db_error(), "db": False}).encode(), "application/json", 503)
-            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases", "/api/craft", "/api/map", "/api/live", "/api/elevation", "/api/finds", "/api/systems", "/api/sectors"):
+            if path in ("/metrics", "/json", "/", "/diff", "/raw/bases", "/api/craft", "/api/map", "/api/live", "/api/elevation", "/api/finds", "/api/systems", "/api/sectors", "/api/planets"):
                 collector.refresh()
             if path == "/metrics":
                 up = 0 if db_error() else 1
@@ -132,7 +162,12 @@ class Handler(BaseHTTPRequestHandler):
                 if not targets and params.get("id"):
                     n = params.get("n", "1")
                     targets = [(unquote_plus(params["id"]), int(n) if n.isdigit() else 1)]
-                out = collector.craft_tree(targets)
+                # &mode=fast crafts wherever it can and refines only the rest; max (default) makes most from stock.
+                # &refiners=N times the refining as if N refiners were available (the save's count otherwise)
+                # &refiners=N times the refining as if N refiners were available (the save's count otherwise).
+                # &pins=0 ignores the pinned paths (POST /api/pins) for this answer.
+                refiners = int(params["refiners"]) if params.get("refiners", "").isdigit() else None
+                out = collector.craft_tree(targets, params.get("mode", "max"), refiners, use_pins=params.get("pins", "1") != "0")
                 return self._send(json.dumps(out).encode(), "application/json", 404 if "error" in out else 200)
             if path == "/raw/bases":
                 return self._send(json.dumps(collector.raw_bases).encode(), "application/json")
@@ -154,7 +189,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(json.dumps(m).encode(),
                                   "application/json")
             if path == "/api/mode":  # polled by the Stream Deck plugin; no save refresh
-                return self._send(json.dumps(control_mode()).encode(), "application/json")
+                return self._send(json.dumps(dict(control_mode(), crafting=collector.crafting_mode())).encode(), "application/json")
             if path == "/api/live":
                 return self._send(json.dumps(live.build(collector.raw_bases, unquote_plus(params.get("base", "")) or None,
                                                         unquote_plus(params.get("target", "")) or None,
@@ -166,6 +201,11 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(json.dumps({"systems": live.systems.listing(maps._addr(unquote_plus(params.get("from", ""))),
                                                                               collector.raw_bases, runes),
                                               "known_runes": runes, "ly_per_voxel": 400}).encode(), "application/json")
+            if path == "/api/planets":
+                # every known planet with its environment and resources, for the phone's Planets tab
+                here = maps._addr(unquote_plus(params.get("from", ""))) or save_address()
+                return self._send(json.dumps(live.planets_api(collector.raw_bases, here, collector.tables)).encode(),
+                                  "application/json")
             if path.startswith("/icon/") and path.endswith(".png"):
                 # the game's HUD icons, extracted by scripts/nms-icons (not in the repo)
                 n = path[len("/icon/"):-len(".png")]
@@ -237,7 +277,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 return
             if path == "/":
-                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /api/craft?id=&n=|items= /map /mobile /api/map /api/live /api/elevation /api/finds /api/sectors /systems /api/systems /healthz\n", "text/plain")
+                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /api/craft?id=&n=|items=&mode=max|fast|now&refiners=N&pins=0 /api/pins /api/mode /map /mobile /api/map /api/live /api/elevation /api/finds /api/sectors /systems /api/systems /api/planets /healthz\n", "text/plain")
             self._send(b"not found", "text/plain", 404)
         except BrokenPipeError:
             pass
@@ -257,9 +297,24 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         path = self.path.partition("?")[0].rstrip("/")
         try:
-            body = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 4096)) or b"{}")
+            body = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 65536)) or b"{}")
         except (ValueError, OSError):
             return self._send(b"bad json", "text/plain", 400)
+        if path == "/api/favourites":
+            # {"id": item id or name, "on": true|false}: the Build tab's starred items, kept in the state file
+            out = collector.set_favourite(str(body.get("id", "")), bool(body.get("on", True)))
+            return self._send(json.dumps(out).encode(), "application/json", 400 if "error" in out else 200)
+        if path == "/api/pins":
+            # {"modes": {mode: {item id: [recipe ids]}}} pins a plan's paths so /api/craft keeps to them
+            # as stock changes; {"clear": true} lets them go. Kept in the state file, shared by every client.
+            out = collector.set_pins(None if body.get("clear") else body.get("modes"))
+            return self._send(json.dumps(out).encode(), "application/json", 400 if "error" in out else 200)
+        if path == "/api/mode":
+            # {"crafting": true|false}: crafting mode, set from the phone for a bulk crafting
+            # session; while on, the right wall screen is the refinery board (/json crafting_mode)
+            if "crafting" not in body:
+                return self._send(b'{"error": "crafting: true|false"}', "application/json", 400)
+            return self._send(json.dumps(collector.set_crafting_mode(bool(body["crafting"]))).encode(), "application/json")
         if path == "/api/finds/class":
             # the player records a hotspot's class from the visor (the marker does not carry it readably)
             try:

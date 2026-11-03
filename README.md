@@ -17,7 +17,7 @@ and while the game is closed. A new save snaps everything back to the truth.
 | Area | Metrics |
 |---|---|
 | Right now | units, nanites, quicksilver, health, shield, life support, ship health, play time, save age, galactic address, the save summary text |
-| Refiners | recipe matched from the slots; which base, freighter or corvette it is in; output and input amounts, progress, remaining time and finish time, projected |
+| Refiners | recipe matched from the slots; which base, freighter or corvette it is in; output and input amounts, progress, remaining time and finish time, projected; the slot caps (the save's stack-limits setting times the item's stack multiplier: 9,999 a substance and 10 of most products on High; a substance output stops at 4,095, one last operation may carry it just past), what the output holds when the run ends, the optimum load (the most product one load gives without stranding input) and what to add or take out of each slot now |
 | Extraction farms | fill level per extractor network from the extractor and depot objects, capacity, rate (measured from consecutive saves once possible, class-C assumed until then), time to full. A base with both mineral and gas extractors is two rows, depots going with the nearer cluster; the row is named from the substances in the base name ("Copper Oxygen"), since the save does not record what a hotspot yields |
 | Plants | growth per plant, what each yields, ready-to-harvest count |
 | Fleet | frigates by class; per expedition: departure, due back, progress, events done/failed, damaged frigates |
@@ -89,7 +89,15 @@ on, reading `/json` on loopback (`apt install conky-all`):
   full, plants by kind with what they yield and how much is in stock, and the
   largest inventory stacks (click to search). The almost-craftable and tidy
   sections still render on demand but are left off the screen so the search
-  stays in view.
+  stays in view. In **crafting mode** (switched on from the phone's Refine or
+  Build tab for a bulk craft; `/json` says `crafting_mode`) the same screen is
+  the refinery board: every refiner with its output now and at the end of
+  the run against the slot's cap, each input with what to add so the run
+  ends exactly at the cap or what to take out when the output fills first,
+  and the optimum load; then the refinery stock (every input the loaded
+  recipes take: in stock and where, loaded, what the top-ups need, short)
+  and the refined output (per product: in the refiners now and at the end,
+  the caps, per load, in stock). The planner and the search stay.
 
 Both carry the save's age, because every timer on them is projected from it.
 Text is drawn at 0.8 of the design size so everything fits; `NMS_CONKY_TEXT_SCALE`
@@ -219,9 +227,9 @@ in-game compass; the page says so until it is.
 
 ## Phone page and Android app
 
-`http://<host>:9877/mobile` is the phone-sized page: Map, Farms, Inventory and
-Build, one tab at a time, built from the same `/api/map`, `/json` and
-`/api/live` the map and the wall screens use (design: the "NMS Mobile" Claude
+`http://<host>:9877/mobile` is the phone-sized page: Map, Planets, Farms,
+Refine, Inventory and Build, one tab at a time, built from the same `/api/map`, `/json`,
+`/api/planets` and `/api/live` the map and the wall screens use (design: the "NMS Mobile" Claude
 Design project; tokens from its Refined Midnight system, Geist fonts served from
 `/fonts/`, the portal glyph font from `conky/fonts`).
 
@@ -230,22 +238,79 @@ Design project; tokens from its Refined Midnight system, Geist fonts served from
   for its card; the legend chips hide a kind; your live position and trail, a
   Nearby list and Go to arrows when the hook is reporting; the planet title
   opens the planet list.
+- Planets: every planet the exporter knows of, searchable by any word of its
+  name, system, resources, biome, weather, sentinels, bases or glyphs (all words
+  must match: "cobalt lush"). Explored (a base, a landing, finds or recorded
+  facts), Bases, This system, or All, which adds the planets known only by name
+  from logged systems. A planet opens to its portal glyphs, galactic
+  coordinates, distance, the system (star, economy, race, conflict), biome,
+  weather and storms, temperature/toxicity/radiation, sentinels, flora and
+  fauna, its three resources, the hotspots and deposits found with their class,
+  your bases and when you were first and last there, and Open its map where it
+  has one. `/api/planets[?from=<address>]` is the data (nms-db). The environment
+  is what live_position reports for the planet you are on; the exporter keeps it
+  in `planet_facts` every 15 s while the game runs, page open or not.
 - Farms: every extraction farm with its projected fill, time to full and loose
   count; a farm's page lists its extractors (tap one to see it on the layout)
   and the base's power verdict.
+- Refine: every refiner (running first, then full, ready, empty; filter by
+  Freighter, Corvette or Bases) with what it makes and from what, where it
+  is, the recipe ratio, the output now and at the end of the run against the
+  slot's cap. Tap one for its inputs: how much to add so the run ends exactly
+  at the cap, or how much to take out when the output fills first; and the
+  optimum load, the most product that refiner gives from one load. A
+  substance output stops at 4,095 whatever the refiner; inputs hold the
+  save's stack-limits setting (9,999 on High), 4,096 on the corvette; the
+  page carries the exporter's projection forward by the second. The **crafting mode** switch at the top
+  (also on Build) turns the right wall screen into the refinery board for a
+  bulk craft, and back; `POST /api/mode {"crafting": true|false}` sets it,
+  `/api/mode` reports it beside the control mode, `/json` carries it.
 - Inventory: where everything is, per container; a search that matches a known
   blueprint also shows its ingredients with have/short and where they are.
-- Build: the device planner, everything that can be made right now (`/json`
-  `crafting.can_make`: the route the search chose and its ingredients against
-  stock), and the almost-craftable list by the ingredient in the way. Tap any
-  of them for every level of the build: an indented tree from the item down to
-  raw materials, each line saying whether it comes from stock or is crafted,
-  refined or cooked (and how many times), with a quantity stepper, what is
-  short, and the raw materials it draws. `/api/craft?id=<id or name>&n=<units>`
-  is the data: the same route choices as the crafting search, stock drawn down
-  on a shared copy so an ingredient used in two branches is only counted once,
-  surplus from rounding up to whole crafts returned for later branches. The
-  item asked for is always made, never taken from stock.
+- Build: favourites (tap ☆ on any item; kept in the exporter's state file, so
+  every phone and browser shares them; `POST /api/favourites {"id", "on"}`),
+  the device planner, everything that can be made right now, and the
+  almost-craftable list by the ingredient in the way. Tap any of them for every
+  level of the build: the bottom-up build order (Step 1 from raw materials, the
+  item last; each line with how many to make, each recipe used and its share,
+  and every other recipe that makes it) or the same as a foldable tree, with a
+  quantity slider and stepper, what is short and the raw materials it draws.
+  `/api/craft?id=<id or name>&n=<units>` (or `items=ID:N,ID:N` to build several
+  together) is the data. Recipes are ranked once against the starting stock;
+  each item uses its best recipe as far as stock allows and the next for the
+  rest; stock is drawn down on a shared copy, so an ingredient used twice is
+  counted once. The item asked for is always made, never taken from stock.
+  Three answers sit side by side on the page, **Most from stock**,
+  **Fastest** and **Craft now** (`&mode=max|fast|now`): max takes the recipe
+  that makes most from stock, refining where that stretches further; fast
+  crafts wherever a known blueprint can and refines only what crafting cannot
+  finish, so it is instant when stock covers it; now crafts only, what can be
+  made this minute from what is held, for cutting a session short and going
+  for what has been made so far. Each card says how far it can go, worked out
+  on its own (`targets[].max_by_mode`); the slider and the max chip go up to
+  the chosen one's, and tapping Craft now sets the quantity to its figure.
+  The recipes follow the stock, so the paths can change from save to save
+  while you gather; **Pin these paths** keeps every mode's recipes, per item
+  and in order, in the exporter's state (`POST /api/pins {"modes": {mode:
+  {id: [recipe ids]}}}`, `{"clear": true}` to let go; `&pins=0` on
+  `/api/craft` ignores them for one answer), and every answer after that
+  ranks the pinned recipes first, so the plan stays put and only the amounts
+  move as stock arrives. Each says whether it can be made, what it
+  is worth, and what its refining takes: operations times the recipe's
+  seconds per operation, split into loads by the slot caps, dealt out over
+  the refiners the save has (longest loads first), the build order's steps
+  one after another; cooking on one processor; crafting instant; loading
+  and emptying not counted. A stepper under the time sets a what-if refiner
+  count for this page only (`&refiners=N`; the save's own count is never
+  changed) and says what the extra ones save; the answer carries the time
+  at a few counts (`time.by_refiners`) so each is one tap. The planner
+  cards show the same time for their "with refiners" count.
+- Counts. The crafting search (`nms_craftable`, the first Make now numbers
+  after a save) follows one recipe per item and counts units already held. A
+  background pass then recounts Make now, favourites and the planner through
+  the build tree: every recipe, nothing held counted, capped at 10,000. The
+  planner card shows both its own figure (crafting only, as `/nms` and the wall
+  screen use it) and the build tree's, with the refiner operations that takes.
 
 The state is in the URL hash, so the browser's and the phone's back button step
 back through it; `?base=` and `?planet=` open a view as on `/map`.
@@ -298,6 +363,21 @@ Nothing under `knowledge/` or `research/` is installed to /opt.
 - `nmsexporter/nmssave.py` decodes the save: chunks of `<u32 0xFEEDA1E5><u32 comp><u32 uncomp><u32 0>` + a raw LZ4 block each, then key de-obfuscation.
 - `nmsexporter/nms.py` builds the snapshot once per save change and applies the projection on every request.
 - Refiner recipes: the slot with amount `-1` is the game's "chosen output" placeholder; otherwise the recipe whose ingredients exactly match the other slots wins.
+- Refiner slot caps: a refiner's container is the MaintenanceObject
+  stack-size group, so an input slot holds what the save's Inventory stack
+  limits setting gives that group (difficultyconfig: substances 9,999 / 250
+  / 150 for High / Normal / Low, products 10 / 10 / 5); the save's own
+  `MaxAmount` is not what the game applies. A slot's cap is that group cap
+  times the item's own stack multiplier from the product table (`items.<id>.stack`
+  in the tables; Casing 2, Power Cells 20, most 1), so a product slot in a
+  refiner holds 10 of most things. A substance output stops at
+  4,095, and the game runs one more operation whenever the output is still
+  below that, so a 1 -> 2 recipe ends at 4,096 (seen in game and in the
+  save; `knowledge/mechanics/refiner-capacity.md`). The corvette's input
+  slots are taken as 4,096. A slot seen holding more than a cap raises that
+  cap. The optimum load is as many operations as every input slot can carry
+  without the output stopping first; "at end" is the output when the loaded
+  inputs run out or the output stops.
 - Extractor and depot fill levels live in the upper 32 bits of each base object's `UserData`, in link-grid units (1440 per item).
 - Recipe seconds per operation = `TimeToMake / 250` for substances and `/ 2` for products (the game's `RefinerSubsMadeInTime` / `RefinerProductsMadeInTime`).
 - Expedition length = events × 90 minutes from the fleet globals.

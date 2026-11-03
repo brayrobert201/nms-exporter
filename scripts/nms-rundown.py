@@ -92,7 +92,8 @@ def full(d) -> str:
     out.append("Refiners:")
     for r in d.get("refiners") or []:
         state = "running" if r.get("active") else ("stalled at cap" if r.get("stalls_at_cap") and r.get("ops_remaining") else "idle")
-        out.append(f"  {r['base']:18s} {r['recipe']:26s} -> {r['output']} {r['projected_output']:.0f}/{r['output_cap'] or '-'}  {state}")
+        end = r.get("end_output", r["projected_output"])
+        out.append(f"  {r['base']:18s} {r['recipe']:26s} -> {r['output']} {r['projected_output']:.0f}, {end:.0f} at end, cap {r['output_cap'] or '-'}  {state}")
     out.append("")
     out.append("Plants:")
     agg: dict = {}

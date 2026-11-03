@@ -26,7 +26,7 @@ never copied into find_label; per field, the newer of the two wins, so
 a correction on the map is not undone by replaying an older chat label.
 `/mark name` adds a named point ("mark" finds).
 
-Planet facts (biome, substances) come from live.json's weather block and are
+Planet facts (biome, substances, weather, hazards, life, sentinels) come from live.json's weather block and are
 kept in nms-db (planet_facts) so they outlive both the visit and an exporter
 restart. Reads go to nms-db and raise when it is unreachable.
 """
@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import bisect
 import math
+import time
 
 from . import db
 
@@ -41,6 +42,9 @@ TYPES = {"MineralHotspot": "hotspot-mineral", "GasHotspot": "hotspot-gas", "Powe
          "TerrainResource": "deposit"}
 MERGE_M = 5.0
 CHAT_LABEL_M = 50.0
+# what is kept of live_position's planet block (hazard as the mod writes it: six values per kind)
+PLANET_FACTS = ("substances", "biome", "biome_subtype", "weather", "storm_frequency", "intensity", "hazard",
+                "life", "creature_life", "race", "buildings", "sentinels", "planet_class", "size", "tile_colours")
 
 
 class Finds:
@@ -57,8 +61,10 @@ class Finds:
     def remember_planet(self, address: int | None, planet: dict | None):
         if address is None or not planet or not planet.get("substances"):
             return
-        keep = {k: planet.get(k) for k in ("substances", "biome", "weather", "storm_frequency", "intensity", "tile_colours")}
-        if self.planets.get(address) == keep:
+        keep = {k: planet.get(k) for k in PLANET_FACTS if planet.get(k) is not None}
+        old = self.planets.get(address) or {}
+        keep["first_seen"] = old.get("first_seen") or round(time.time())
+        if old == keep:
             return
         try:
             db.put_planet(address, keep)
@@ -66,6 +72,7 @@ class Finds:
         except Exception:      # noqa: BLE001 - tried again on the next live sample
             pass
 
+    @db.serialized
     def refresh(self, timeline: list):
         """timeline: sorted [(t, address)] of planet changes from the trail."""
         if not self._loaded:
@@ -116,7 +123,7 @@ class Finds:
                 lab.pop(k, None)
         lab.pop("t", None)
         if lab:
-            self.labels[key] = {**lab, "t": round(__import__("time").time())}
+            self.labels[key] = {**lab, "t": round(time.time())}
         else:
             self.labels.pop(key, None)
         db.put_label(key, self.labels.get(key))

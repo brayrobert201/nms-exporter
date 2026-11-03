@@ -78,6 +78,14 @@ def _tkid(t):
         return None
 
 
+def _sentinels(data):
+    """SentinelLevel per ground combat timer setting (Off, Slow, Normal, Fast), or None."""
+    try:
+        return [_name(g.SentinelLevel) for g in list(data.GroundCombatDataPerDifficulty)]
+    except Exception:
+        return None
+
+
 def _planet_info(p):
     data = p.mPlanetData
     w, hz = data.Weather, data.Hazard
@@ -90,6 +98,7 @@ def _planet_info(p):
         "substances": [_tkid(data.CommonSubstanceID), _tkid(data.UncommonSubstanceID), _tkid(data.RareSubstanceID)],
         "life": _name(data.Life), "creature_life": _name(data.CreatureLife),
         "race": _name(data.InhabitingRace), "buildings": _name(data.BuildingLevel),
+        "sentinels": _sentinels(data),
         # inline enums of cGcPlanetGenerationIntermediateData; the biome picks the Gas1 hotspot substance
         "biome": _name(data.GenerationData.Biome), "biome_subtype": _name(data.GenerationData.BiomeSubType),
         "planet_class": _name(data.GenerationData.Class), "size": _name(data.GenerationData.Size),
@@ -116,7 +125,7 @@ def _address():
 class LivePosition(Mod):
     __author__ = "nms-exporter"
     __description__ = "Write the player's position to mod_saves/live four times a second"
-    __version__ = "0.5"
+    __version__ = "0.6"
 
     def __init__(self):
         super().__init__()

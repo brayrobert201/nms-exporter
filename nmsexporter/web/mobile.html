@@ -8,8 +8,8 @@
 <link rel="icon" href="data:,">
 <title>NMS</title>
 <!--
-  The phone page: Map, Farms, Inventory and Build, one tab at a time, from /api/map, /json and
-  /api/live. The Android app (android/) is this page in a WebView with the screen kept on; in a
+  The phone page: Map, Planets, Farms, Refine, Inventory and Build, one tab at a time, from /api/map, /json,
+  /api/planets and /api/live. The Android app (android/) is this page in a WebView with the screen kept on; in a
   phone browser it is the same page, so the two never drift apart. Built from the Claude Design
   prototype "NMS Mobile" (tokens: Refined Midnight). The save is an anchor, not a feed: every fill
   and timer ticks forward from the save's age, and the save age is always on screen.
@@ -76,7 +76,7 @@ input::placeholder { color: var(--dim); }
 
 nav { flex: none; display: flex; justify-content: space-around; padding: 10px 0 calc(14px + var(--safe-bottom)); border-top: 1px solid var(--line);
   background: rgba(10,10,16,.95); backdrop-filter: blur(12px); }
-nav button { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; min-height: 44px; font-size: 9.5px; font-weight: 600;
+nav button { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 54px; min-height: 44px; font-size: 9.5px; font-weight: 600;
   letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
 nav button.on { color: var(--brand); }
 nav button span { display: flex; align-items: center; gap: 4px; }
@@ -220,7 +220,46 @@ nav svg { width: 22px; height: 22px; }
 .almost .h .c { font-size: 11px; color: var(--muted); white-space: nowrap; }
 .almost .l { font-size: 12px; color: var(--text-dim); text-wrap: pretty; }
 .empty { padding: 28px 8px; text-align: center; font-size: 13px; color: var(--muted); }
+/* refiners: a row per refiner, the load and the optimum when open; the crafting mode switch */
+.rc .n small { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 4px; }
+.rc .foot2 { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--muted); margin-top: 5px; }
+.rc .foot2 .mono { font-family: var(--font-mono); color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.rc .bar { margin-top: 6px; }
+.rc .body { padding-left: 34px; }
+.rc .ing { flex-direction: column; align-items: flex-start; gap: 1px; } .rc .ing span:last-child { font-variant-numeric: tabular-nums; }
+.rc .ing b { font-weight: 600; } .rc .ing b.ok { color: var(--success); } .rc .ing b.warn { color: var(--warn); }
+.rc .opt { font-size: 12px; color: var(--text-dim); text-wrap: pretty; padding-top: 6px; border-top: 1px dashed var(--line); }
+.rc .opt b { color: var(--brand); font-weight: 600; } .rc .opt small { color: var(--muted); }
+.state.run { color: var(--brand); background: var(--brand-tint); } .state.ready { color: var(--success); background: var(--success-tint); }
+.cmode { margin: 10px 14px 0; width: calc(100% - 28px); display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); text-align: left; }
+.cmode.on { background: var(--brand-tint); border-color: rgba(123,108,255,.4); }
+.cmode .sw { flex: none; width: 40px; height: 24px; border-radius: 12px; background: var(--disabled); position: relative; transition: background .15s; }
+.cmode .sw i { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s; }
+.cmode.on .sw { background: var(--brand); } .cmode.on .sw i { left: 19px; }
+.cmode .t { display: block; font-size: 14px; font-weight: 600; } .cmode .d { display: block; font-size: 11px; color: var(--muted); text-wrap: pretty; }
 button.bp { width: 100%; }
+.rowcard.fav { display: grid; grid-template-columns: 44px minmax(0, 1fr); }
+.rowcard.fav > button:not(.star) { grid-template-columns: minmax(0, 1fr) auto; padding-left: 0; }
+.rowcard.fav > .body { grid-column: 1 / -1; padding-left: 44px; }
+.star { width: 44px; min-height: 52px; font-size: 18px; color: var(--dim); display: flex; align-items: center; justify-content: center; }
+.star.on { color: var(--svc-squash); }
+.star.inline { width: 28px; min-height: 0; display: inline-flex; font-size: 15px; vertical-align: -1px; }
+.plan .nums { flex-wrap: wrap; row-gap: 6px; }
+.opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.opt { text-align: left; display: flex; flex-direction: column; gap: 2px; padding: 10px 9px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); min-width: 0; }
+.opt.on { border-color: var(--brand); background: var(--brand-tint); }
+.opt .l { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; line-height: 1.2; min-height: 2.4em; display: flex; align-items: flex-end; text-wrap: balance; }
+.opt .v { font: 600 16px var(--font-mono); white-space: nowrap; } .opt .v.warn { color: var(--warn); font-size: 13px; }
+.pinbar { display: flex; align-items: center; gap: 10px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.pinbar .lbl { flex: 1; min-width: 0; text-wrap: pretty; } .pinbar .lbl b { color: var(--text); font-weight: 600; }
+.pinbar button { flex: none; padding: 7px 11px; border-radius: 9px; background: var(--surface); border: 1px solid var(--glass-border); color: var(--brand); font-size: 12px; font-weight: 600; }
+.pinbar button.on { background: var(--brand-tint); border-color: rgba(123,108,255,.4); }
+.opt .d { font-size: 11px; color: var(--muted); text-wrap: pretty; }
+.refs { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px solid var(--line); }
+.refs .row { display: flex; align-items: center; gap: 8px; } .refs .lbl { flex: 1; font-size: 12px; color: var(--muted); } .refs .lbl small { color: var(--dim); }
+.refs .step { width: 32px; height: 32px; border-radius: 9px; background: var(--surface); border: 1px solid var(--glass-border); font-size: 16px; }
+.refs .n { font: 600 17px var(--font-mono); min-width: 32px; text-align: center; }
+.refs .chips { margin: 0; } .refs .chips button { flex-direction: column; gap: 0; padding: 4px 9px; line-height: 1.2; } .refs .chips button span { font-family: var(--font-sans); font-size: 11px; }
 .lvbtn { align-self: flex-start; color: var(--brand); font-size: 12px; font-weight: 600; padding: 4px 0; }
 .lnk { color: var(--text); text-decoration: underline; text-decoration-color: var(--glass-border-strong); text-underline-offset: 3px; font-size: inherit; }
 .qty { display: flex; align-items: center; gap: 6px; padding: 12px 16px 0; flex-wrap: wrap; }
@@ -229,6 +268,7 @@ button.bp { width: 100%; }
 .qty .n { font: 600 20px var(--font-mono); min-width: 44px; text-align: center; }
 .qty .chips { margin: 0 0 0 auto; flex-wrap: nowrap; }
 .qty .chips button { padding: 5px 10px; }
+.qty .sl { flex: 1 1 100%; width: 100%; height: 36px; margin: 2px 0 0; accent-color: var(--brand); touch-action: pan-y; }
 .tree { margin: 0 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .tn { width: 100%; text-align: left; display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); min-height: 48px; }
 .tn:last-child { border-bottom: 0; }
@@ -242,6 +282,11 @@ button.bp { width: 100%; }
 .tn.step { grid-template-columns: 64px minmax(0, 1fr); padding: 10px 12px 10px 0; cursor: default; }
 .tn.step .q { font: 600 15px var(--font-mono); text-align: right; color: var(--text); }
 .tn.step .how { white-space: normal; }
+.tn.step .share { font: 600 11px var(--font-mono); color: var(--text); margin-right: 6px; }
+.tn.step .alts { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
+.tn.step .alts .al { font-size: 10px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; }
+.tn.step .alts .how { color: var(--dim); } .tn.step .alts .how b { color: var(--muted); } .hv { color: var(--dim); }
+.tn.way { min-height: 0; padding-top: 5px; padding-bottom: 5px; grid-template-columns: 0 minmax(0, 1fr); }
 .tn.step.tgt { background: var(--brand-tint); } .tn.step.tgt .nm { font-size: 15px; } .tn.step.tgt .q { color: var(--brand); }
 .amt { text-align: right; font: 600 13px var(--font-mono); white-space: nowrap; }
 .amt small { display: block; font: 500 10px var(--font-sans); letter-spacing: .04em; text-transform: uppercase; }
@@ -261,6 +306,14 @@ button.bp { width: 100%; }
 .srow i { width: 10px; height: 10px; border-radius: 50%; display: block; margin: 0 auto; }
 .srow svg { width: 20px; height: 20px; color: var(--text); }
 .srow .glyphs { font-size: 14px; color: var(--text-dim); }
+.rowcard .ly { font: 500 12px var(--font-mono); color: var(--text-dim); white-space: nowrap; }
+.pf { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 3px 10px; font-size: 12px; }
+.pf dt { color: var(--muted); } .pf dd { color: var(--text-dim); text-wrap: pretty; }
+.pf dd .glyphs { font-size: 14px; letter-spacing: 0; color: var(--text); white-space: nowrap; } .pf dd .mono { color: var(--text); }
+.pf dd small { color: var(--dim); }
+.ptags { display: flex; flex-wrap: wrap; gap: 4px; }
+.ptags span { padding: 2px 8px; border-radius: var(--r-pill); background: var(--glass-strong); color: var(--text); font-size: 11px; }
+.ptags span.hs { background: var(--brand-tint); } .ptags span b { font-family: var(--font-mono); font-weight: 600; margin-left: 4px; color: var(--brand); }
 #err { position: fixed; left: 50%; top: calc(8px + var(--safe-top)); transform: translateX(-50%); z-index: 30; padding: 7px 12px; border-radius: var(--r-pill); font-size: 12px; color: var(--danger); border: 1px solid rgba(255,92,92,.35); max-width: calc(100% - 24px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #toast { position: fixed; left: 50%; bottom: calc(90px + var(--safe-bottom)); transform: translateX(-50%); z-index: 30; padding: 8px 14px; border-radius: var(--r-pill); font-size: 12px; color: var(--text); }
 @keyframes pulse { 0% { transform: scale(0.6); opacity: 0.45; } 100% { transform: scale(1.9); opacity: 0; } }
@@ -310,6 +363,7 @@ const fnum = (v) => Math.round(v || 0).toLocaleString('en-US');
 const fdur = (sec) => { if (sec == null || !isFinite(sec)) return '—'; const s = Math.max(0, Math.floor(sec)); const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
   return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : m ? `${m}m` : `${s}s`; };
 const fbig = (v) => { v = v || 0; for (const [d, u] of [[1e9, 'B'], [1e6, 'M'], [1e3, 'k']]) if (Math.abs(v) >= d * 10) return (v / d).toLocaleString('en-US', { maximumFractionDigits: 1 }) + u; return fnum(v); };
+const fly = (ly) => ly == null ? '' : ly >= 1e5 ? `${Math.round(ly / 1000)}k ly` : `${fnum(ly)} ly`;
 const fdist = (m) => m >= 10000 ? (m / 1000).toFixed(0) + ' km' : m >= 1000 ? (m / 1000).toFixed(1) + ' km' : Math.round(m) + ' m';
 const bearing = (e, n) => ((Math.atan2(e, n) * 180 / Math.PI) + 360) % 360;
 const compass = (deg) => ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(deg / 45) % 8];
@@ -337,8 +391,10 @@ const ico = (d, extra = '') => `<svg viewBox="0 0 24 24" fill="none" stroke="cur
 const ICONS = {
   map: ico(['M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5L9 4Z', 'M9 4v13.5', 'M15 6.5V20']),
   farms: ico(['M4 20h16', 'M6 20V9l6-5 6 5v11', 'M10 20v-6h4v6']),
+  planets: ico(['M12 18.5a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13Z', 'M3 15.5c-1.6 1.6-2 3-1.2 3.7 1.4 1.3 6.9-1.4 12.2-6.7s8-10.8 6.7-12.2c-.7-.8-2.1-.4-3.7 1.2']),
   inv: ico(['M3.5 8 12 3.5 20.5 8v8L12 20.5 3.5 16V8Z', 'M3.5 8 12 12.5 20.5 8', 'M12 12.5v8']),
   build: ico(['M14.7 6.3a4 4 0 0 0-5.2 5.2L4 17l3 3 5.5-5.5a4 4 0 0 0 5.2-5.2l-2.4 2.4-2.6-.4-.4-2.6 2.4-2.4Z']),
+  refine: ico(['M9 3h6', 'M10 3v6.5L4.5 19a1.5 1.5 0 0 0 1.3 2.2h12.4a1.5 1.5 0 0 0 1.3-2.2L14 9.5V3', 'M7 15.5h10']),
   app: ico(['M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z', 'M12 2.5v3', 'M12 18.5v3', 'M2.5 12h3', 'M18.5 12h3', 'M5.3 5.3l2.1 2.1', 'M16.6 16.6l2.1 2.1', 'M5.3 18.7l2.1-2.1', 'M16.6 7.4l2.1-2.1']),
 };
 const turnWord = (t) => t == null ? '' : Math.abs(t) < 10 ? 'ahead' : Math.abs(t) > 170 ? 'behind' : `${Math.round(Math.abs(t))}° ${t < 0 ? 'left' : 'right'}`;
@@ -346,9 +402,9 @@ const arrow = (t) => t == null ? '<span></span>' : `<svg viewBox="-10 -10 20 20"
 const height = (h) => Math.abs(h || 0) < 2 ? '' : `${h > 0 ? '↑' : '↓'} ${Math.round(Math.abs(h))} m`;
 
 // ---- state ----
-const S = { tab: 'map', planet: null, level: 'planet', base: null, farm: null, sel: null, hidden: new Set(), query: '', type: 'All', exp: null, bkind: 'All', bexp: null, craft: null, cview: 'order', closed: new Set(),
+const S = { tab: 'map', planet: null, level: 'planet', base: null, farm: null, sel: null, hidden: new Set(), query: '', type: 'All', exp: null, bkind: 'All', bexp: null, rexp: null, rkind: 'All', craft: null, cview: 'order', cmode: 'max', crefs: null, closed: new Set(), pq: '', pkind: 'Explored', pexp: null,
   target: null, follow: false, userChose: false, placed: false };
-let MAP = null, J = null, LIVE = null, mapAt = 0, jsonAt = 0, view = null, ERR = null;
+let MAP = null, J = null, LIVE = null, mapAt = 0, jsonAt = 0, view = null, ERR = null, PL = null, plAt = 0;
 const elapsed = () => J ? J.save.age + (Date.now() - jsonAt) / 1000 : null;
 const planet = () => MAP && (MAP.planets.find((p) => p.address === S.planet) || null);
 const layout = () => { const pl = planet(); return pl && S.base ? pl.layouts[S.base] || null : null; };
@@ -360,6 +416,7 @@ const onThisPlanet = () => LIVE && LIVE.on_planet && planet() && LIVE.address ==
 function hash() {
   if (S.tab === 'map') return S.planet ? (S.level === 'base' && S.base ? `#map/${S.planet}/${encodeURIComponent(S.base)}` : `#map/${S.planet}`) : '#map';
   if (S.tab === 'farms') return S.farm ? `#farms/${encodeURIComponent(S.farm)}` : '#farms';
+  if (S.tab === 'planets') return S.pexp ? `#planets/${S.pexp}` : '#planets';
   if (S.tab === 'build' && S.craft) return `#build/${S.craft.map(([i, n]) => `${encodeURIComponent(i)}:${n}`).join(',')}`;
   return '#' + S.tab;
 }
@@ -369,7 +426,8 @@ function readHash() {
   if (tab === 'map') { S.tab = 'map'; if (parts[1]) S.planet = parts[1]; S.base = parts[2] ? decodeURIComponent(parts[2]) : null; S.level = S.base ? 'base' : 'planet'; }
   else if (tab === 'farms') { S.tab = 'farms'; S.farm = parts[1] ? decodeURIComponent(parts[1]) : null; }
   else if (tab === 'build') { S.tab = 'build'; S.craft = parts[1] ? parts[1].split(',').map((x) => { const k = x.lastIndexOf(':'); return k < 0 ? [decodeURIComponent(x), 1] : [decodeURIComponent(x.slice(0, k)), Math.max(1, parseInt(x.slice(k + 1), 10) || 1)]; }) : null; }
-  else if (tab === 'inv') S.tab = tab;
+  else if (tab === 'planets') { S.tab = 'planets'; S.pexp = parts[1] || null; }
+  else if (tab === 'inv' || tab === 'refine') S.tab = tab;
   else S.tab = 'map';
 }
 function go(changes, opts = {}) {
@@ -418,14 +476,17 @@ function render() {
   renderNav();
   if (isMap) renderMap();
   else if (S.tab === 'farms') renderFarms();
+  else if (S.tab === 'planets') renderPlanets();
   else if (S.tab === 'inv') renderInv();
+  else if (S.tab === 'refine') renderRefine();
   else if (S.tab === 'build') (S.craft ? renderCraft() : renderBuild());
   document.querySelectorAll('.saveage').forEach((e) => { e.textContent = J ? `● save ${fdur(elapsed())} ago` : '● no save yet'; e.className = `pill saveage ${!J ? 'off' : elapsed() < 1800 ? 'ok' : 'warn'}`; });
 }
 function renderNav() {
   const full = J ? Object.values(J.farms || {}).filter((f) => f.full_in_seconds !== null && f.full_in_seconds !== undefined && f.full_in_seconds <= 0).length : 0;
   const loose = looseTotal();
-  const items = [['map', 'Map', loose, 'bad'], ['farms', 'Farms', full, ''], ['inv', 'Inventory', 0, ''], ['build', 'Build', 0, '']];
+  const todo = J ? (J.refiners || []).filter((r) => !r.active && (r.projected_output || 0) > 0).length : 0;   // ready to collect, or full
+  const items = [['map', 'Map', loose, 'bad'], ['planets', 'Planets', 0, ''], ['farms', 'Farms', full, ''], ['refine', 'Refine', todo, ''], ['inv', 'Inventory', 0, ''], ['build', 'Build', 0, '']];
   if (SHELL) items.push(['app', 'App', 0, '']);
   $('nav').innerHTML = items.map(([t, label, badge, cls]) => `<button class="${S.tab === t ? 'on' : ''}" data-act="tab" data-tab="${t}">${ICONS[t]}<span>${label}${badge ? `<span class="badge ${cls}">${badge}</span>` : ''}</span></button>`).join('');
 }
@@ -759,6 +820,77 @@ function tickFarms() {
   if (nx) nx.textContent = filling.length ? fdur(Math.min(...filling.map((f) => f.left))) : '—';
 }
 
+// ---- Refiners: every refiner with its load, what the output holds at the end, and the optimum load ----
+// The exporter projects each refiner from the save (/json refiners); the page carries that forward by the
+// seconds since /json was read. Slot caps come with the data: inputs hold the location's stack cap (the save's
+// stack limits setting), a substance output stops at 4,095, and the game runs one more operation whenever the
+// output is still below that (so a 1 -> 2 recipe ends at 4,096), as the exporter models it.
+const KIND = { freighter: 'Freighter', corvette: 'Corvette', base: 'Base', portable: 'Portable', space: 'In space', frigate: 'Frigate' };
+const RKINDS = ['All', 'Freighter', 'Corvette', 'Bases'];
+function refList() {
+  if (!J || !J.refiners) return [];
+  const dt = (Date.now() - jsonAt) / 1000;
+  return J.refiners.map((r) => {
+    const spo = r.seconds_per_op || 1, per = r.output_per_op || 1, cap = r.output_cap || 0;
+    const left0 = Math.max(0, r.remaining_seconds || 0), tick = Math.min(Math.floor(dt / spo), Math.ceil(left0 / spo));
+    const out = Math.min(r.end_output ?? r.projected_output, (r.projected_output || 0) + tick * per);
+    const toCap = (o) => cap && o < cap ? Math.ceil((cap - o) / per) : 0;   // one more op while below the cap
+    const ins = (r.inputs || []).map((i, k) => ({ ...i, have: Math.max(0, ((r.projected_inputs || [])[k] ?? i.amount) - tick * i.per_op) }));
+    const left = Math.max(0, left0 - dt), active = !!r.active && left > 0;
+    // the top-up: as many operations as the output has room for and the input slots can carry
+    const room = cap ? toCap(out) : 1e9;
+    const ops = Math.max(0, Math.min(room, ...ins.map((i) => i.per_op ? Math.floor((i.cap || 0) / i.per_op) : 1e9)));
+    for (const i of ins) { i.want = ops * i.per_op; i.add = Math.max(0, i.want - i.have); i.spare = Math.max(0, i.have - i.want); }
+    const full = !active && !!r.stalls_at_cap && ins.some((i) => i.have >= i.per_op);
+    const state = active ? 'run' : full ? 'full' : out > 0 ? 'ready' : 'empty';
+    const where = r.kind === 'freighter' || r.kind === 'corvette' ? KIND[r.kind] : (r.base || KIND[r.kind] || r.kind);
+    const kindGroup = r.kind === 'freighter' ? 'Freighter' : r.kind === 'corvette' ? 'Corvette' : 'Bases';
+    return { ...r, out, ins, left, active, full, state, where, kindGroup, cap, per, fillOut: out + ops * per };
+  }).sort((a, b) => { const o = { run: 0, full: 1, ready: 2, empty: 3 }; return (o[a.state] - o[b.state]) || (a.state === 'run' ? a.left - b.left : b.out - a.out) || a.output.localeCompare(b.output); });
+}
+const refStateText = (r) => r.state === 'run' ? `${fdur(r.left)} left` : r.state === 'full' ? 'Full · empty it' : r.state === 'ready' ? 'Ready · collect' : 'Empty';
+const refOutText = (r) => `${fnum(r.out)}${r.end_output > r.out + 0.5 ? ` → ${fnum(r.end_output)} at end` : ''}`;
+const ratio = (r) => `${r.inputs.map((i) => i.per_op).join(' + ')} → ${r.output_per_op}`;
+function refCard(r) {
+  const open = S.rexp === r.key, names = r.inputs.map((i) => i.item).join(' + ');
+  const body = !open ? '' : `<div class="body">
+      ${r.ins.map((i) => `<div class="ing"><span>${esc(i.item)} <small>${i.per_op} per op · slot ${fnum(i.cap)}</small></span><span>have ${fnum(i.have)}${i.add ? ` · <b class="ok">add ${fnum(i.add)}</b>` : ''}${i.spare ? ` · <b class="warn">take out ${fnum(i.spare)}</b>` : ''}</span></div>`).join('')}
+      <div class="ing"><span>${esc(r.output)} <small>${r.output_per_op} per op</small></span><span>${fnum(r.out)} now · ${fnum(r.end_output)} at end · stops at ${fnum(r.cap)}</span></div>
+      <div class="opt">${r.ins.some((i) => i.add) ? `Top up as above and the run ends at <b>${fnum(r.fillOut)} ${esc(r.output)}</b>. ` : r.ins.some((i) => i.spare) ? `The output fills before the inputs run out: take the spare out, or empty the output first. ` : ''}
+        Optimum load: <b>${r.optimum.inputs.map((i) => `${fnum(i.amount)} ${esc(i.item)}`).join(' + ')} → ${fnum(r.optimum.output)} ${esc(r.output)}</b>, the most this ${esc(KIND[r.kind] || r.kind).toLowerCase()} refiner holds <small>(output stops at ${fnum(r.cap)}; inputs ${fnum(r.slot_cap)} a slot${r.kind !== 'corvette' && r.stack_limits ? `, ${esc(r.stack_limits).toLowerCase()} stack limits` : ''})</small>.</div></div>`;
+  return `<div class="rowcard rc" data-rid="${esc(r.key)}"><button data-act="rexp" data-key="${esc(r.key)}"><span class="chev">${open ? '▾' : '▸'}</span>
+    <div style="min-width:0"><div class="n">${esc(r.output)}<small>from ${esc(names)}</small></div><div class="s">${esc(r.where)} · ${esc(r.recipe)} · ${ratio(r)}</div>
+      <div class="bar thin"><i data-r="bar" style="width:${(r.cap ? r.out / r.cap * 100 : 0).toFixed(1)}%"></i></div>
+      <div class="foot2"><span class="mono" data-r="out">${refOutText(r)}</span><span>stops at ${fnum(r.cap)}</span></div></div>
+    <span class="state ${r.state}" data-r="state">${refStateText(r)}</span></button>${body}</div>`;
+}
+// crafting mode: set from here for a bulk crafting session; the exporter keeps it, and while it is on the
+// right wall screen (conky/right.conf) is the refinery board instead of farms and plants
+function cmodeBar() {
+  const on = !!(J && J.crafting_mode);
+  return `<button class="cmode ${on ? 'on' : ''}" data-act="cmode" aria-pressed="${on}"><span class="sw"><i></i></span><span style="min-width:0"><span class="t">Crafting mode ${on ? 'on' : 'off'}</span><span class="d">${on ? 'The right wall screen is the refinery board: every refiner, what to add, what the runs end at' : 'For a bulk craft: the right wall screen becomes the refinery board until this is turned off'}</span></span></button>`;
+}
+function renderRefine() {
+  const P = $('page'), all = refList(), refs = all.filter((r) => S.rkind === 'All' || r.kindGroup === S.rkind);
+  const running = all.filter((r) => r.state === 'run'), ready = all.filter((r) => r.state === 'ready'), full = all.filter((r) => r.state === 'full');
+  const next = running.length ? Math.min(...running.map((r) => r.left)) : null;
+  P.innerHTML = header(`<span class="eyebrow">Refinery · projected</span>`, 'Refiners', J ? `Last save ${clock(J.save.timestamp)} · ${plural(all.length, 'refiner')} · outputs keep rising between saves` : 'Waiting for the exporter')
+    + cmodeBar()
+    + `<div class="tiles"><div class="tile"><div class="l">Running</div><div class="v">${running.length}</div><div class="n" data-r="next">${next === null ? 'none' : 'next done in ' + fdur(next)}</div></div><div class="tile"><div class="l">Ready</div><div class="v ${ready.length ? '' : ''}">${ready.length}</div><div class="n">collect the output</div></div><div class="tile"><div class="l">Full</div><div class="v ${full.length ? 'bad' : ''}">${full.length}</div><div class="n">at the cap with input left</div></div></div>`
+    + `<div class="chips pad">${RKINDS.map((k) => `<button class="${S.rkind === k ? 'on' : ''}" data-act="rkind" data-kind="${k}">${k}<span>${all.filter((r) => k === 'All' || r.kindGroup === k).length}</span></button>`).join('')}</div>`
+    + `<div class="cards tight" style="padding-bottom:12px">${refs.map(refCard).join('')}</div>` + (refs.length ? '' : `<div class="empty">No refiners ${S.rkind === 'All' ? 'in the save' : 'there'}.</div>`)
+    + `<div class="note">Tap a refiner for its inputs: what to add so the run ends exactly at the output's cap, or what to take out when the output fills first. A substance output stops at 4,095 whatever the refiner (one last operation may carry it just past); inputs hold the save's stack limit, 4,096 on the corvette.</div>`;
+}
+function tickRefine() {
+  if (S.tab !== 'refine' || !J) return;
+  const refs = refList();
+  for (const r of refs) { const c = document.querySelector(`[data-rid="${CSS.escape(r.key)}"]`); if (!c) continue;
+    const st = c.querySelector('[data-r="state"]'); st.textContent = refStateText(r); st.className = `state ${r.state}`;
+    c.querySelector('[data-r="bar"]').style.width = (r.cap ? r.out / r.cap * 100 : 0).toFixed(1) + '%'; c.querySelector('[data-r="out"]').textContent = refOutText(r); }
+  const running = refs.filter((r) => r.state === 'run'), nx = document.querySelector('[data-r="next"]');
+  if (nx) nx.textContent = running.length ? 'next done in ' + fdur(Math.min(...running.map((r) => r.left))) : 'none';
+}
+
 // ---- Inventory ----
 function invData() {
   if (!J) return { all: [], places: {} };
@@ -797,23 +929,114 @@ function renderInvList() {
     + (!rows.length && !bps.length ? `<div class="empty">Nothing in any container matches “${esc(S.query)}”.</div>` : '');
 }
 
+// ---- Planets: every planet the exporter knows of (/api/planets, from nms-db), searchable ----
+const LIFE = { Dead: 'none', Low: 'sparse', Mid: 'average', Full: 'rich' };
+const SENT = { Low: 'low', Default: 'normal', Aggressive: 'aggressive', Corrupt: 'corrupted' };
+const STORMS = { None_: 'no storms', Low: 'occasional storms', High: 'frequent storms', Always: 'constant storms' };
+const enumWord = (v) => String(v || '').replace(/_$/, '').replace(/([a-z])([A-Z])/g, '$1 $2');
+const sentinels = (f) => { const l = f && f.sentinels; if (!l || !l.length) return null;
+  const n = SENT[l[2] ?? l[0]] || enumWord(l[2] ?? l[0]); return new Set(l).size > 1 ? `${n} <small>(normal combat timers)</small>` : n; };
+const hazardLine = (f) => { const h = f && f.hazard; if (!h) return null; const T = h.Temperature || {}, out = [];
+  if (T.ambient != null) out.push(`${Math.round(T.ambient)}° <small>night ${Math.round(T.night)}° · storm ${Math.round(T.storm)}°</small>`);
+  for (const [k, w] of [['Toxicity', 'toxic'], ['Radiation', 'radiation']]) { const v = h[k] || {}; if ((v.ambient || 0) > 0 || (v.storm || 0) > 0) out.push(`${w} ${Math.round(v.ambient || 0)} <small>storm ${Math.round(v.storm || 0)}</small>`); }
+  return out.join(' · '); };
+const weatherLine = (f) => !f ? null : [f.weather && enumWord(f.weather), STORMS[f.storm_frequency] || (f.storm_frequency && enumWord(f.storm_frequency)), f.intensity === 'Extreme' ? 'extreme' : null].filter(Boolean).join(' · ');
+const explored = (p) => !!(p.facts || p.bases.length || p.last_visit || p.hotspots.length || Object.keys(p.deposits).length || p.marks.length);
+const planetText = (p) => { const f = p.facts || {}, sy = p.system || {};
+  return [p.name, p.system_name, p.portal, p.coords, f.biome, f.biome_subtype, f.weather, f.size, sentinels(f), f.race, sy.star, sy.economy, sy.race, sy.conflict,
+    ...p.resources, ...p.bases, ...p.marks, ...p.hotspots.map((h) => `${h.kind} ${h.class || ''}`), p.here ? 'here' : ''].filter(Boolean).join(' ').toLowerCase(); };
+async function loadPlanets(force = false) {
+  if (!force && PL && Date.now() - plAt < 60000) return;
+  const from = LIVE && LIVE.address ? `?from=${LIVE.address}` : '';
+  try { PL = await api('/api/planets' + from); plAt = Date.now(); }
+  catch (e) { PL = { error: String(e.message || e), planets: (PL && PL.planets) || [] }; }
+  if (S.tab === 'planets') renderPlanetList();
+}
+function renderPlanets() {
+  const P = $('page');
+  P.innerHTML = `<header class="hdr"><div class="row"><span class="eyebrow">Atlas</span><span class="pills">${pillSave()}</span></div><h1>Known planets</h1><div class="sub" id="plsub">loading…</div>
+    <div class="search"><span style="color:var(--dim);font-size:15px">⌕</span><input id="pq" type="search" autocomplete="off" autocapitalize="off" enterkeyhint="search" placeholder="Name, resource, biome, sentinels…" value="${esc(S.pq)}"><button class="xbtn" data-act="clearpq" aria-label="Clear" ${S.pq ? '' : 'hidden'}>×</button></div>
+    <div class="chips" id="plchips"></div></header><div id="pllist" style="border-top:1px solid var(--line)"></div>`;
+  $('pq').addEventListener('input', (e) => { S.pq = e.target.value; P.querySelector('[data-act="clearpq"]').hidden = !S.pq; renderPlanetList(); });
+  renderPlanetList();
+  loadPlanets();
+}
+function planetBody(p) {
+  const f = p.facts || {}, sy = p.system, rows = [];
+  const kv = (k, v) => { if (v) rows.push(`<dt>${k}</dt><dd>${v}</dd>`); };
+  kv('Portal', `<span class="glyphs">${esc(p.portal)}</span> <span class="glyphcode">${esc(p.portal)}</span>`);
+  kv('Coordinates', `<span class="mono">${esc(p.coords)}</span>${p.distance_ly != null && !p.here_system ? ` <small>· ${fnum(p.distance_ly)} ly</small>` : ''}`);
+  if (sy) kv('System', esc([p.system_name, sy.star && `${sy.star.toLowerCase()} star`, sy.economy && `${enumWord(sy.economy)} (${enumWord(sy.wealth).toLowerCase()})`,
+    sy.race && enumWord(sy.race), sy.conflict && `${enumWord(sy.conflict).toLowerCase()} conflict`, sy.pirate && 'pirate', sy.abandoned && 'abandoned'].filter(Boolean).join(' · ')));
+  if (p.facts) {
+    kv('Biome', esc([enumWord(f.biome), f.biome_subtype && !['None_', 'Standard', 'None'].includes(f.biome_subtype) ? enumWord(f.biome_subtype) : null, f.size && f.size.toLowerCase()].filter(Boolean).join(' · ')));
+    kv('Weather', esc(weatherLine(f)));
+    kv('Hazards', hazardLine(f));
+    kv('Sentinels', sentinels(f));
+    kv('Life', [f.life && `flora ${LIFE[f.life] || f.life}`, f.creature_life && `fauna ${LIFE[f.creature_life] || f.creature_life}`].filter(Boolean).join(' · '));
+  }
+  if (p.resources.length) kv('Resources', `<div class="ptags">${p.resources.map((r) => `<span>${esc(r)}</span>`).join('')}</div>`);
+  if (p.hotspots.length) kv('Hotspots', `<div class="ptags">${p.hotspots.map((h) => `<span class="hs">${esc(h.kind === 'power' ? 'Power' : h.resource || h.kind)}${h.class ? `<b>${esc(h.class)}</b>` : ''}</span>`).join('')}</div>`);
+  const dep = Object.entries(p.deposits);
+  if (dep.length) kv('Deposits', esc(dep.map(([n, c]) => c > 1 ? `${n} ×${c}` : n).join(' · ')));
+  if (p.marks.length) kv('Marks', esc(p.marks.join(' · ')));
+  if (p.bases.length) kv('Bases', esc(p.bases.join(' · ')));
+  kv('Seen', [p.first_seen && `first ${new Date(p.first_seen * 1000).toLocaleDateString()}`, p.last_visit && `last landed ${fdur(Date.now() / 1000 - p.last_visit)} ago`].filter(Boolean).join(' · '));
+  if (!p.facts) rows.push(`<dt></dt><dd><small>${explored(p) ? 'Environment not recorded yet: it is taken from the game while you are on the planet.' : 'Only the name is known (seen in a logged system). Visit it to record its environment.'}</small></dd>`);
+  return `<div class="body"><dl class="pf">${rows.join('')}</dl>${p.has_map ? `<button class="lvbtn" data-act="openplanet" data-planet="${esc(p.address)}">Open its map ›</button>` : ''}</div>`;
+}
+function renderPlanetList() {
+  if (!$('pllist')) return;
+  const all = (PL && PL.planets) || [];
+  if (PL && PL.error) $('plsub').innerHTML = `<span class="bad">⚠ ${esc(PL.error)}</span>`;
+  else if (PL) $('plsub').textContent = `${plural(all.length, 'planet')} · ${all.filter((p) => p.facts).length} with environment · ${all.filter((p) => p.bases.length).length} with bases`;
+  const terms = S.pq.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const match = all.filter((p) => { if (!terms.length) return true; const t = planetText(p); return terms.every((w) => t.includes(w)); });
+  const KINDS_ = [['Explored', explored], ['Bases', (p) => p.bases.length > 0], ['This system', (p) => p.here_system], ['All', () => true]];
+  $('plchips').innerHTML = KINDS_.map(([k, fn]) => `<button class="${S.pkind === k ? 'on' : ''}" data-act="pkind" data-kind="${k}">${k}<span>${match.filter(fn).length}</span></button>`).join('');
+  const rows = match.filter((KINDS_.find(([k]) => k === S.pkind) || KINDS_[0])[1]);
+  if (S.pexp && !rows.some((p) => p.address === S.pexp) && all.some((p) => p.address === S.pexp)) rows.unshift(all.find((p) => p.address === S.pexp));
+  const shown = rows.slice(0, 300);
+  $('pllist').innerHTML = `<div class="cards" style="padding-top:8px">${shown.map((p) => { const open = S.pexp === p.address, f = p.facts || {};
+    const dotc = p.here ? 'var(--success)' : p.bases.length ? COL.base : p.facts ? 'var(--text-dim)' : 'var(--dim)';
+    const sub = [p.system_name || 'unnamed system', f.biome && enumWord(f.biome), p.resources.slice(0, 3).join(', ')].filter(Boolean).join(' · ');
+    const where = p.here ? '<span class="ok">here</span>' : p.here_system ? 'this system' : fly(p.distance_ly);
+    return `<div class="rowcard" data-planet-row="${esc(p.address)}"><button data-act="pexp" data-address="${esc(p.address)}"><span class="chev" style="color:${dotc}">${open ? '▾' : '●'}</span><div style="min-width:0"><div class="n">${esc(p.name || `Planet ${p.index}`)}</div><div class="s" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(sub)}</div></div><span class="ly">${where}</span></button>`
+      + (open ? planetBody(p) : '') + `</div>`; }).join('')}</div>`
+    + (rows.length > shown.length ? `<div class="note">${rows.length - shown.length} more: narrow the search</div>` : '')
+    + (!PL ? '<div class="empty">Loading planets…</div>' : !rows.length ? `<div class="empty">${terms.length ? `No known planet matches “${esc(S.pq)}”.` : 'No planets here yet.'}</div>` : '');
+  if (S.pexp && !S.pscrolled) { const r = document.querySelector(`[data-planet-row="${CSS.escape(S.pexp)}"]`); if (r) { S.pscrolled = true; r.scrollIntoView({ block: 'center' }); } }
+}
+
 // ---- Build ----
+const STAR_ON = '★', STAR_OFF = '☆';
+const isFav = (id) => !!(J && (J.favourites || []).some((f) => f.id === id));
+const starBtn = (id, cls = 'star') => `<button class="${cls}${isFav(id) ? ' on' : ''}" data-act="fav" data-id="${esc(id)}" aria-label="${isFav(id) ? 'Remove from favourites' : 'Add to favourites'}">${isFav(id) ? STAR_ON : STAR_OFF}</button>`;
+const fcount = (n) => n == null ? '…' : n >= 10000 ? '10k+' : fnum(n);
 function renderBuild() {
   const P = $('page'), pl = (J && J.planner) || {}, cr = (J && J.crafting) || {};
-  const targets = pl.targets || [], can = cr.can_make, almost = cr.by_ingredient || [];
+  const targets = pl.targets || [], can = cr.can_make, almost = cr.by_ingredient || [], favs = (J && J.favourites) || [];
   const KINDS = { craft: 'Craft', refine: 'Refine', cook: 'Cook' };
   const kinds = ['All', 'Craft', 'Refine', 'Cook'];
   const make = (can || []).filter((m) => S.bkind === 'All' || KINDS[m.route] === S.bkind);
-  P.innerHTML = header(`<span class="eyebrow">From stock · known blueprints</span>`, 'Build', 'Intermediates are crafted from stock, so shared bottlenecks count once')
-    + (targets.length ? `<div class="sect"><span>Device planner</span><span>now · after one harvest</span></div><div class="cards tight">${targets.length > 1 ? `<button class="card" data-act="craftall" style="flex-direction:row;align-items:center;justify-content:space-between"><span><span style="font-size:14px;font-weight:600">Build order for ${targets.map((t) => esc(t.item)).join(' + ')}</span><span class="sub" style="display:block">every step from raw materials, sharing the stock</span></span><span style="color:var(--brand);font-size:18px">›</span></button>` : ''}${targets.map((t) => `<button class="bp plan" style="text-align:left" data-act="craft" data-id="${esc(t.id)}"><div class="h"><span class="t">${esc(t.item)} <small style="color:var(--brand)">levels ›</small></span><span class="v" style="color:var(--muted);font-weight:400">worth ${fbig(t.value)} each</span></div>
-        <div class="nums"><div><div class="l">Now</div><div class="v">${t.now}</div></div><div><div class="l">After harvest</div><div class="v ok">${t.after_harvest}</div></div></div>
-        ${t.blocker ? `<div class="blk">Next one needs ${esc(t.blocker.item)} · ${fnum(t.blocker.have)} of ${fnum(t.blocker.need)}</div>` : '<div class="blk ok">Nothing in the way</div>'}</button>`).join('')}</div>` : '')
-    + `<div class="sect"><span>Make now</span><span>tap for ingredients</span></div>`
+  const recount = cr.counts === 'search' ? `<div class="note" style="padding-bottom:6px">Recounting through every recipe; the numbers below settle in a minute.</div>` : '';
+  P.innerHTML = header(`<span class="eyebrow">From stock · known blueprints</span>`, 'Build', 'Counts are what can be made from stock through every recipe, not counting what you already hold')
+    + cmodeBar()
+    // favourites: starred items, kept by the exporter so every phone and browser sees the same list
+    + `<div class="sect"><span>Favourites</span><span>${favs.length ? 'tap for every level' : ''}</span></div><div class="cards tight">`
+    + (favs.length > 1 ? `<button class="card" data-act="craftfavs" style="flex-direction:row;align-items:center;justify-content:space-between"><span><span style="font-size:14px;font-weight:600">Build order for all ${favs.length}</span><span class="sub" style="display:block">one of each, sharing the stock; set the numbers there</span></span><span style="color:var(--brand);font-size:18px">›</span></button>` : '')
+    + favs.map((f) => `<div class="rowcard fav">${starBtn(f.id)}<button data-act="craft" data-id="${esc(f.id)}"><div style="min-width:0"><div class="n">${esc(f.item)}</div><div class="s">${f.have ? `have ${fnum(f.have)} · ` : ''}${f.max === 0 ? 'none from stock now' : 'can make from stock'}</div></div><span class="tot">${f.max === 0 ? '0' : '×' + fcount(f.max)}</span></button></div>`).join('')
+    + `</div>` + (favs.length ? '' : `<div class="note">Tap ${STAR_OFF} on anything below, or on an item's build page, to keep it here.</div>`)
+    + (targets.length ? `<div class="sect"><span>Device planner</span><span>now · after one harvest</span></div><div class="cards tight">${targets.length > 1 ? `<button class="card" data-act="craftall" style="flex-direction:row;align-items:center;justify-content:space-between"><span><span style="font-size:14px;font-weight:600">Build order for ${targets.map((t) => esc(t.item)).join(' + ')}</span><span class="sub" style="display:block">every step from raw materials, sharing the stock</span></span><span style="color:var(--brand);font-size:18px">›</span></button>` : ''}${targets.map((t) => { const r = t.refining;
+        return `<button class="bp plan" style="text-align:left" data-act="craft" data-id="${esc(t.id)}"><div class="h"><span class="t">${esc(t.item)} <small style="color:var(--brand)">levels ›</small></span><span class="v" style="color:var(--muted);font-weight:400">worth ${fbig(t.value)} each</span></div>
+        <div class="nums"><div><div class="l">With refiners</div><div class="v ok">${r ? fcount(r.now) : '…'}</div></div><div><div class="l">Crafting only</div><div class="v">${t.now}</div></div><div><div class="l">+ harvest</div><div class="v">${t.after_harvest}</div></div></div>
+        ${r ? `<div class="blk" style="color:var(--muted)">With refiners: ${r.now ? `${fcount(r.now)} for ${fnum(r.refiner_ops)} refiner ops${r.time && !r.time.instant ? `, about ${fdur(r.time.wall_seconds)} in ${plural(r.time.refiners, 'refiner')}` : ''}` : 'none'}${r.next_short && r.next_short.length && r.now < 10000 ? ` · the next one is short of ${r.next_short.map((x) => `${fnum(x.amount)} ${esc(x.item)}`).join(', ')}` : ''}</div>` : ''}
+        ${t.blocker ? `<div class="blk">Crafting only, the next one needs ${esc(t.blocker.item)} · ${fnum(t.blocker.have)} of ${fnum(t.blocker.need)}</div>` : '<div class="blk ok">Crafting only: nothing in the way</div>'}</button>`; }).join('')}</div>` : '')
+    + `<div class="sect"><span>Make now</span><span>tap for ingredients · ${STAR_OFF} to keep</span></div>` + recount
     + (can ? `<div class="chips pad">${kinds.map((k) => `<button class="${S.bkind === k ? 'on' : ''}" data-act="bkind" data-kind="${k}">${k}<span>${(can || []).filter((m) => k === 'All' || KINDS[m.route] === k).length}</span></button>`).join('')}</div>
       <div class="cards tight">${make.map((m) => { const open = S.bexp === m.id;
-        return `<div class="rowcard"><button data-act="bexp" data-id="${esc(m.id)}"><span class="chev">${open ? '▾' : '▸'}</span><div style="min-width:0"><div class="n">${esc(m.item)}</div><div class="s">${KINDS[m.route] || m.route}${m.route !== 'craft' ? ` · ${esc(m.recipe)}` : ''}${m.yield > 1 ? ` · makes ${m.yield}` : ''}</div></div><span class="tot">×${m.n >= 999999 ? '1M+' : fnum(m.n)}</span></button>`
-          + (open ? `<div class="body" style="gap:4px;padding-top:0"><button class="lvbtn" data-act="craft" data-id="${esc(m.id)}">Every level ›</button></div>` : '')
-          + (open ? `<div class="body" style="gap:4px">${m.needs.map((g) => `<div class="ing"><span>${esc(g.item)} <small>${fnum(g.amount)} each</small></span><span>have ${fnum(g.have)}</span></div>`).join('')}</div>` : '') + `</div>`; }).join('')}</div>`
+        return `<div class="rowcard fav">${starBtn(m.id)}<button data-act="bexp" data-id="${esc(m.id)}"><div style="min-width:0"><div class="n">${esc(m.item)}</div><div class="s">${KINDS[m.route] || m.route}${m.route !== 'craft' ? ` · ${esc(m.recipe)}` : ''}${m.yield > 1 ? ` · makes ${m.yield}` : ''}${m.have ? ` · have ${fnum(m.have)}` : ''}</div></div><span class="tot">×${cr.counts === 'tree' ? fcount(m.n) : m.n >= 999999 ? '1M+' : fnum(m.n)}</span></button>`
+          + (open ? `<div class="body" style="gap:4px"><button class="lvbtn" data-act="craft" data-id="${esc(m.id)}">Every level and every way ›</button>${m.needs.map((g) => `<div class="ing"><span>${esc(g.item)} <small>${fnum(g.amount)} each</small></span><span>have ${fnum(g.have)}</span></div>`).join('')}</div>` : '') + `</div>`; }).join('')}</div>`
       + (!make.length ? `<div class="empty">Nothing in stock makes a${S.bkind === 'All' ? 'nything' : ' ' + S.bkind.toLowerCase() + ' recipe'} right now.</div>` : '')
       : `<div class="note">${cr.computed_at === null || cr.computed_at === undefined ? 'The crafting search is still running; this fills in on the next refresh.' : 'This exporter does not report what can be made now (update it to get the Make now list).'}</div>`)
     + `<div class="sect"><span>Almost craftable</span><span>by what is in the way</span></div><div class="cards tight" style="padding-bottom:12px">${almost.map((a) => `<div class="card almost"><div class="h"><span class="t">${esc(a.ingredient)} <small>have ${fnum(a.have)}</small></span><span class="c">${plural(a.items.length, 'blueprint')}</span></div><div class="l">${a.items.map((i) => `<button class="lnk" data-act="craft" data-id="${esc(i.item)}">${esc(i.item)}</button> short ${fnum(i.short)}`).join(' · ')}</div></div>`).join('')}</div>`
@@ -821,48 +1044,107 @@ function renderBuild() {
 }
 
 // ---- Build breakdown (/api/craft): the build order, bottom up, and every level as a tree, stock first ----
-const CRAFT = { key: null, data: null, err: null, seq: 0 };
+// Every mode is fetched for every spec so the page can set them side by side: "max" takes the route that
+// makes most from stock (refining where that gives more), "fast" crafts wherever a blueprint can and refines
+// only what crafting cannot finish, "now" crafts only (what can be made this minute from what is held). Each
+// answer carries the time its refining takes on the save's refiners and the most each mode makes on its
+// own (max_by_mode), which is what the quantity slider and the max chip go up to. The paths can be pinned
+// (POST /api/pins, kept by the exporter) so a plan keeps to the same recipes as stock changes from save to save.
+const CRAFT = { key: null, data: null, both: {}, err: null, seq: 0 };
 const ROUTE = { craft: 'Craft', refine: 'Refine', cook: 'Cook' };
+const MODES = ['max', 'fast', 'now'];
+const MODE = { max: 'Most from stock', fast: 'Fastest', now: 'Craft now' };
+const modeMax = (t, m) => t && t.max_by_mode && t.max_by_mode[m || S.cmode] != null ? t.max_by_mode[m || S.cmode] : t ? t.max : null;
 const craftSpec = () => S.craft.map(([i, n]) => `${i}:${n}`).join(',');
 async function loadCraft() {
-  const key = `${craftSpec()}|${jsonAt}`;
+  const key = `${craftSpec()}|${jsonAt}|${S.crefs || ''}`;
   if (CRAFT.key === key) return;
   CRAFT.key = key; CRAFT.err = null; const seq = ++CRAFT.seq;
   try {
-    const r = await fetch(`/api/craft?items=${encodeURIComponent(craftSpec())}`, { cache: 'no-store' });
-    const d = await r.json();
+    // S.crefs is a what-if refiner count for the timing, this page only; the save's count otherwise
+    const got = await Promise.all(MODES.map(async (m) => { const r = await fetch(`/api/craft?items=${encodeURIComponent(craftSpec())}&mode=${m}${S.crefs ? `&refiners=${S.crefs}` : ''}`, { cache: 'no-store' }); return [m, await r.json()]; }));
+    CRAFT.both = {};
     if (seq !== CRAFT.seq) return;
-    if (d.error) { CRAFT.err = d.error; CRAFT.data = null; } else { d.spec = craftSpec(); CRAFT.data = d; }
+    for (const [m, d] of got) { if (d.error) { CRAFT.err = d.error; } else { d.spec = craftSpec(); CRAFT.both[m] = d; } }
+    CRAFT.data = CRAFT.both[S.cmode] || CRAFT.both.max || null;
   } catch (e) { if (seq !== CRAFT.seq) return; CRAFT.err = String(e.message || e); CRAFT.data = null; }
   if (S.tab === 'build' && S.craft) renderCraft();
 }
+const ftime = (t) => !t ? '' : t.instant ? 'instant' : `~${fdur(t.wall_seconds)}`;
+// the time card: what the refining takes, over how many refiners, in how many loads
+function timeLine(t) {
+  if (!t) return '';
+  if (t.instant) return `<b class="ok">Instant</b>: crafting only, nothing to refine`;
+  const bits = [`${plural(t.refiner_ops, 'refiner op')} in ${plural(t.loads, 'load')} over ${plural(t.refiners, 'refiner')}`];
+  if (t.cook_seconds) bits.push(`${plural(t.cook_ops, 'cook')} (${fdur(t.cook_seconds)} on one processor)`);
+  if (t.steps.length > 1) bits.push(`${t.steps.filter((s) => s.wall_seconds > 0).map((s) => `step ${s.step} ${fdur(s.wall_seconds)}`).join(', ')}`);
+  return `<b>About ${fdur(t.wall_seconds)}</b> of refining · ${bits.join(' · ')} · loading and emptying is yours on top`;
+}
+// what more refiners would save: a stepper for a what-if count, and the time at a few counts to tap
+function refinersBar(t) {
+  if (!t || t.instant) return '';
+  const base = t.save_refiners || t.refiners, n = t.refiners, at = (k) => (t.by_refiners || []).find((x) => x.refiners === k);
+  const now = at(n), saved = at(base) && now ? at(base).wall_seconds - now.wall_seconds : 0;
+  const chips = (t.by_refiners || []).filter((x) => x.refiners !== n).map((x) => `<button data-act="crefs" data-n="${x.refiners}"><span style="opacity:1">${x.refiners}</span>${fdur(x.wall_seconds)}</button>`).join('');
+  return `<div class="refs"><div class="row"><span class="lbl">Refiners for the timing${n !== base ? ` <small>· the save has ${base}</small>` : ' <small>· what the save has</small>'}</span>
+      <button class="step" data-act="crefs" data-d="-1" aria-label="One refiner fewer">−</button><span class="n">${n}</span><button class="step" data-act="crefs" data-d="1" aria-label="One refiner more">+</button></div>
+    <div class="row"><span class="lbl">${n !== base ? (saved > 0 ? `<b class="ok">${n - base > 0 ? `${n - base} more` : `${base - n} fewer`}: saves ${fdur(saved)}</b>` : saved < 0 ? `<b class="warn">${base - n} fewer: costs ${fdur(-saved)}</b>` : 'no change') : 'tap a count to see the time with that many'}</span></div>
+    <div class="chips">${chips}${n !== base ? `<button data-act="crefs" data-n="${base}">reset</button>` : ''}</div></div>`;
+}
+const fclock = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); };
+// pinned paths: the recipes this plan uses, held by the exporter so every save's answer keeps to them
+function pinBar(d) {
+  const p = d.pins || {};
+  if (p.on) return `<div class="pinbar"><span class="lbl"><b>Paths pinned</b>${p.at ? ` at ${fclock(p.at)}` : ''} · ${p.applied ? `${plural((p.pinned_items || []).length, 'item')} here on the pinned recipes` : 'none of them apply here'} · the plan keeps to them as stock changes</span><button class="on" data-act="unpin">Unpin</button></div>`;
+  return `<div class="pinbar"><span class="lbl">The recipes follow the stock, so the paths can change from save to save while you gather</span><button data-act="pin">Pin these paths</button></div>`;
+}
 const needsText = (m) => m.needs.map((x) => `${fnum(x.amount)} ${esc(x.item)}`).join(' + ');
+const wayText = (w) => `<b>${ROUTE[w.route] || w.route}</b>${w.route !== 'craft' ? ` · ${esc(w.recipe)}` : ''}`;
+// one item of the build order: how many, each way it is made (a split shows each share), what it takes from
+// stock or earlier leftovers, and every other way to make it with what that would make from stock alone
+function stepRow(m) {
+  const used = m.ways.map((w) => `<div class="how">${m.ways.length > 1 ? `<span class="share">${fnum(w.make)}</span>` : ''}${wayText(w)} ×${fnum(w.crafts)} · ${needsText(w)}${w.crafts > 1 ? ' each' : ''}${w.yield > 1 ? ` · makes ${w.yield}` : ''}</div>`).join('');
+  const held = [m.from_stock && `${fnum(m.from_stock)} of the ${fnum(m.have)} you hold`, m.from_made && `${fnum(m.from_made)} left over from earlier crafts`].filter(Boolean);
+  const others = (m.all_ways || []).filter((w) => !w.used);
+  return `<div class="tn step${m.target ? ' tgt' : ''}"><span class="q">${fnum(m.make)}</span><div style="min-width:0"><div class="nm">${esc(m.item)}${m.ways.length > 1 ? ` <small>${m.ways.length} ways</small>` : ''}</div>${used}`
+    + (held.length ? `<div class="how">uses ${held.join(' and ')} first</div>` : '')
+    + (others.length ? `<div class="alts"><div class="al">${others.length === 1 ? 'Another way' : `${others.length} other ways`}</div>${others.map((w) => `<div class="how">${wayText(w)} · ${w.needs.map((x) => `${fnum(x.amount)} ${esc(x.item)} <span class="hv">(${fnum(x.have)})</span>`).join(' + ')}${w.yield > 1 ? ` · makes ${w.yield}` : ''}${w.route === 'craft' && !w.known ? ' · blueprint not known' : ''} <span class="hv">· ${w.from_stock_alone ? `${fnum(w.from_stock_alone)} from stock` : 'none from stock'}</span></div>`).join('')}</div>` : '')
+    + `</div></div>`;
+}
 function renderCraft() {
   const P = $('page'), d = CRAFT.data && CRAFT.data.spec === craftSpec() ? CRAFT.data : null;
   loadCraft();
   const names = d ? d.targets.map((t) => t.item) : S.craft.map(([i]) => i);
   const title = names.join(' + ');
-  const qty = S.craft.map(([id, n], i) => { const t = d && d.targets[i], mx = t && t.max;
-    return `<div class="qty"><span class="lbl">${esc(t ? t.item : id)}${mx != null ? ` · most from stock now ${mx >= 999999 ? '1M+' : fnum(mx)}` : ''}</span>`
+  // the max is the chosen mode's own (most from stock, fastest, or crafting only right now); the slider goes up to it
+  const qty = S.craft.map(([id, n], i) => { const t = d && d.targets[i], mx = modeMax(t), top = Math.max(mx || 0, n, 10);
+    return `<div class="qty"><span class="lbl">${t ? starBtn(t.id, 'star inline') : ''}${esc(t ? t.item : id)}${t && t.have ? ` · have ${fnum(t.have)}` : ''}${mx != null ? ` · ${S.cmode === 'now' ? 'right now' : MODE[S.cmode].toLowerCase()} up to ${fcount(mx)}` : ''}</span>`
       + `<button class="step" data-act="craftn" data-i="${i}" data-d="-1" aria-label="One fewer">−</button><span class="n">${fnum(n)}</span><button class="step" data-act="craftn" data-i="${i}" data-d="1" aria-label="One more">+</button>`
-      + `<div class="chips">${[1, 5].map((k) => `<button class="${n === k ? 'on' : ''}" data-act="craftn" data-i="${i}" data-n="${k}">×${k}</button>`).join('')}${mx > 0 && mx < 10000 ? `<button class="${n === mx ? 'on' : ''}" data-act="craftn" data-i="${i}" data-n="${mx}">max ${fnum(mx)}</button>` : ''}</div></div>`; }).join('');
+      + `<div class="chips">${[1, 5].map((k) => `<button class="${n === k ? 'on' : ''}" data-act="craftn" data-i="${i}" data-n="${k}">×${k}</button>`).join('')}${mx > 0 && mx < 10000 ? `<button class="${n === mx ? 'on' : ''}" data-act="craftn" data-i="${i}" data-n="${mx}">max ${fnum(mx)}</button>` : ''}</div>`
+      + `<input type="range" class="sl" min="1" max="${top}" value="${n}" data-sl="${i}" aria-label="How many ${esc(t ? t.item : id)}"></div>`; }).join('');
   let body;
   if (CRAFT.err) body = `<div class="empty">${esc(CRAFT.err)}</div>`;
   else if (!d) body = `<div class="empty">Working out every level…</div>`;
   else {
-    const all = d.steps.flatMap((st) => st.items), count = (r) => all.filter((m) => m.route === r).reduce((a, m) => a + m.crafts, 0);
+    const all = d.steps.flatMap((st) => st.items.flatMap((m) => m.ways)), count = (r) => all.filter((w) => w.route === r).reduce((a, w) => a + w.crafts, 0);
     const work = [['craft', 'craft'], ['refine', 'refiner op'], ['cook', 'cook']].map(([r, w]) => count(r) && plural(count(r), w)).filter(Boolean).join(' · ');
     const verdict = d.ok ? `<span class="v ok">You can make ${d.targets.length > 1 || d.targets[0].qty > 1 ? 'these' : 'this'}</span>` : `<span class="v warn">Short of ${plural(d.short.length, 'material')}</span>`;
+    // most from stock, fastest, craft now: the answers side by side with how far each can go, the chosen one
+    // drives the breakdown below; Craft now also sets the quantity to what crafting alone makes this minute
+    const other = MODES.map((m) => { const x = CRAFT.both[m]; if (!x) return '';
+      const on = S.cmode === m, t = x.time || {}, mx = x.targets.length === 1 ? modeMax(x.targets[0], m) : null;
+      const upto = mx != null ? `up to ${fcount(mx)}${m === 'now' ? ' right now' : ''}` : '';
+      const dsc = x.ok ? (t.instant ? 'crafting only' : `${fnum(t.refiner_ops)} ops · ${plural(t.loads, 'load')}`) : `${t.instant ? 'crafting only' : ftime(t)} · short of ${x.short.slice(0, 2).map((y) => esc(y.item)).join(', ')}${x.short.length > 2 ? '…' : ''}`;
+      return `<button class="opt ${on ? 'on' : ''}" data-act="cmode2" data-m="${m}"><span class="l">${MODE[m]}</span><span class="v ${x.ok ? '' : 'warn'}">${x.ok ? ftime(t) : `short of ${x.short.length}`}</span><span class="d">${[upto, dsc].filter(Boolean).join(' · ')}</span></button>`; }).join('');
     body = `<div class="cards tight" style="padding-top:12px"><div class="bp"><div class="h"><span class="t">${d.targets.map((t) => `${fnum(t.qty)} × ${esc(t.item)}`).join(' + ')}</span>${verdict}</div>`
-      + `<div style="font-size:12px;color:var(--muted)">${plural(d.steps.length, 'step')} · ${work || 'nothing to make'}</div>`
+      + `<div style="font-size:12px;color:var(--muted)">${plural(d.steps.length, 'step')} · ${work || 'nothing to make'}${d.value ? ` · worth ${fbig(d.value)}` : ''}</div>`
+      + `<div class="opts">${other}</div><div style="font-size:12px;color:var(--text-dim);text-wrap:pretty">${timeLine(d.time)}</div>` + refinersBar(d.time) + pinBar(d)
       + d.short.map((x) => `<div class="g"><span class="nm">${esc(x.item)}</span><span class="tag warn" style="justify-self:end">Short ${fnum(x.amount)}</span><span class="wh">have ${fnum(x.have)} · nothing in stock makes the rest</span></div>`).join('')
       + `</div></div>`
       + `<div class="chips pad" style="padding-top:14px"><button class="${S.cview === 'order' ? 'on' : ''}" data-act="cview" data-v="order">Build order</button><button class="${S.cview === 'tree' ? 'on' : ''}" data-act="cview" data-v="tree">Every level</button></div>`;
     if (S.cview === 'tree') body += `<div class="sect" style="padding-top:6px"><span>Every level</span><span>tap to fold · stock first</span></div><div class="tree" id="tree"></div>`;
     else body += d.steps.map((st, i) => `<div class="sect" style="padding-top:${i ? 16 : 6}px"><span>Step ${st.step}${i === 0 ? ' · from raw materials' : i === d.steps.length - 1 ? ' · the build' : ''}</span><span>${plural(st.items.length, 'item')}</span></div>`
-      + `<div class="tree">${st.items.map((m) => `<div class="tn step${m.target ? ' tgt' : ''}"><span class="q">${fnum(m.make)}</span><div style="min-width:0"><div class="nm">${esc(m.item)}</div>`
-        + `<div class="how"><b>${ROUTE[m.route] || m.route}</b>${m.route !== 'craft' ? ` · ${esc(m.recipe)}` : ''} ×${fnum(m.crafts)} · ${needsText(m)}${m.crafts > 1 ? ' each' : ''}${m.yield > 1 ? ` · makes ${m.yield}` : ''}</div>`
-        + `${m.from_stock ? `<div class="how">uses ${fnum(m.from_stock)} you hold first, of ${fnum(m.have)}</div>` : ''}</div></div>`).join('')}</div>`).join('');
+      + `<div class="tree">${st.items.map(stepRow).join('')}</div>`).join('');
     body += `<div class="sect"><span>Raw materials used</span><span>of what you hold</span></div><div class="cards tight" style="padding-bottom:14px"><div class="rowcard" style="padding:6px 12px">`
       + d.raw.map((x) => `<div class="ing" style="padding:5px 0;border-bottom:1px solid var(--line)"><span>${esc(x.item)}</span><span>${fnum(x.amount)} <small>of ${fnum(x.have)}</small></span></div>`).join('') + `</div></div>`;
   }
@@ -873,18 +1155,26 @@ function renderCraft() {
 function drawTree() {
   const T = $('tree'), d = CRAFT.data; if (!T || !d) return;
   const rows = [];
+  const guides = (depth) => Array.from({ length: depth }, (_, i) => `linear-gradient(var(--glass-border-strong), var(--glass-border-strong)) ${17 + i * 16}px 0 / 1px 100% no-repeat`).join(', ');
   function walk(n, depth, path) {
-    const kids = n.children.length > 0, open = kids && !S.closed.has(path);
+    const kids = n.ways.length > 0, open = kids && !S.closed.has(path);
+    const parts = [n.from_stock && `${fnum(n.from_stock)} from stock`, n.from_made && `${fnum(n.from_made)} left over`].filter(Boolean);
     let how, amt;
-    if (n.short) { how = `have ${fnum(n.have)}${n.from_stock ? ` · ${fnum(n.from_stock)} from stock` : ''}`; amt = `<span class="amt short">${fnum(n.short)}<small>short</small></span>`; }
-    else if (n.make) { how = `<b>${ROUTE[n.route] || n.route}</b>${n.route !== 'craft' ? ` · ${esc(n.recipe)}` : ''} ×${fnum(n.crafts)}${n.yield > 1 ? ` · makes ${n.yield} each` : ''}${n.from_stock ? ` · ${fnum(n.from_stock)} from stock` : ''}`;
+    if (n.short) { how = [`have ${fnum(n.have)}`, ...parts].join(' · '); amt = `<span class="amt short">${fnum(n.short)}<small>short</small></span>`; }
+    else if (n.make) { how = (n.ways.length > 1 ? `${n.ways.length} ways` : `${wayText(n.ways[0])} ×${fnum(n.ways[0].crafts)}${n.ways[0].yield > 1 ? ` · makes ${n.ways[0].yield} each` : ''}`) + (parts.length ? ` · ${parts.join(' · ')}` : '');
       amt = `<span class="amt make">${fnum(n.make)}<small>make</small></span>`; }
-    else { how = `from stock · have ${fnum(n.have)}`; amt = `<span class="amt stock">${fnum(n.from_stock)}<small>stock</small></span>`; }
-    // one faint guide per ancestor level, so siblings deep in the tree still line up with their parent
-    const guides = Array.from({ length: depth }, (_, i) => `linear-gradient(var(--glass-border-strong), var(--glass-border-strong)) ${17 + i * 16}px 0 / 1px 100% no-repeat`).join(', ');
-    rows.push(`<button class="tn d${depth}" ${kids ? `data-act="node" data-path="${path}"` : 'tabindex="-1"'} style="padding-left:${12 + depth * 16}px;${kids ? '' : 'cursor:default;'}${guides ? `background:${guides};` : ''}">`
+    else { how = n.from_made && !n.from_stock ? 'left over from earlier crafts' : `from stock · have ${fnum(n.have)}`; amt = `<span class="amt stock">${fnum(n.from_stock + n.from_made)}<small>${n.from_stock ? 'stock' : 'spare'}</small></span>`; }
+    const g = guides(depth);
+    rows.push(`<button class="tn d${depth}" ${kids ? `data-act="node" data-path="${path}"` : 'tabindex="-1"'} style="padding-left:${12 + depth * 16}px;${kids ? '' : 'cursor:default;'}${g ? `background:${g};` : ''}">`
       + `<span class="chev">${kids ? (open ? '▾' : '▸') : ''}</span><div style="min-width:0"><div class="nm"><span class="lv">L${depth}</span>${esc(n.item)}<small>×${fnum(n.need)}</small></div><div class="how">${how}</div></div>${amt}</button>`);
-    if (open) n.children.forEach((c, i) => walk(c, depth + 1, `${path}.${i}`));
+    if (!open) return;
+    n.ways.forEach((w, wi) => {
+      if (n.ways.length > 1) {
+        const g2 = guides(depth + 1);
+        rows.push(`<div class="tn way" style="padding-left:${28 + depth * 16}px;${g2 ? `background:${g2};` : ''}"><span></span><div class="how">${wayText(w)} ×${fnum(w.crafts)} → ${fnum(w.make)}</div></div>`);
+      }
+      w.children.forEach((c, i) => walk(c, depth + 1, `${path}.${wi}.${i}`));
+    });
   }
   d.trees.forEach((t, i) => walk(t, 0, String(i)));
   T.innerHTML = rows.join('');
@@ -898,7 +1188,7 @@ function openSheet(title, sub, rowsHtml) {
 function planetsSheet() {
   const rows = MAP.planets.map((p) => { const loose = p.points.reduce((a, q) => a + (q.loose || 0), 0), here = LIVE && LIVE.on_planet && LIVE.address === p.address;
     return `<button class="srow ${p.address === S.planet ? 'on' : ''}" data-act="openplanet" data-planet="${esc(p.address)}"><i style="background:${here ? 'var(--success)' : loose ? 'var(--danger)' : p.bases.length ? COL.base : 'var(--dim)'}"></i><div style="min-width:0"><div class="n">${esc(p.planet_name || p.label)}</div><div class="s">${p.system_name ? esc(p.system_name) + ' · ' : ''}${p.bases.length ? plural(p.bases.length, 'base') : 'no bases'}${p.bases.length && p.planet_name ? ' · ' + esc(p.label) : ''}${here ? ' · you are here' : ''}${loose ? ` · ⚠ ${loose} loose` : ''}</div></div><span class="glyphs">${esc(p.portal || '')}</span></button>`; });
-  openSheet('Planets', `${MAP.planets.length} with bases or visits`, rows.join(''));
+  openSheet('Planets', `${MAP.planets.length} with maps`, rows.join('') + `<button class="srow" data-act="tab" data-tab="planets"><span></span><div style="min-width:0"><div class="n">Every known planet ›</div><div class="s">search by name, resource, biome, sentinels</div></div><span></span></button>`);
 }
 function nearbySheet() {
   const rows = (LIVE.nearby || []).map((r) => { const isBase = r.kind === 'base', lab = isBase ? r.base : `${LABEL[r.kind] || r.kind} · ${r.base}`;
@@ -935,15 +1225,71 @@ const ACT = {
   type: (d) => { S.type = d.type; renderInvList(); },
   exp: (d) => { S.exp = S.exp === d.id ? null : d.id; renderInvList(); },
   bkind: (d) => { S.bkind = d.kind; renderBuild(); },
+  pkind: (d) => { S.pkind = d.kind; renderPlanetList(); },
+  pexp: (d) => { S.pexp = S.pexp === d.address ? null : d.address; history.replaceState(null, '', hash()); renderPlanetList(); },
+  clearpq: () => { S.pq = ''; $('pq').value = ''; $('pq').focus(); document.querySelector('[data-act="clearpq"]').hidden = true; renderPlanetList(); },
   bexp: (d) => { S.bexp = S.bexp === d.id ? null : d.id; renderBuild(); },
+  rexp: (d) => { S.rexp = S.rexp === d.key ? null : d.key; renderRefine(); },
+  rkind: (d) => { S.rkind = d.kind; renderRefine(); },
+  cmode: async () => {
+    const on = !(J && J.crafting_mode);
+    try {
+      const r = await fetch('/api/mode', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ crafting: on }) });
+      const out = await r.json();
+      if (out.error) { toast(out.error); return; }
+      if (J) J.crafting_mode = out.crafting;
+      toast(out.crafting ? 'Crafting mode on · the right wall screen is the refinery board' : 'Crafting mode off');
+      render();
+    } catch (e) { toast('Could not reach the exporter'); }
+  },
   craft: (d) => { S.closed = new Set(); go({ tab: 'build', craft: [[d.id, 1]] }); },
   craftall: () => { S.closed = new Set(); const ts = (J.planner.targets || []); go({ tab: 'build', craft: ts.map((t) => [t.id, Math.max(1, t.now || 1)]) }); },
   craftback: () => go({ tab: 'build', craft: null }),
+  craftfavs: () => { S.closed = new Set(); go({ tab: 'build', craft: J.favourites.map((f) => [f.id, 1]) }); },
+  fav: async (d) => {
+    const on = !isFav(d.id);
+    try {
+      const r = await fetch('/api/favourites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: d.id, on }) });
+      const out = await r.json();
+      if (out.error) { toast(out.error); return; }
+      J.favourites = out.favourites;
+      toast(on ? 'Added to favourites' : 'Removed from favourites');
+      if (CRAFT.data) CRAFT.data.targets.forEach((t) => { t.favourite = isFav(t.id); });
+      render();
+    } catch (e) { toast('Could not reach the exporter'); }
+  },
   craftn: (d) => { const i = +d.i, cur = S.craft[i][1], n = Math.max(1, Math.min(10000, d.n ? +d.n : cur + (+d.d)));
     if (n === cur) return; const c = S.craft.map((x) => [...x]); c[i][1] = n; go({ craft: c }, { push: false }); history.replaceState(null, '', hash()); },
   cview: (d) => { S.cview = d.v; renderCraft(); },
+  cmode2: (d) => { S.cmode = d.m; CRAFT.data = CRAFT.both[d.m] || CRAFT.data;
+    if (d.m === 'now' && CRAFT.data && CRAFT.data.spec === craftSpec()) {
+      // craft now: one target goes to what crafting alone makes this minute; several only come down to it
+      const c = S.craft.map(([id, n], i) => { const mx = modeMax(CRAFT.data.targets[i], 'now'); return [id, mx > 0 && (S.craft.length === 1 || n > mx) ? mx : n]; });
+      if (c.some((x, i) => x[1] !== S.craft[i][1])) { go({ craft: c }, { push: false }); history.replaceState(null, '', hash()); return; }
+    }
+    renderCraft(); },
+  pin: async () => {
+    // every mode's answer for this spec: per item, the recipes it used in order
+    const modes = {};
+    for (const m of MODES) { const x = CRAFT.both[m]; if (!x || x.spec !== craftSpec()) continue; const per = {};
+      x.steps.forEach((st) => st.items.forEach((it) => { if (it.ways.length) per[it.id] = it.ways.map((w) => w.recipe_id); }));
+      if (Object.keys(per).length) modes[m] = per; }
+    if (!Object.keys(modes).length) { toast('Nothing to pin yet'); return; }
+    await postPins({ modes }, 'Paths pinned · the plan keeps to these recipes as stock changes');
+  },
+  unpin: () => postPins({ clear: true }, 'Paths unpinned · the recipes follow the stock again'),
+  crefs: (d) => { const t = CRAFT.data && CRAFT.data.time, cur = t ? t.refiners : 1, base = t ? t.save_refiners : 1;
+    const n = Math.max(1, Math.min(500, d.n ? +d.n : cur + (+d.d))); S.crefs = n === base ? null : n; renderCraft(); },
   node: (d) => { S.closed.has(d.path) ? S.closed.delete(d.path) : S.closed.add(d.path); drawTree(); },
 };
+async function postPins(body, msg) {
+  try {
+    const r = await fetch('/api/pins', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const out = await r.json();
+    if (out.error) { toast(out.error); return; }
+    toast(msg); CRAFT.key = null; renderCraft();
+  } catch (e) { toast('Could not reach the exporter'); }
+}
 function closeSheet() { $('sheet').hidden = true; $('sheet').innerHTML = ''; }
 function zoomTo(x, y, w) { const box = wrapBox(), h = w * box.height / Math.max(box.width, 1); setView({ x: x - w / 2, y: y - h / 2, w, h }); drawSel(); drawIssue(); }
 document.addEventListener('click', (e) => {
@@ -953,6 +1299,8 @@ document.addEventListener('click', (e) => {
   const fn = ACT[a.dataset.act]; if (fn) fn(a.dataset, a, e);
 });
 $('sheet').addEventListener('click', (e) => { if (e.target.classList.contains('scrim')) closeSheet(); });
+document.addEventListener('input', (e) => { const s = e.target.closest('input[data-sl]'); if (!s) return; const n = s.closest('.qty').querySelector('.n'); if (n) n.textContent = fnum(+s.value); });
+document.addEventListener('change', (e) => { const s = e.target.closest('input[data-sl]'); if (s) ACT.craftn({ i: s.dataset.sl, n: s.value }); });
 function select(id) { S.sel = id; drawMap(); drawSel(); drawIssue(); }
 
 // ---- map gestures: one finger pans, two pinch, the wheel zooms; a still tap selects ----
@@ -1032,6 +1380,7 @@ setInterval(() => {
   if (document.hidden) return;
   document.querySelectorAll('.saveage').forEach((e) => { e.textContent = J ? `● save ${fdur(elapsed())} ago` : '● no save yet'; e.className = `pill saveage ${!J ? 'off' : elapsed() < 1800 ? 'ok' : 'warn'}`; });
   tickFarms();
+  tickRefine();
 }, 1000);
 setInterval(() => { if (!document.hidden) loadJson(); }, 60000);
 setInterval(() => { if (!document.hidden) loadMap(); }, 300000);

@@ -25,7 +25,7 @@ import urllib.request
 from . import nmssave
 from .planner import Planner
 from .s3backup import SaveBackup
-from .crafting import Crafting
+from .crafting import MODES, Crafting, ops_to_cap
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -46,7 +46,10 @@ MAPPING_CANDIDATES = [os.environ.get("NMS_MAPPING", ""),
 RESOURCE_KINDS = {"^U_EXTRACTOR_S": "mineral", "^U_GASEXTRACTOR": "gas", "^U_SILO_S": "depot"}
 EXTRACTORS = {"^U_EXTRACTOR_S", "^U_GASEXTRACTOR"}
 GAS_SUBSTANCES = {"GAS1", "GAS2", "GAS3", "GAS4", "OXYGEN"}   # what a gas extractor can yield
-SUBSTANCE_STACK = 9999          # refiner output cap for substances
+# Refiner slot caps: the constants and the rule live in crafting.py (and in
+# knowledge/mechanics/refiner-capacity.md). A slot seen holding more than a cap raises
+# that cap (the save wins).
+REFINER_KINDS = {1: "portable", 2: "freighter", 3: "base", 5: "space", 6: "frigate", 8: "corvette"}
 REFINER_STALE_SECONDS = 7 * 86400   # ignore refiner entries not touched for a week
 PLANT_NAMES = {"RADIOPLANT": "Gamma Weed", "TOXICPLANT": "Fungal Cluster", "SNOWPLANT": "Frostwort",
                "SACVENOMPLANT": "Venom Urchin", "SCORCHEDPLANT": "Solar Vine", "POOPPLANT": "Coprite Sphere",
@@ -181,6 +184,7 @@ class Collector:
         self.raw_bases: list = []
         self.raw_points: dict = {}
         self.crafting_result: dict = {}
+        self._most_cache: dict = {}   # (save timestamp, item id, stock tag) -> most the build tree makes
         self.crafting_seconds = 0.0
         self.mapping: dict = {}
         self.state = self._load_state()
@@ -266,10 +270,17 @@ class Collector:
         except Exception as e:
             snap.setdefault("errors", {})["history"] = str(e)
 
-    def craft_tree(self, targets: list) -> dict:
+    def craft_tree(self, targets: list, mode: str = "max", refiners: int | None = None, use_pins: bool = True) -> dict:
         """Every level of making [(item id or name, qty), ...] together from the current stock, and the
         bottom-up build order (/api/craft): the phone page's build breakdown. With the crafting search
-        done, each target also carries the most it alone makes from stock now (`max`)."""
+        done, each target also carries the most it alone makes from stock now (`max`, on the "max"
+        paths) and the same worked out for each mode on its own (`max_by_mode`, on the pinned paths
+        when there are any). mode "fast" crafts wherever a known blueprint can and refines only what
+        crafting cannot finish; "max" takes the route that makes most from stock; "now" crafts only,
+        what can be made this minute from what is held. The pinned paths (set_pins) are applied unless
+        use_pins is off; `pins` in the answer says so. `time` says what the refining takes on the
+        save's refiners (or `refiners`, a what-if count: time.save_refiners is the save's own), and
+        `value` what the targets are worth."""
         snap = self.snapshot
         if "items" not in snap:
             return {"error": (snap.get("errors") or {}).get("save", "no save loaded")}
@@ -283,11 +294,36 @@ class Collector:
         if not resolved:
             return {"error": "no item given"}
         stock = {k: rec["total"] for k, rec in snap["items"].items()}
-        out = self.crafting.tree(resolved, stock, snap["known"]["products"], snap["known"]["recipes"])
+        kp, kr = snap["known"]["products"], snap["known"]["recipes"]
+        mode = mode if mode in MODES else "max"
+        base = self.refiner_count(snap)
+        n = max(1, min(int(refiners), 500)) if refiners else base
+        pins = (self.state.get("pins") or {}) if use_pins else {}
+        pin_modes = pins.get("modes") or {}
+        out = self.crafting.tree(resolved, stock, kp, kr, mode=mode, refiners=n, setting=snap.get("stack_limits") or "High",
+                                 compare=[base, base + 1, base + 2, base + 5, base + 10, base + 20, n],
+                                 pins=pin_modes.get(mode))
+        out["time"]["save_refiners"] = base
+        out["pins"] = {"on": bool(self.state.get("pins")), "applied": bool(pin_modes.get(mode)), "at": pins.get("at"),
+                       "save": pins.get("save"), "items": len(pin_modes.get(mode) or {}), "pinned_items": out.pop("pinned_items", [])}
+        items = self.tables.get("items", {})
         for t in out["targets"]:
-            t["max"] = (self.crafting_result.get(t["id"]) or {}).get("makeable")
+            t["max"] = self._most(snap, t["id"], stock)      # the most this item alone makes; cached per save
+            # the most for each mode on its own (and on its pinned paths): what the quantity can go up to there
+            t["max_by_mode"] = {m: self._most(snap, t["id"], stock, mode=m, pins=pin_modes.get(m),
+                                              tag=f"mode:{m}:{pins.get('at') or ''}" if pin_modes.get(m) else f"mode:{m}")
+                                for m in MODES}
+            t["have"] = stock.get(t["id"], 0)
+            t["favourite"] = t["id"] in self.state.get("favourites", [])
+            t["value"] = (items.get(t["id"], {}).get("value") or 0) * t["qty"]
+        out["value"] = sum(t["value"] for t in out["targets"])
         out["save"] = {"file": snap.get("save", {}).get("file"), "timestamp": snap.get("save", {}).get("timestamp")}
         return out
+
+    @staticmethod
+    def refiner_count(snap: dict) -> int:
+        """Refiners the save knows of (with or without a recipe loaded), at least one."""
+        return max(1, len(snap.get("refiners") or []))
 
     def diff(self, against: int = 1) -> dict:
         """What changed between the latest save and the one `against` saves
@@ -325,6 +361,119 @@ class Collector:
             snap["crafting"] = self._crafting_summary(res, stock)
         except Exception as e:
             self.snapshot.setdefault("errors", {})["crafting"] = str(e)
+            return
+        try:
+            self._tree_counts(snap, stock)
+        except Exception as e:
+            self.snapshot.setdefault("errors", {})["crafting_tree"] = str(e)
+
+    def _most(self, snap: dict, iid: str, stock: dict | None = None, hint: int | None = None, tag: str = "now",
+              mode: str = "max", pins: dict | None = None) -> int:
+        """The build tree's most for iid, cached per save (tag tells stock, mode and pin variants apart)."""
+        key = (snap.get("save", {}).get("timestamp"), iid, tag)
+        if key not in self._most_cache:
+            if len(self._most_cache) > 2000:
+                self._most_cache.clear()
+            st = stock if stock is not None else {k: rec["total"] for k, rec in snap["items"].items()}
+            self._most_cache[key] = self.crafting.most(iid, st, snap["known"]["products"], snap["known"]["recipes"], hint=hint,
+                                                       mode=mode, pins=pins)
+        return self._most_cache[key]
+
+    def _tree_counts(self, snap: dict, stock: dict):
+        """Second pass, after the quick search has been published: every count again through the build tree,
+        which splits work across every route and never counts what is already held (the phone page's
+        Make now, favourites, and the planner's figures with refiners). Tens of seconds on a big save."""
+        kp, kr = snap["known"]["products"], snap["known"]["recipes"]
+        self._update_favourites(snap, stock)
+        p = snap.get("planner") or {}
+        if p.get("targets"):
+            after = dict(stock)
+            for k, v in self.planner.harvest(snap.get("plants") or {}).items():
+                after[k] = after.get(k, 0) + v
+            for t in p["targets"]:
+                now = self._most(snap, t["id"], stock)
+                aft = self._most(snap, t["id"], after, tag="after_harvest")
+                ops, tm = 0, None
+                if now:
+                    tr = self.crafting.tree([(t["id"], now)], stock, kp, kr, refiners=self.refiner_count(snap), setting=snap.get("stack_limits") or "High")
+                    ops, tm = tr["time"]["refiner_ops"], tr["time"]
+                nxt = self.crafting.tree([(t["id"], now + 1)], stock, kp, kr)
+                t["refining"] = {"now": now, "after_harvest": aft, "refiner_ops": ops, "next_short": nxt["short"][:3], "time": tm}
+        cr = snap.get("crafting") or {}
+        can = []
+        for c in cr.get("can_make", []):
+            held = stock.get(c["id"], 0)
+            n = self._most(snap, c["id"], stock, hint=max(1, c["n"] - held))
+            if n:
+                can.append(dict(c, n=n, have=held))
+        can.sort(key=lambda c: (-c["n"], c["item"]))
+        snap["crafting"] = dict(cr, can_make=can, counts="tree")
+
+    def _update_favourites(self, snap: dict, stock: dict | None = None):
+        """The favourites list in the snapshot: id, name, held, and the most the build tree makes."""
+        stock = stock if stock is not None else {k: rec["total"] for k, rec in snap.get("items", {}).items()}
+        out = []
+        for iid in self.state.get("favourites", []):
+            out.append({"id": iid, "item": self.crafting.name(iid), "have": stock.get(iid, 0),
+                        "max": self._most(snap, iid, stock) if "known" in snap else None})
+        snap["favourites"] = out
+
+    def set_favourite(self, iid: str, on: bool) -> dict:
+        """Add or remove a favourite (an item id or name); kept in the state file, shared by every client."""
+        if iid not in self.crafting.routes:
+            low = iid.strip().lower()
+            iid = next((k for k, v in self.tables.get("items", {}).items() if (v.get("name") or "").lower() == low and k in self.crafting.routes), iid)
+        if iid not in self.crafting.routes:
+            return {"error": f"nothing makes {iid}"}
+        favs = [f for f in self.state.get("favourites", []) if f != iid]
+        if on:
+            favs.append(iid)
+        self.state["favourites"] = favs
+        self._save_state()
+        snap = self.snapshot
+        if "items" in snap:
+            self._update_favourites(snap)
+        return {"favourites": snap.get("favourites", [])}
+
+    def pins(self) -> dict:
+        """The pinned paths: per mode, per item, the recipes to use first and in what order. Kept in the
+        state file so every phone and browser builds on the same plan."""
+        p = self.state.get("pins") or {}
+        return {"on": bool(p), "at": p.get("at"), "save": p.get("save"),
+                "items": {m: len(v) for m, v in (p.get("modes") or {}).items()}}
+
+    def set_pins(self, modes: dict | None) -> dict:
+        """Pin the paths of a plan ({mode: {item id: [recipe ids]}}, as the Build page captures them from
+        its answers), or clear them with None. Unknown modes, items and recipes are dropped."""
+        if not modes:
+            self.state.pop("pins", None)
+        else:
+            kept = {}
+            for m, per in modes.items():
+                if m not in MODES or not isinstance(per, dict):
+                    continue
+                for iid, rids in per.items():
+                    ok = [r["recipe_id"] for r in self.crafting.routes.get(iid, [])]
+                    rids = [r for r in (rids if isinstance(rids, list) else []) if r in ok]
+                    if rids:
+                        kept.setdefault(m, {})[iid] = rids[:8]
+            if not kept:
+                return {"error": "nothing to pin"}
+            sv = self.snapshot.get("save", {}) if "items" in self.snapshot else {}
+            self.state["pins"] = {"at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                                  "save": {"file": sv.get("file"), "timestamp": sv.get("timestamp")}, "modes": kept}
+        self._save_state()
+        return self.pins()
+
+    def crafting_mode(self) -> bool:
+        """Crafting mode: set from the phone for a bulk crafting session; the right wall
+        screen becomes the refinery board while it is on. Kept in the state file."""
+        return bool(self.state.get("crafting_mode"))
+
+    def set_crafting_mode(self, on: bool) -> dict:
+        self.state["crafting_mode"] = bool(on)
+        self._save_state()
+        return {"crafting": self.crafting_mode()}
 
     def _crafting_summary(self, res: dict, stock: dict) -> dict:
         """Known blueprints that cannot be made now, and the ingredients standing in the way."""
@@ -360,13 +509,19 @@ class Collector:
                         "yield": route["yield"],
                         "needs": [{"id": ing, "item": nm(ing), "amount": amt, "have": stock.get(ing, 0)} for ing, amt in route["needs"]]})
         can.sort(key=lambda c: (-c["n"], c["item"]))
-        return {"computed_at": time.time(), "blocked": blocked[:150], "by_ingredient": by_ing[:24], "can_make": can[:400]}
+        return {"computed_at": time.time(), "blocked": blocked[:150], "by_ingredient": by_ing[:24], "can_make": can[:400], "counts": "search"}
 
     # -- snapshot (static part, computed once per save) ----------------------
     def _build(self, save: dict, path: str, mtime: float) -> dict:
         ps = save["BaseContext"]["PlayerStateData"]
         common = save.get("CommonStateData", {})
         items = self.tables.get("items", {})
+        # the save also caches other players' bases the game has loaded nearby (ExternalPlanetBase,
+        # ExternalSpaceBase, ExternalSpaceStationBase; dozens near the galactic core): not yours,
+        # so not in farms, plants, refiners, the map or the base count
+        all_bases = ps.get("PersistentPlayerBases", [])
+        ps["PersistentPlayerBases"] = [b for b in all_bases if not str((b.get("BaseType") or {}).get("PersistentBaseTypes") or "").startswith("External")]
+        external_bases = len(all_bases) - len(ps["PersistentPlayerBases"])
 
         def name(iid: str) -> str:
             iid = iid.lstrip("^")
@@ -382,7 +537,7 @@ class Collector:
         snap = {"errors": {}, "save": {}, "player": {}, "stats": {}, "collections": {},
                 "items": {}, "locations": [], "refiners": [], "farms": {}, "plants": {},
                 "fleet": {}, "universe": {}, "missions": {}, "tech": [], "tidy": {}, "blueprints": {},
-                "crafting": {"computed_at": None, "blocked": [], "by_ingredient": [], "can_make": []}}
+                "crafting": {"computed_at": None, "blocked": [], "by_ingredient": [], "can_make": []}, "favourites": []}
         s = snap["save"]
         s.update(path=path, file=os.path.basename(path), mtime=mtime, timestamp=ps.get("TimeStamp", 0),
                  summary=ps.get("SaveSummary", ""), version=save.get("Version"), platform=save.get("Platform"),
@@ -426,6 +581,7 @@ class Collector:
                         snap["stats"][sid] = v + 2 ** 32 if unsigned else v
 
         dd = save.get("DiscoveryManagerData", {}).get("DiscoveryData-v1", {})
+        snap["others_bases"] = external_bases     # cached in the save, left out everywhere
         snap["collections"] = dict(
             ships=sum(1 for x in ps.get("ShipOwnership", []) if x.get("Name") or x.get("Inventory", {}).get("Slots")),
             multitools=len(ps.get("Multitools", [])), pets=len(ps.get("Pets", [])), eggs=len(ps.get("Eggs", [])),
@@ -435,6 +591,7 @@ class Collector:
             known_words=len(ps.get("KnownWords", [])), discoveries=len(dd.get("Store", {}).get("Record", [])),
             vehicles=len(ps.get("VehicleOwnership", [])), settlements=sum(1 for x in ps.get("SettlementStatesV2", []) if x.get("Name")))
 
+        snap["stack_limits"] = self._stack_setting(ps)
         snap["known"] = {"products": {k.lstrip("^") for k in ps.get("KnownProducts", [])},
                          "recipes": {k.lstrip("^") for k in ps.get("KnownRefinerRecipes", [])}}
 
@@ -472,6 +629,9 @@ class Collector:
         try:
             stock = {iid: rec["total"] for iid, rec in snap["items"].items()}
             snap["planner"] = self.planner.plan(stock, snap["known"]["products"], snap["plants"])
+            # favourites appear at once; their counts follow from the crafting thread
+            snap["favourites"] = [{"id": i, "item": self.crafting.name(i), "have": stock.get(i, 0), "max": None}
+                                  for i in self.state.get("favourites", [])]
         except Exception as e:
             snap["errors"]["planner"] = str(e)
             snap["planner"] = {}
@@ -571,6 +731,12 @@ class Collector:
                 out.append(([r[i] * p[0] + up[i] * p[1] + f[i] * p[2] for i in range(3)], b.get("Name") or "base"))
         return out
 
+    @staticmethod
+    def _stack_setting(ps: dict) -> str:
+        """The save's Inventory stack limits difficulty setting (High / Normal / Low)."""
+        st = ((ps.get("DifficultyState") or {}).get("Settings") or {}).get("InventoryStackLimits", {})
+        return st.get("InventoryStackLimitsDifficulty") or "High"
+
     def _refiners(self, ps: dict, name, itype) -> list:
         planet_refiners = self._planet_base_refiners(ps)
 
@@ -582,6 +748,16 @@ class Collector:
                 if math.dist(best[0], kpos) < 2.0:
                     return best[1]
             return LOCATION_NAMES.get(loc, f"location {loc}")
+
+        setting = self._stack_setting(ps)
+
+        def slot_cap(iid: str, slot: dict | None, loc, output: bool = False) -> int:
+            """What this slot can hold (crafting.Crafting.slot_cap). The save's own MaxAmount
+            is not used: it reads 9999 on every refiner slot."""
+            cap = self.crafting.slot_cap(iid.lstrip("^"), setting, output=output, corvette=loc == 8)
+            if output:
+                return cap                    # a run may end just past it; that is not a bigger slot
+            return max(cap, slot.get("Amount", 0) if slot else 0)
 
         recipes = [r for r in self.tables.get("recipes", []) if not r.get("cooking")]
         by_result: dict = {}
@@ -624,21 +800,34 @@ class Collector:
                 continue
             _, r, out_id = match
             out_slot = ids[out_id]
+            out_cap = slot_cap(out_id, out_slot, loc, output=True)
+            per_op = r["result"]["amount"] or 1
             inputs = []
             ops = None
+            load_ops = None                   # operations a full load of every input gives
             for ing in r["ingredients"]:
                 sl = ids.get(ing["id"])
                 amt = max(0, sl["Amount"]) if sl else 0
-                inputs.append({"id": ing["id"], "item": name(ing["id"]), "amount": amt, "per_op": ing["amount"]})
+                cap = slot_cap(ing["id"], sl, loc)
+                inputs.append({"id": ing["id"], "item": name(ing["id"]), "amount": amt, "per_op": ing["amount"], "cap": cap})
                 n = amt // ing["amount"] if ing["amount"] else 0
                 ops = n if ops is None else min(ops, n)
+                full = cap // ing["amount"] if ing["amount"] else 0
+                load_ops = full if load_ops is None else min(load_ops, full)
+            # The optimum load: as many operations as the inputs can carry without the
+            # output stopping first, so nothing is left stranded in a slot. The output
+            # runs until it reaches its cap (the last operation may carry it past).
+            opt_ops = min(load_ops or 0, ops_to_cap(0, out_cap, per_op))
+            optimum = {"ops": opt_ops, "output": opt_ops * per_op,
+                       "inputs": [{"id": i["id"], "item": i["item"], "amount": opt_ops * i["per_op"]} for i in inputs]}
             out.append(dict(
-                key=f"{loc}:{pos[0]},{pos[1]},{pos[2]}", location_code=loc,
+                key=f"{loc}:{pos[0]},{pos[1]},{pos[2]}", location_code=loc, kind=REFINER_KINDS.get(loc, f"location {loc}"),
                 base=place(loc, k.get("Position") or [0, 0, 0]),
                 recipe=r["operation"], recipe_id=r["id"], seconds_per_op=r["seconds_per_op"],
                 output_id=out_id, output=name(out_id), output_amount=max(0, out_slot["Amount"]),
                 output_per_op=r["result"]["amount"],
-                output_cap=SUBSTANCE_STACK if itype(out_id) == "Substance" else (out_slot.get("MaxAmount") or 0),
+                output_cap=out_cap, slot_cap=self.crafting.slot_cap("LAND1", setting, corvette=loc == 8), stack_limits=setting,
+                optimum=optimum, max_output=min(opt_ops, load_ops or 0) * per_op,
                 inputs=inputs, ops_remaining=ops or 0,
                 last_update=d.get("LastUpdateTimestamp", 0), last_completed=d.get("LastCompletedTimestamp", 0)))
         return out
@@ -1039,6 +1228,7 @@ class Collector:
             return snap
         snap["now"] = now
         snap["save"]["age"] = now - snap["save"]["mtime"]
+        snap["crafting_mode"] = self.crafting_mode()
         ext = self.tables.get("extraction", {})
         upi = ext.get("resource_units_per_item", 1440)
         for r in snap["refiners"]:
@@ -1048,21 +1238,30 @@ class Collector:
             # 10 for most products); the refiner stalls there with inputs left.
             ops = r["ops_remaining"]
             if r["output_cap"] and r["output_per_op"]:
-                ops_to_cap = max(0, (r["output_cap"] - r["output_amount"]) // r["output_per_op"])
-                r["stalls_at_cap"] = ops_to_cap < ops
-                ops = min(ops, ops_to_cap)
+                to_cap = ops_to_cap(r["output_amount"], r["output_cap"], r["output_per_op"])
+                r["stalls_at_cap"] = to_cap < ops
+                ops = min(ops, to_cap)
             else:
                 r["stalls_at_cap"] = False
             done = min(ops, int(elapsed // spo))
             r["projected_ops_done"] = done
             r["projected_output"] = r["output_amount"] + done * r["output_per_op"]
-            if r["output_cap"]:
-                r["projected_output"] = min(r["projected_output"], r["output_cap"])
             r["projected_inputs"] = [max(0, i["amount"] - done * i["per_op"]) for i in r["inputs"]]
             r["remaining_seconds"] = max(0.0, ops * spo - elapsed)
             r["finish_at"] = r["last_update"] + ops * spo
             r["progress"] = 1.0 if ops == 0 else min(1.0, done / ops)
             r["active"] = 1 if ops and r["remaining_seconds"] > 0 else 0
+            # What the output slot holds once the loaded inputs run out or the cap is hit,
+            # and what to add (or take out) now so the next run ends exactly at the cap.
+            per_op = r["output_per_op"] or 1
+            r["end_output"] = r["output_amount"] + ops * per_op
+            room_ops = ops_to_cap(r["projected_output"], r["output_cap"], per_op) if r["output_cap"] else 10 ** 9
+            fill_ops = max(0, min([room_ops] + [i["cap"] // i["per_op"] for i in r["inputs"] if i["per_op"]]))
+            fill = []
+            for i, have in zip(r["inputs"], r["projected_inputs"]):
+                want = fill_ops * i["per_op"]
+                fill.append({"id": i["id"], "item": i["item"], "want": want, "add": max(0, want - have), "spare": max(0, have - want)})
+            r["to_fill"] = {"ops": fill_ops, "output": r["projected_output"] + fill_ops * per_op, "inputs": fill}
         for f in snap["farms"].values():
             elapsed = max(0.0, now - f["anchor"])
             proj = min(f["capacity_units"], f["stored_units"] + f["rate_units_per_s"] * elapsed)
@@ -1161,6 +1360,10 @@ class Collector:
         m("nms_refiner_remaining_seconds", "Seconds until the loaded inputs are exhausted (projected).", "gauge", [(rl(r), int(r["remaining_seconds"])) for r in R])
         m("nms_refiner_finish_timestamp_seconds", "Unix time the loaded job completes.", "gauge", [(rl(r), int(r["finish_at"])) for r in R])
         m("nms_refiner_output_amount", "Output stack size (projected).", "gauge", [(rl(r), r["projected_output"]) for r in R])
+        m("nms_refiner_output_end", "Output stack size when the loaded inputs run out or the cap is hit.", "gauge", [(rl(r), r["end_output"]) for r in R])
+        m("nms_refiner_output_cap", "What the output slot can hold (the location's stack cap).", "gauge", [(rl(r), r["output_cap"]) for r in R])
+        m("nms_refiner_optimum_output", "Output of one optimum load: every input filled without stranding any.", "gauge", [(rl(r), r["optimum"]["output"]) for r in R])
+        m("nms_crafting_mode", "Crafting mode on (1): the right wall screen is the refinery board.", "gauge", [({}, 1 if snap.get("crafting_mode") else 0)])
         m("nms_refiner_output_saved", "Output stack size as last saved.", "gauge", [(rl(r), r["output_amount"]) for r in R])
         m("nms_refiner_input_amount", "Input remaining (projected).", "gauge",
           [(dict(rl(r), input=i["item"]), v) for r in R for i, v in zip(r["inputs"], r["projected_inputs"])])

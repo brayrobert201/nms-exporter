@@ -18,6 +18,7 @@ The views at the end of SCHEMA are for ad-hoc SQL (`scripts/nms-sql`).
 """
 from __future__ import annotations
 
+import functools
 import glob
 import json
 import os
@@ -83,6 +84,19 @@ SELECT id, to_timestamp(t) AS at, data FROM event WHERE stream = 'weather';
 """
 
 _local = threading.local()
+
+
+def serialized(fn):
+    """One caller at a time. For the history caches' refresh (one instance each): the first
+    load reads every row of a stream (a minute or more), and two requests doing it at once
+    would each tail from the start and fill the same dicts."""
+    lock = threading.Lock()
+
+    @functools.wraps(fn)
+    def run(*a, **k):
+        with lock:
+            return fn(*a, **k)
+    return run
 
 
 def connect():
