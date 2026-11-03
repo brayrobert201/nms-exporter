@@ -126,7 +126,7 @@ class Crafting:
 
     def tree(self, targets: list, stock: dict, known_products: set, known_recipes: set,
              mode: str = "max", refiners: int = 1, setting: str = "High", compare: list | None = None,
-             pins: dict | None = None) -> dict:
+             pins: dict | None = None, choices: dict | None = None) -> dict:
         """Every level of making targets [(item_id, qty), ...] together from stock, and the same work as a
         bottom-up build order.
 
@@ -135,7 +135,9 @@ class Crafting:
         cooking before refining, then most from stock; mode "now": crafting only, what can be made this
         minute from what is held), so the choice does not flip as quantities change. `pins`
         ({item id: [recipe ids]}) puts those recipes first for that item, in that order, ahead of the
-        ranking, so a plan stays on the same paths as stock changes from save to save.
+        ranking, so a plan stays on the same paths as stock changes from save to save. `choices`
+        ({item id: "craft" | "refine" | "cook"}) keeps an item to that kind of route, the player's
+        call on the Build page; an item with no route of that kind, and "now" (crafting only), ignore it.
         A node takes what earlier crafts left over first, then stock, then makes the rest: as many as
         the first route can make, the remainder by the next, and so on. Only when no route can finish
         does the remainder go to the route with the smallest shortfall, whose missing leaves are short.
@@ -161,6 +163,9 @@ class Crafting:
                 rs = usable.get(iid, [])
                 if mode == "now":
                     rs = [r for r in rs if r["route"] == "craft"]
+                ch = (choices or {}).get(iid)
+                if ch and mode != "now" and any(r["route"] == ch for r in rs):
+                    rs = [r for r in rs if r["route"] == ch]
                 if mode == "fast":
                     key = lambda r: (speed.get(r["route"], 3), -self.direct(r, stock), len(r["needs"]))
                 else:
@@ -293,6 +298,9 @@ class Crafting:
                               "needs": [{"id": i, "item": self.name(i), "amount": am, "have": stock.get(i, 0)} for i, am in r["needs"]]}
                              for r in routes_all.get(iid, [])]
             a["all_ways"].sort(key=lambda w: (-w["used"], not w["known"], -w["from_stock_alone"]))
+            # the kinds of route the player can choose between here (crafting only with the blueprint known)
+            a["kinds"] = sorted({r["route"] for r in usable.get(iid, [])})
+            a["choice"] = (choices or {}).get(iid)
             steps.setdefault(level[iid], []).append(a)
         step_list = [{"step": i + 1, "items": sorted(steps[lv], key=lambda m: (m["target"], -m["make"], m["item"]))}
                      for i, lv in enumerate(sorted(steps))]
@@ -341,12 +349,12 @@ class Crafting:
         return total
 
     def most(self, iid: str, stock: dict, known_products: set, known_recipes: set, cap: int = 10_000,
-             hint: int | None = None, mode: str = "max", pins: dict | None = None) -> int:
+             hint: int | None = None, mode: str = "max", pins: dict | None = None, choices: dict | None = None) -> int:
         """The most of iid the build tree makes from stock (every route, split as tree() splits), up to cap,
         in the given mode ("now" is what crafting alone makes this minute) and on the pinned paths.
         Units already held are not counted: the tree always makes the item asked for. A hint (say the
         search's count less what is held) starts the search near the answer."""
-        ok = lambda n: self.tree([(iid, n)], stock, known_products, known_recipes, mode=mode, pins=pins)["ok"]
+        ok = lambda n: self.tree([(iid, n)], stock, known_products, known_recipes, mode=mode, pins=pins, choices=choices)["ok"]
         lo, hi = 0, None                     # ok(lo), not ok(hi)
         if hint:
             h = max(1, min(int(hint), cap))

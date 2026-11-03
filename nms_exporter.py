@@ -167,7 +167,9 @@ class Handler(BaseHTTPRequestHandler):
                 # &refiners=N times the refining as if N refiners were available (the save's count otherwise).
                 # &pins=0 ignores the pinned paths (POST /api/pins) for this answer.
                 refiners = int(params["refiners"]) if params.get("refiners", "").isdigit() else None
-                out = collector.craft_tree(targets, params.get("mode", "max"), refiners, use_pins=params.get("pins", "1") != "0")
+                # &refstock=0 leaves out what sits in the freighter refiners (counted by default)
+                out = collector.craft_tree(targets, params.get("mode", "max"), refiners, use_pins=params.get("pins", "1") != "0",
+                                           in_refiners=params.get("refstock", "1") != "0")
                 return self._send(json.dumps(out).encode(), "application/json", 404 if "error" in out else 200)
             if path == "/raw/bases":
                 return self._send(json.dumps(collector.raw_bases).encode(), "application/json")
@@ -277,7 +279,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 return
             if path == "/":
-                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /api/craft?id=&n=|items=&mode=max|fast|now&refiners=N&pins=0 /api/pins /api/mode /map /mobile /api/map /api/live /api/elevation /api/finds /api/sectors /systems /api/systems /api/planets /healthz\n", "text/plain")
+                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /api/craft?id=&n=|items=&mode=max|fast|now&refiners=N&pins=0&refstock=0 /api/pins /api/routes /api/mode /map /mobile /api/map /api/live /api/elevation /api/finds /api/sectors /systems /api/systems /api/planets /healthz\n", "text/plain")
             self._send(b"not found", "text/plain", 404)
         except BrokenPipeError:
             pass
@@ -308,6 +310,11 @@ class Handler(BaseHTTPRequestHandler):
             # {"modes": {mode: {item id: [recipe ids]}}} pins a plan's paths so /api/craft keeps to them
             # as stock changes; {"clear": true} lets them go. Kept in the state file, shared by every client.
             out = collector.set_pins(None if body.get("clear") else body.get("modes"))
+            return self._send(json.dumps(out).encode(), "application/json", 400 if "error" in out else 200)
+        if path == "/api/routes":
+            # {"id": item, "route": "craft"|"refine"|"cook"|null}: how that item is made in every build plan;
+            # {"clear": true} drops every call. Kept in the state file, shared by every client.
+            out = collector.set_route(str(body.get("id") or "") or None, body.get("route") or None, bool(body.get("clear")))
             return self._send(json.dumps(out).encode(), "application/json", 400 if "error" in out else 200)
         if path == "/api/mode":
             # {"crafting": true|false}: crafting mode, set from the phone for a bulk crafting

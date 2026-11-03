@@ -270,7 +270,8 @@ class Collector:
         except Exception as e:
             snap.setdefault("errors", {})["history"] = str(e)
 
-    def craft_tree(self, targets: list, mode: str = "max", refiners: int | None = None, use_pins: bool = True) -> dict:
+    def craft_tree(self, targets: list, mode: str = "max", refiners: int | None = None, use_pins: bool = True,
+                   in_refiners: bool = True) -> dict:
         """Every level of making [(item id or name, qty), ...] together from the current stock, and the
         bottom-up build order (/api/craft): the phone page's build breakdown. With the crafting search
         done, each target also carries the most it alone makes from stock now (`max`, on the "max"
@@ -278,7 +279,11 @@ class Collector:
         when there are any). mode "fast" crafts wherever a known blueprint can and refines only what
         crafting cannot finish; "max" takes the route that makes most from stock; "now" crafts only,
         what can be made this minute from what is held. The pinned paths (set_pins) are applied unless
-        use_pins is off; `pins` in the answer says so. `time` says what the refining takes on the
+        use_pins is off; `pins` in the answer says so. The player's craft-or-refine calls (set_route)
+        always are (`routes`). With in_refiners, what sits in the freighter refiners counts as stock
+        (`refiner_stock`): their output and the inputs still loaded, as at the end of the run for
+        "max" and "fast" (the refining goes on meanwhile) and as they are now for "now".
+        `time` says what the refining takes on the
         save's refiners (or `refiners`, a what-if count: time.save_refiners is the save's own), and
         `value` what the targets are worth."""
         snap = self.snapshot
@@ -293,31 +298,83 @@ class Collector:
             resolved.append((iid, max(1, min(int(q), 10_000))))
         if not resolved:
             return {"error": "no item given"}
-        stock = {k: rec["total"] for k, rec in snap["items"].items()}
+        held = {k: rec["total"] for k, rec in snap["items"].items()}
         kp, kr = snap["known"]["products"], snap["known"]["recipes"]
         mode = mode if mode in MODES else "max"
         base = self.refiner_count(snap)
         n = max(1, min(int(refiners), 500)) if refiners else base
         pins = (self.state.get("pins") or {}) if use_pins else {}
         pin_modes = pins.get("modes") or {}
+        choices = self.state.get("routes") or {}
+
+        def stock_for(m):
+            """Held stock plus the freighter refiners' contents as that mode counts them."""
+            rs = self.refiner_stock(snap, at="now" if m == "now" else "end") if in_refiners else {}
+            st = dict(held)
+            for k, v in rs.items():
+                st[k] = st.get(k, 0) + v
+            return st, rs
+
+        stock, rstock = stock_for(mode)
         out = self.crafting.tree(resolved, stock, kp, kr, mode=mode, refiners=n, setting=snap.get("stack_limits") or "High",
                                  compare=[base, base + 1, base + 2, base + 5, base + 10, base + 20, n],
-                                 pins=pin_modes.get(mode))
+                                 pins=pin_modes.get(mode), choices=choices)
         out["time"]["save_refiners"] = base
+        nm = self.crafting.name
+        # where each item's count came from: what the refiners add on top of the inventories
+        for st in out["steps"]:
+            for m in st["items"]:
+                m["in_refiners"] = rstock.get(m["id"], 0)
+        for lst in (out["raw"], out["short"]):
+            for x in lst:
+                x["in_refiners"] = rstock.get(x["id"], 0)
+        out["refiner_stock"] = {"on": in_refiners, "at": "now" if mode == "now" else "end", "kinds": list(self.REFINER_STOCK_KINDS),
+                                "items": [{"id": k, "item": nm(k), "amount": v} for k, v in sorted(rstock.items(), key=lambda kv: -kv[1])]}
+        out["routes"] = [{"id": k, "item": nm(k), "route": v} for k, v in sorted(choices.items(), key=lambda kv: nm(kv[0]))]
         out["pins"] = {"on": bool(self.state.get("pins")), "applied": bool(pin_modes.get(mode)), "at": pins.get("at"),
                        "save": pins.get("save"), "items": len(pin_modes.get(mode) or {}), "pinned_items": out.pop("pinned_items", [])}
         items = self.tables.get("items", {})
         for t in out["targets"]:
-            t["max"] = self._most(snap, t["id"], stock)      # the most this item alone makes; cached per save
-            # the most for each mode on its own (and on its pinned paths): what the quantity can go up to there
-            t["max_by_mode"] = {m: self._most(snap, t["id"], stock, mode=m, pins=pin_modes.get(m),
-                                              tag=f"mode:{m}:{pins.get('at') or ''}" if pin_modes.get(m) else f"mode:{m}")
-                                for m in MODES}
-            t["have"] = stock.get(t["id"], 0)
+            # the most for each mode on its own, on its pinned paths, with the route choices and the refiners'
+            # contents as that mode counts them: what the quantity can go up to there
+            t["max_by_mode"] = {}
+            for m in MODES:
+                st, rs = stock_for(m) if m != mode else (stock, rstock)
+                fp = hash((pins.get("at") if pin_modes.get(m) else None, frozenset(choices.items()), frozenset(rs.items())))
+                t["max_by_mode"][m] = self._most(snap, t["id"], st, mode=m, pins=pin_modes.get(m), choices=choices, tag=f"mode:{m}:{fp}")
+            t["max"] = t["max_by_mode"]["max"]
+            t["have"] = held.get(t["id"], 0)
+            t["in_refiners"] = rstock.get(t["id"], 0)
             t["favourite"] = t["id"] in self.state.get("favourites", [])
             t["value"] = (items.get(t["id"], {}).get("value") or 0) * t["qty"]
         out["value"] = sum(t["value"] for t in out["targets"])
         out["save"] = {"file": snap.get("save", {}).get("file"), "timestamp": snap.get("save", {}).get("timestamp")}
+        return out
+
+    REFINER_STOCK_KINDS = ("freighter",)
+
+    def refiner_stock(self, snap: dict, at: str = "end", now: float | None = None) -> dict:
+        """{item id: amount} sitting in the freighter refiners: each output slot and the inputs still
+        loaded, at the end of the run (at="end": the output it stops at, the inputs that leaves) or
+        projected to now (as /json projects them). Corvette and base refiners are not counted."""
+        now = now or time.time()
+        out: dict = {}
+        for r in snap.get("refiners") or []:
+            if r.get("kind") not in self.REFINER_STOCK_KINDS:
+                continue
+            ops = r.get("ops_remaining") or 0
+            if r.get("output_cap") and r.get("output_per_op"):
+                ops = min(ops, ops_to_cap(r["output_amount"], r["output_cap"], r["output_per_op"]))
+            if at != "end":
+                ops = min(ops, int(max(0.0, now - r["last_update"]) // (r.get("seconds_per_op") or 1)))
+            if r.get("output_id"):
+                v = (r.get("output_amount") or 0) + ops * (r.get("output_per_op") or 0)
+                if v > 0:
+                    out[r["output_id"]] = out.get(r["output_id"], 0) + v
+            for i in r.get("inputs") or []:
+                v = max(0, (i.get("amount") or 0) - ops * (i.get("per_op") or 0))
+                if v > 0 and i.get("id"):
+                    out[i["id"]] = out.get(i["id"], 0) + v
         return out
 
     @staticmethod
@@ -368,7 +425,7 @@ class Collector:
             self.snapshot.setdefault("errors", {})["crafting_tree"] = str(e)
 
     def _most(self, snap: dict, iid: str, stock: dict | None = None, hint: int | None = None, tag: str = "now",
-              mode: str = "max", pins: dict | None = None) -> int:
+              mode: str = "max", pins: dict | None = None, choices: dict | None = None) -> int:
         """The build tree's most for iid, cached per save (tag tells stock, mode and pin variants apart)."""
         key = (snap.get("save", {}).get("timestamp"), iid, tag)
         if key not in self._most_cache:
@@ -376,7 +433,7 @@ class Collector:
                 self._most_cache.clear()
             st = stock if stock is not None else {k: rec["total"] for k, rec in snap["items"].items()}
             self._most_cache[key] = self.crafting.most(iid, st, snap["known"]["products"], snap["known"]["recipes"], hint=hint,
-                                                       mode=mode, pins=pins)
+                                                       mode=mode, pins=pins, choices=choices)
         return self._most_cache[key]
 
     def _tree_counts(self, snap: dict, stock: dict):
@@ -464,6 +521,28 @@ class Collector:
                                   "save": {"file": sv.get("file"), "timestamp": sv.get("timestamp")}, "modes": kept}
         self._save_state()
         return self.pins()
+
+    def set_route(self, iid: str | None, route: str | None, clear: bool = False) -> dict:
+        """The player's call on how an item is made in every build plan: "craft", "refine" or "cook",
+        or None to let the planner choose again; clear drops every call. Kept in the state file."""
+        ch = dict(self.state.get("routes") or {})
+        if clear:
+            ch = {}
+        elif iid:
+            if iid not in self.crafting.routes:
+                return {"error": f"nothing makes {iid}"}
+            if route:
+                if route not in {r["route"] for r in self.crafting.routes[iid]}:
+                    return {"error": f"{self.crafting.name(iid)} has no {route} route"}
+                ch[iid] = route
+            else:
+                ch.pop(iid, None)
+        if ch:
+            self.state["routes"] = ch
+        else:
+            self.state.pop("routes", None)
+        self._save_state()
+        return {"routes": [{"id": k, "item": self.crafting.name(k), "route": v} for k, v in ch.items()]}
 
     def crafting_mode(self) -> bool:
         """Crafting mode: set from the phone for a bulk crafting session; the right wall

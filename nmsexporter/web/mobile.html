@@ -254,6 +254,10 @@ button.bp { width: 100%; }
 .pinbar .lbl { flex: 1; min-width: 0; text-wrap: pretty; } .pinbar .lbl b { color: var(--text); font-weight: 600; }
 .pinbar button { flex: none; padding: 7px 11px; border-radius: 9px; background: var(--surface); border: 1px solid var(--glass-border); color: var(--brand); font-size: 12px; font-weight: 600; }
 .pinbar button.on { background: var(--brand-tint); border-color: rgba(123,108,255,.4); }
+.seg { display: inline-flex; margin: 5px 0 2px; border: 1px solid var(--glass-border); border-radius: 9px; overflow: hidden; }
+.seg button { padding: 5px 11px; font-size: 12px; color: var(--muted); border-right: 1px solid var(--glass-border); }
+.seg button:last-child { border-right: 0; } .seg button.on { background: var(--brand-tint); color: var(--text); font-weight: 600; }
+.seg button.on.auto { background: var(--surface); color: var(--text-dim); font-weight: 500; }
 .opt .d { font-size: 11px; color: var(--muted); text-wrap: pretty; }
 .refs { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px solid var(--line); }
 .refs .row { display: flex; align-items: center; gap: 8px; } .refs .lbl { flex: 1; font-size: 12px; color: var(--muted); } .refs .lbl small { color: var(--dim); }
@@ -402,7 +406,7 @@ const arrow = (t) => t == null ? '<span></span>' : `<svg viewBox="-10 -10 20 20"
 const height = (h) => Math.abs(h || 0) < 2 ? '' : `${h > 0 ? '↑' : '↓'} ${Math.round(Math.abs(h))} m`;
 
 // ---- state ----
-const S = { tab: 'map', planet: null, level: 'planet', base: null, farm: null, sel: null, hidden: new Set(), query: '', type: 'All', exp: null, bkind: 'All', bexp: null, rexp: null, rkind: 'All', craft: null, cview: 'order', cmode: 'max', crefs: null, closed: new Set(), pq: '', pkind: 'Explored', pexp: null,
+const S = { tab: 'map', planet: null, level: 'planet', base: null, farm: null, sel: null, hidden: new Set(), query: '', type: 'All', exp: null, bkind: 'All', bexp: null, rexp: null, rkind: 'All', craft: null, cview: 'order', cmode: 'max', crefs: null, norefstock: false, closed: new Set(), pq: '', pkind: 'Explored', pexp: null,
   target: null, follow: false, userChose: false, placed: false };
 let MAP = null, J = null, LIVE = null, mapAt = 0, jsonAt = 0, view = null, ERR = null, PL = null, plAt = 0;
 const elapsed = () => J ? J.save.age + (Date.now() - jsonAt) / 1000 : null;
@@ -1057,12 +1061,12 @@ const MODE = { max: 'Most from stock', fast: 'Fastest', now: 'Craft now' };
 const modeMax = (t, m) => t && t.max_by_mode && t.max_by_mode[m || S.cmode] != null ? t.max_by_mode[m || S.cmode] : t ? t.max : null;
 const craftSpec = () => S.craft.map(([i, n]) => `${i}:${n}`).join(',');
 async function loadCraft() {
-  const key = `${craftSpec()}|${jsonAt}|${S.crefs || ''}`;
+  const key = `${craftSpec()}|${jsonAt}|${S.crefs || ''}|${S.norefstock ? 'norefs' : ''}`;
   if (CRAFT.key === key) return;
   CRAFT.key = key; CRAFT.err = null; const seq = ++CRAFT.seq;
   try {
     // S.crefs is a what-if refiner count for the timing, this page only; the save's count otherwise
-    const got = await Promise.all(MODES.map(async (m) => { const r = await fetch(`/api/craft?items=${encodeURIComponent(craftSpec())}&mode=${m}${S.crefs ? `&refiners=${S.crefs}` : ''}`, { cache: 'no-store' }); return [m, await r.json()]; }));
+    const got = await Promise.all(MODES.map(async (m) => { const r = await fetch(`/api/craft?items=${encodeURIComponent(craftSpec())}&mode=${m}${S.crefs ? `&refiners=${S.crefs}` : ''}${S.norefstock ? '&refstock=0' : ''}`, { cache: 'no-store' }); return [m, await r.json()]; }));
     CRAFT.both = {};
     if (seq !== CRAFT.seq) return;
     for (const [m, d] of got) { if (d.error) { CRAFT.err = d.error; } else { d.spec = craftSpec(); CRAFT.both[m] = d; } }
@@ -1094,7 +1098,14 @@ function refinersBar(t) {
 const fclock = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); };
 // pinned paths: the recipes this plan uses, held by the exporter so every save's answer keeps to them
 function pinBar(d) {
-  const p = d.pins || {};
+  const p = d.pins || {}, rs = d.refiner_stock || {}, ri = rs.items || [], ch = d.routes || [];
+  const refs = rs.on
+    ? `<div class="pinbar"><span class="lbl"><b>Freighter refiners counted</b> · ${ri.length ? `${plural(ri.length, 'item')}${rs.at === 'end' ? ' as the runs end' : ' as they are now'}: ${ri.slice(0, 3).map((x) => `${fnum(x.amount)} ${esc(x.item)}`).join(', ')}${ri.length > 3 ? '…' : ''}` : 'they are empty'}</span><button class="on" data-act="refstock">Leave out</button></div>`
+    : `<div class="pinbar"><span class="lbl">What sits in the freighter refiners is left out</span><button data-act="refstock">Count them</button></div>`;
+  const calls = ch.length ? `<div class="pinbar"><span class="lbl"><b>Set by hand</b> · ${ch.map((x) => `${esc(x.item)} ${x.route === 'craft' ? 'crafted' : x.route === 'cook' ? 'cooked' : 'refined'}`).join(', ')}</span><button data-act="clearroutes">Reset</button></div>` : '';
+  return refs + calls + pinBar1(p);
+}
+function pinBar1(p) {
   if (p.on) return `<div class="pinbar"><span class="lbl"><b>Paths pinned</b>${p.at ? ` at ${fclock(p.at)}` : ''} · ${p.applied ? `${plural((p.pinned_items || []).length, 'item')} here on the pinned recipes` : 'none of them apply here'} · the plan keeps to them as stock changes</span><button class="on" data-act="unpin">Unpin</button></div>`;
   return `<div class="pinbar"><span class="lbl">The recipes follow the stock, so the paths can change from save to save while you gather</span><button data-act="pin">Pin these paths</button></div>`;
 }
@@ -1102,11 +1113,20 @@ const needsText = (m) => m.needs.map((x) => `${fnum(x.amount)} ${esc(x.item)}`).
 const wayText = (w) => `<b>${ROUTE[w.route] || w.route}</b>${w.route !== 'craft' ? ` · ${esc(w.recipe)}` : ''}`;
 // one item of the build order: how many, each way it is made (a split shows each share), what it takes from
 // stock or earlier leftovers, and every other way to make it with what that would make from stock alone
+// Auto, or the player's call on how this item is made: kept by the exporter and used by every plan
+function routeSeg(m) {
+  const kinds = m.kinds || [];
+  if (!m.target && kinds.includes('craft') && kinds.length > 1)
+    return `<div class="seg">${[['', 'Auto'], ...kinds.map((k) => [k, ROUTE[k] || k])].map(([k, l]) => `<button class="${(m.choice || '') === k ? 'on' : ''}${k ? '' : ' auto'}" data-act="route" data-id="${esc(m.id)}" data-r="${k}">${l}</button>`).join('')}</div>`;
+  return '';
+}
+// refining: loads of what size and how long each, the per-load cost that decides craft or refine
+const loadText = (w) => w.route === 'craft' || !w.loads ? '' : ` · ${plural(w.loads, 'load')} of ${fnum(Math.round(w.make / w.loads))}, ${fdur(w.seconds / w.loads)} each`;
 function stepRow(m) {
-  const used = m.ways.map((w) => `<div class="how">${m.ways.length > 1 ? `<span class="share">${fnum(w.make)}</span>` : ''}${wayText(w)} ×${fnum(w.crafts)} · ${needsText(w)}${w.crafts > 1 ? ' each' : ''}${w.yield > 1 ? ` · makes ${w.yield}` : ''}</div>`).join('');
-  const held = [m.from_stock && `${fnum(m.from_stock)} of the ${fnum(m.have)} you hold`, m.from_made && `${fnum(m.from_made)} left over from earlier crafts`].filter(Boolean);
+  const used = m.ways.map((w) => `<div class="how">${m.ways.length > 1 ? `<span class="share">${fnum(w.make)}</span>` : ''}${wayText(w)} ×${fnum(w.crafts)} · ${needsText(w)}${w.crafts > 1 ? ' each' : ''}${w.yield > 1 ? ` · makes ${w.yield}` : ''}${loadText(w)}</div>`).join('');
+  const held = [m.from_stock && `${fnum(m.from_stock)} of the ${fnum(m.have)} you hold${m.in_refiners ? ` (${fnum(m.in_refiners)} in the refiners)` : ''}`, m.from_made && `${fnum(m.from_made)} left over from earlier crafts`].filter(Boolean);
   const others = (m.all_ways || []).filter((w) => !w.used);
-  return `<div class="tn step${m.target ? ' tgt' : ''}"><span class="q">${fnum(m.make)}</span><div style="min-width:0"><div class="nm">${esc(m.item)}${m.ways.length > 1 ? ` <small>${m.ways.length} ways</small>` : ''}</div>${used}`
+  return `<div class="tn step${m.target ? ' tgt' : ''}"><span class="q">${fnum(m.make)}</span><div style="min-width:0"><div class="nm">${esc(m.item)}${m.ways.length > 1 ? ` <small>${m.ways.length} ways</small>` : ''}</div>${routeSeg(m)}${used}`
     + (held.length ? `<div class="how">uses ${held.join(' and ')} first</div>` : '')
     + (others.length ? `<div class="alts"><div class="al">${others.length === 1 ? 'Another way' : `${others.length} other ways`}</div>${others.map((w) => `<div class="how">${wayText(w)} · ${w.needs.map((x) => `${fnum(x.amount)} ${esc(x.item)} <span class="hv">(${fnum(x.have)})</span>`).join(' + ')}${w.yield > 1 ? ` · makes ${w.yield}` : ''}${w.route === 'craft' && !w.known ? ' · blueprint not known' : ''} <span class="hv">· ${w.from_stock_alone ? `${fnum(w.from_stock_alone)} from stock` : 'none from stock'}</span></div>`).join('')}</div>` : '')
     + `</div></div>`;
@@ -1139,14 +1159,14 @@ function renderCraft() {
     body = `<div class="cards tight" style="padding-top:12px"><div class="bp"><div class="h"><span class="t">${d.targets.map((t) => `${fnum(t.qty)} × ${esc(t.item)}`).join(' + ')}</span>${verdict}</div>`
       + `<div style="font-size:12px;color:var(--muted)">${plural(d.steps.length, 'step')} · ${work || 'nothing to make'}${d.value ? ` · worth ${fbig(d.value)}` : ''}</div>`
       + `<div class="opts">${other}</div><div style="font-size:12px;color:var(--text-dim);text-wrap:pretty">${timeLine(d.time)}</div>` + refinersBar(d.time) + pinBar(d)
-      + d.short.map((x) => `<div class="g"><span class="nm">${esc(x.item)}</span><span class="tag warn" style="justify-self:end">Short ${fnum(x.amount)}</span><span class="wh">have ${fnum(x.have)} · nothing in stock makes the rest</span></div>`).join('')
+      + d.short.map((x) => `<div class="g"><span class="nm">${esc(x.item)}</span><span class="tag warn" style="justify-self:end">Short ${fnum(x.amount)}</span><span class="wh">have ${fnum(x.have)}${x.in_refiners ? ` + ${fnum(x.in_refiners)} in the refiners` : ''} · nothing in stock makes the rest</span></div>`).join('')
       + `</div></div>`
       + `<div class="chips pad" style="padding-top:14px"><button class="${S.cview === 'order' ? 'on' : ''}" data-act="cview" data-v="order">Build order</button><button class="${S.cview === 'tree' ? 'on' : ''}" data-act="cview" data-v="tree">Every level</button></div>`;
     if (S.cview === 'tree') body += `<div class="sect" style="padding-top:6px"><span>Every level</span><span>tap to fold · stock first</span></div><div class="tree" id="tree"></div>`;
     else body += d.steps.map((st, i) => `<div class="sect" style="padding-top:${i ? 16 : 6}px"><span>Step ${st.step}${i === 0 ? ' · from raw materials' : i === d.steps.length - 1 ? ' · the build' : ''}</span><span>${plural(st.items.length, 'item')}</span></div>`
       + `<div class="tree">${st.items.map(stepRow).join('')}</div>`).join('');
     body += `<div class="sect"><span>Raw materials used</span><span>of what you hold</span></div><div class="cards tight" style="padding-bottom:14px"><div class="rowcard" style="padding:6px 12px">`
-      + d.raw.map((x) => `<div class="ing" style="padding:5px 0;border-bottom:1px solid var(--line)"><span>${esc(x.item)}</span><span>${fnum(x.amount)} <small>of ${fnum(x.have)}</small></span></div>`).join('') + `</div></div>`;
+      + d.raw.map((x) => `<div class="ing" style="padding:5px 0;border-bottom:1px solid var(--line)"><span>${esc(x.item)}</span><span>${fnum(x.amount)} <small>of ${fnum(x.have + (x.in_refiners || 0))}${x.in_refiners ? ` · ${fnum(x.in_refiners)} in refiners` : ''}</small></span></div>`).join('') + `</div></div>`;
   }
   P.innerHTML = `<header class="hdr"><div class="row"><button class="back" data-act="craftback">‹ Build</button><span class="pills">${pillSave()}</span></div><h1 style="white-space:normal">${esc(title)}</h1><div class="sub" style="white-space:normal">Bottom up from raw materials, net of what you hold; an ingredient used twice is counted once</div></header>`
     + qty + body;
@@ -1278,10 +1298,21 @@ const ACT = {
     await postPins({ modes }, 'Paths pinned · the plan keeps to these recipes as stock changes');
   },
   unpin: () => postPins({ clear: true }, 'Paths unpinned · the recipes follow the stock again'),
+  refstock: () => { S.norefstock = !S.norefstock; toast(S.norefstock ? 'Freighter refiners left out' : 'Freighter refiners counted'); CRAFT.key = null; renderCraft(); },
+  route: (d) => postRoutes({ id: d.id, route: d.r || null }, d.r ? `${ROUTE[d.r]} set · every plan uses it` : 'Back to auto'),
+  clearroutes: () => postRoutes({ clear: true }, 'Every item back to auto'),
   crefs: (d) => { const t = CRAFT.data && CRAFT.data.time, cur = t ? t.refiners : 1, base = t ? t.save_refiners : 1;
     const n = Math.max(1, Math.min(500, d.n ? +d.n : cur + (+d.d))); S.crefs = n === base ? null : n; renderCraft(); },
   node: (d) => { S.closed.has(d.path) ? S.closed.delete(d.path) : S.closed.add(d.path); drawTree(); },
 };
+async function postRoutes(body, msg) {
+  try {
+    const r = await fetch('/api/routes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const out = await r.json();
+    if (out.error) { toast(out.error); return; }
+    toast(msg); CRAFT.key = null; renderCraft();
+  } catch (e) { toast('Could not reach the exporter'); }
+}
 async function postPins(body, msg) {
   try {
     const r = await fetch('/api/pins', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });

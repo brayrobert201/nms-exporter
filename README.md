@@ -295,7 +295,17 @@ Design project; tokens from its Refined Midnight system, Geist fonts served from
   {id: [recipe ids]}}}`, `{"clear": true}` to let go; `&pins=0` on
   `/api/craft` ignores them for one answer), and every answer after that
   ranks the pinned recipes first, so the plan stays put and only the amounts
-  move as stock arrives. Each says whether it can be made, what it
+  move as stock arrives. What sits in the freighter refiners counts as stock:
+  each output slot and the inputs still loaded, as the runs will end for Most
+  from stock and Fastest and as they are now for Craft now (`refiner_stock`
+  in the answer; each line says how much of what it uses is in the refiners;
+  **Leave out** on the page, `&refstock=0`, drops them). Corvette and base
+  refiners are not counted. Every item that can be both crafted and refined
+  has an **Auto / Craft / Refine** switch: a call kept in the exporter's
+  state (`POST /api/routes {"id", "route": "craft"|"refine"|"cook"|null}`,
+  `{"clear": true}` for all) that every plan and every maximum then keeps to,
+  Craft now aside; refine lines say their loads and the time each takes, which
+  is what the call weighs. Each says whether it can be made, what it
   is worth, and what its refining takes: operations times the recipe's
   seconds per operation, split into loads by the slot caps, dealt out over
   the refiners the save has (longest loads first), the build order's steps
