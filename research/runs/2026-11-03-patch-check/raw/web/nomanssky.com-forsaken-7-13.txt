@@ -1,0 +1,60 @@
+
+Forsaken 7.13 - No Man's Sky
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+Forsaken 7.13
+November 02, 2026.
+Hello Everyone,
+Thank you to everyone playing No Man’s Sky – Forsaken, especially those taking the time to report any issues they encounter via Zendesk or console crash reporting.
+We are listening closely to your feedback, and have identified and resolved a number of issues. These fixes are included in patch 7.13, which is now live on Steam, and will be coming to other platforms as soon as possible.
+Bug Fixes
+- Added a variant of the Corvette Haulage mission that requires package delivery to space stations.
+- Fixed an issue that caused Corvette Haulage packages to be difficult to deliver to delivery management boxes.
+- Fixed an issue that caused players to drop packages when disembarking their corvette.
+- Fixed an issue that prevented the collection of salvageable parts from space hulks.
+- Fixed an issue which caused players to lose mementos when purchasing new Corvette parts from the Forsaken Trader when their inventory was full.
+- Fixed an issue with the tutorial for the Forsaken traders.
+- Improvements to mission markers displayed for seamless warping.
+- Improvements to clarity of information displayed to the player when using minimal HUD mode.
+- Fixed an issue that caused multiple ships to land at Planetary Outpost landing pads.
+- In community expedition games started from a primary save, the Return to Primary Save button in the pause menu will now finalise the expedition if the season has expired.
+- Fixed an issue that could prevent the player being able to enter freighters after freighter battles.
+- Fixed an issue which caused some Corvette parts to snap incorrectly while being built.
+- Fixed an issue that caused Corvettes to occasionally collide when leaving the Anomaly.
+- Updated the corvette configuration / edit mode to allow the deletion of certain Corvette parts that could block players within Corvettes.
+- Visual improvements to new Corvette parts.
+- Optimisations to Corvette parts.
+- Fixed an issue which caused the warp effect to be black.
+- Improved load times and file system performance.
+- Fixed an issue that caused rolling in space to occur when moving around in PCVR.
+- Fixed an issue with text input on the Steam Frame to preview text.
+- Fixed an issue with text input on the Steam Frame where only one character could be input.
+- Fixed a rare crash related to downloading base images.
+- Fixed a rare crash on PS5.
+- General stability improvements.
+- Fixed an issue that caused the cycle weapon button to be missing when piloting an Exocraft on iOS.
+- Added the ability to activate Auto-run by tapping the button on iOS.
+- Improved haptic feedback when playing at higher framerates on iOS.
+- Fixed an issue that would cause the ship roll controls to appear when getting in or out of your starship on iOS.
+- Fixed an issue that meant tapping on planet waypoints did not bring up the relevant UI on iOS.
+- Added support to dismiss inventory pop-ups by using back button in top left on iOS.
+- Improve starship handling when using Thumbstick control method on iOS devices.
+- Fixed an issue that caused a missing icon in the tooltip about Exocraft acceleration on iOS.
+- Fixed an unlocalised string for the Uncapped Max FPS setting in the Display & Graphics settings on iOS.
+- Added a message to when you tap on the Community Expedition tile in trial mode to explain the game mode on iOS.
+- Fixed an issue that could cause the crosshair to disappear after tutorial boxes appear on screen on iOS.
+- Fixed an issue that could cause button prompts to appear at low resolution on iOS.
+- Fixed overlapping text when claiming a space station on iOS.
+- Fixed text overlapping with switch weapon button prompts when playing with a controller on iOS.
+- Fixed an issue causing misaligned tiles on the Catalogue & Guide page on some iPad devices.
+- Stability improvements on iOS devices.
+We will continue to release patches as issues are identified and resolved. If you experience any issues, let us know by submitting a bug report.
+Thank you,
+Hello Games

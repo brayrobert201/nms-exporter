@@ -1,0 +1,67 @@
+stack changed where old had a value: 0
+old stack values [(10, 382), (5, 302), (0, 175), (4, 78), (2, 15), (3, 13), (50, 6), (20, 5), (1000, 1), (30, 1)]
+new stack values [(5, 1163), (0, 739), (10, 382), (4, 78), (2, 15), (3, 13), (50, 6), (20, 5), (1000, 1), (30, 1)]
+null->0 kinds [('BuildingPart', 540), ('Procedural', 21)]
+classes same: True | biome_gases same: True | substances same: True
+fields old [('name', 5235), ('type', 5235), ('category', 5235), ('value', 4588), ('price', 4474), ('craft', 1699), ('stack', 978), ('stat', 647), ('core', 647), ('upgrade', 647), ('procedural', 254), ('template', 254), ('class', 254), ('quality', 254), ('sentinel', 254), ('symbol', 114)]
+fields new [('name', 5462), ('type', 5462), ('category', 5462), ('value', 4815), ('price', 4701), ('stack', 2403), ('craft', 1704), ('stat', 647), ('core', 647), ('upgrade', 647), ('procedural', 254), ('template', 254), ('class', 254), ('quality', 254), ('sentinel', 254), ('symbol', 114)]
+added by category [('BuildingPart', 220), ('Curiosity', 6), ('CustomisationPart', 1)]
+  + B_COK_C1 Hornet-I-Class Cockpit BuildingPart 1600000 None
+  + B_COK_C2 Hornet-II-Class Cockpit BuildingPart 1600000 None
+  + B_COK_C3 Hornet-III-Class Cockpit BuildingPart 1600000 None
+  + B_COK_C4 Viper-I-Class Cockpit BuildingPart 1600000 None
+  + B_COK_C5 Viper-II-Class Cockpit BuildingPart 1600000 None
+  + B_COK_C6 Viper-III-Class Cockpit BuildingPart 1600000 None
+  + B_COK_C7 Mantis-I-Class Cockpit BuildingPart 1600000 None
+  + B_COK_C8 Mantis-II-Class Cockpit BuildingPart 1600000 None
+  + B_COK_C9 Mantis-III-Class Cockpit BuildingPart 1600000 None
+  + B_COK_E Vantage-Class Cockpit BuildingPart 1600000 None
+  + B_CON_16 Magmox Joint BuildingPart 350000 None
+  + B_DECO_U Deathwrought Amplifier BuildingPart 175000 None
+  + B_DECO_V_0 Lungfish Cap BuildingPart 175000 None
+  + B_DECO_V_1 Lungfish Cap BuildingPart 175000 None
+  + B_DECO_W Lungfish Chassis BuildingPart 175000 None
+  + B_GEN_6 Chelone-Class Generator BuildingPart 1750000 None
+  + B_GEN_6_1 Chelone-Class Generator BuildingPart 1750000 None
+  + B_HAB1_D Legion-Class Walkway BuildingPart 350000 None
+  + B_HAB1_E Gunner-Class Walkway BuildingPart 350000 None
+  + B_HAB1_F Legionnaire-Class Walkway BuildingPart 350000 None
+  + B_HAB_D Legion-Class Hab BuildingPart 680000 None
+  + B_HAB_E Gunner-Class Hab BuildingPart 680000 None
+  + B_HAB_F Legionnaire-Class Hab BuildingPart 680000 None
+  + B_LND_D Rover Landing Thrusters BuildingPart 800000 None
+  + B_TRU_I Arachnid Thruster BuildingPart 1000000 None
+  + B_TRU_J Razor Jet BuildingPart 1000000 None
+  + B_TUR_G Dematerialisation Ray BuildingPart 1200000 None
+  + B_WALL_CANT0 Corvette Interior Furnishing BuildingPart 75000 {'ingredients': [{'id': 'ASTEROID1', 'type': 'Substance', 'amount': 30}, {'id': 'SAND1', 'type': 'Substance', 'amount': 10}, {'id': 'FUEL1', 'type': 'Substance', 'amount': 10}], 'yield': 1}
+  + B_WALL_WIND3 Corvette Window Module BuildingPart 75000 {'ingredients': [{'id': 'FARMPROD3', 'type': 'Product', 'amount': 1}, {'id': 'ASTEROID1', 'type': 'Substance', 'amount': 30}], 'yield': 1}
+  + B_WNG_S Gorgon Thruster BuildingPart 1400000 None
+  + B_WNG_S_R Gorgon Thruster BuildingPart 1400000 None
+  + B_WNG_T Dromedary Wing Module BuildingPart 350000 None
+  + B_WNG_T_R Dromedary Wing Module BuildingPart 350000 None
+  + B_WNG_U Komodo Wing Module BuildingPart 350000 None
+  + B_WNG_U_R Komodo Wing Module BuildingPart 350000 None
+  + B_WNG_V Arthropod Wing Module BuildingPart 350000 None
+  + B_WNG_V_R Arthropod Wing Module BuildingPart 350000 None
+  + B_WNG_W Eldritch Thruster BuildingPart 1400000 None
+  + B_WNG_W_B Eldritch Thruster BuildingPart 1400000 None
+  + B_WNG_W_R Eldritch Thruster BuildingPart 1400000 None
+  + B_WNG_W_T Eldritch Thruster BuildingPart 1400000 None
+  + B_WNG_X Plated Thruster BuildingPart 1400000 None
+  + B_WNG_X_B Plated Thruster BuildingPart 1400000 None
+  + B_WNG_X_R Plated Thruster BuildingPart 1400000 None
+  + B_WNG_X_T Plated Thruster BuildingPart 1400000 None
+  + B_WNG_Y Lockjaw Thruster BuildingPart 1400000 None
+  + B_WNG_Y_B Lockjaw Thruster BuildingPart 1400000 None
+  + B_WNG_Y_R Lockjaw Thruster BuildingPart 1400000 None
+  + B_WNG_Y_T Lockjaw Thruster BuildingPart 1400000 None
+  + GRAV_FLOOR Gravitational Flooring BuildingPart 1 {'ingredients': [{'id': 'LAND3', 'type': 'Substance', 'amount': 25}], 'yield': 1}
+  + GRAV_RAMP Gravitational Ramp BuildingPart 1 {'ingredients': [{'id': 'LAND3', 'type': 'Substance', 'amount': 25}], 'yield': 1}
+  + GRAV_WALL Gravitational Wall BuildingPart 1 {'ingredients': [{'id': 'LAND3', 'type': 'Substance', 'amount': 25}], 'yield': 1}
+  + GRUB_HAT Larva Tank CustomisationPart 3200 None
+  + SPOOK_PACKAGE1 Preserved Brain Curiosity 140000 None
+  + SPOOK_PACKAGE2 Preserved Grub Curiosity 140000 None
+  + SPOOK_PACKAGE3 Preserved Sample Curiosity 140000 None
+  + SPOOK_PACKAGE4 Preserved Eyeball Curiosity 140000 None
+  + SPOOK_PACKAGE5 Preserved Egg Curiosity 140000 None
+  + SPOOK_PACKAGE6 Preserved Horror Curiosity 140000 None

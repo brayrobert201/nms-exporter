@@ -1,0 +1,24 @@
+distinct keys in save: 975 unmapped by data/nms_mapping.json: 21
+  'rVj' -> BarterLoc (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData
+  'xXU' -> SellButtonSub (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData
+  'EFE' -> MissionMessageToSendOnSuccess (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData
+  '?<t' -> AcceptHeader (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  'jQX' -> NPCOffer (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  'wBA' -> PlayerOffer (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  'PGS' -> AcceptEmpty (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  '2q5' -> AcceptBad (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  'c6K' -> AcceptPoor (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  'lI?' -> AcceptFair (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  'j?y' -> AcceptGood (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  'l;a' -> AcceptGreat (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  'R0p' -> BuyButton (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  'Y4s' -> PopupButton (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  'LTP' -> PopupButtonSub (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  'JWt' -> OfferAcceptedOSD (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  '3Vm' -> OfferDeclinedOSD (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  '7<Z' -> TransferPopupTitle (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  'grs' -> TransferPopupDesc (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  'iv3' -> TransferPopupButton (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+  '<0F' -> TransferPopupButtonSub (x1) at /CommonStateData/SeasonData/SeasonalUAStationTradeData/BarterLoc
+save-key names the code reads (that are mapping values): 125
+of those, absent from this save: []

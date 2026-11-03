@@ -1,0 +1,207 @@
+== meta: old 25800958 new 26331461
+== recipes old 1684 new 1684; old ids dup? 0
+== fleet: 0 differences
+== hotspots: 1 differences
+   ~ hotspots [{"Power": {"class_weighting": {"C": 10, "B": 6, "A": 2, "S": 1}, "class_strength": {"C": 150, "B": 220, "A": 250, "S": 300}, "range_m": [200, 250]}, "Mineral1": {"class_weighting": {"C": 6, "B": 4, "A": 2, "S": 1}, "class_strength": {"C": 1, "B": 1.5, "A": 2, "S": 2.5}, "range_m": [190, 225]}, "Min
+== biomes_by_star: 0 differences
+== labels: 0 differences
+== globals_SUSPECT: 0 differences
+== items_SUSPECT old 5235 new 5462
+ added 227:
+   + B_COK_C1 None Hornet-I-Class Cockpit 1600000 BuildingPart
+   + B_COK_C2 None Hornet-II-Class Cockpit 1600000 BuildingPart
+   + B_COK_C3 None Hornet-III-Class Cockpit 1600000 BuildingPart
+   + B_COK_C4 None Viper-I-Class Cockpit 1600000 BuildingPart
+   + B_COK_C5 None Viper-II-Class Cockpit 1600000 BuildingPart
+   + B_COK_C6 None Viper-III-Class Cockpit 1600000 BuildingPart
+   + B_COK_C7 None Mantis-I-Class Cockpit 1600000 BuildingPart
+   + B_COK_C8 None Mantis-II-Class Cockpit 1600000 BuildingPart
+   + B_COK_C9 None Mantis-III-Class Cockpit 1600000 BuildingPart
+   + B_COK_E None Vantage-Class Cockpit 1600000 BuildingPart
+   + B_CON_16 None Magmox Joint 350000 BuildingPart
+   + B_DECO_U None Deathwrought Amplifier 175000 BuildingPart
+   + B_DECO_V_0 None Lungfish Cap 175000 BuildingPart
+   + B_DECO_V_1 None Lungfish Cap 175000 BuildingPart
+   + B_DECO_W None Lungfish Chassis 175000 BuildingPart
+   + B_GEN_6 None Chelone-Class Generator 1750000 BuildingPart
+   + B_GEN_6_1 None Chelone-Class Generator 1750000 BuildingPart
+   + B_HAB1_D None Legion-Class Walkway 350000 BuildingPart
+   + B_HAB1_E None Gunner-Class Walkway 350000 BuildingPart
+   + B_HAB1_F None Legionnaire-Class Walkway 350000 BuildingPart
+   + B_HAB_D None Legion-Class Hab 680000 BuildingPart
+   + B_HAB_E None Gunner-Class Hab 680000 BuildingPart
+   + B_HAB_F None Legionnaire-Class Hab 680000 BuildingPart
+   + B_LND_D None Rover Landing Thrusters 800000 BuildingPart
+   + B_STR_AC_E None Basilisk Casing 150000 BuildingPart
+   + B_STR_AC_N None Basilisk Casing 150000 BuildingPart
+   + B_STR_AC_NE None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_NE1 None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_NE2 None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_NE3 None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_NW None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_NW1 None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_NW2 None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_NW3 None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_S None Basilisk Casing 150000 BuildingPart
+   + B_STR_AC_W None Basilisk Casing 150000 BuildingPart
+   + B_STR_AC_Y_E None Basilisk Casing 150000 BuildingPart
+   + B_STR_AC_Y_N None Basilisk Casing 150000 BuildingPart
+   + B_STR_AC_Y_NE None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_Y_NE1 None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_Y_NE2 None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_Y_NE3 None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_Y_NW None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_Y_NW1 None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_Y_NW2 None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_Y_NW3 None Basilisk Aerofoil 150000 BuildingPart
+   + B_STR_AC_Y_S None Basilisk Casing 150000 BuildingPart
+   + B_STR_AC_Y_W None Basilisk Casing 150000 BuildingPart
+   + B_STR_AD_E None Reaper Cowling 150000 BuildingPart
+   + B_STR_AD_N None Reaper Cowling 150000 BuildingPart
+   + B_STR_AD_NE None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_NE1 None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_NE2 None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_NE3 None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_NW None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_NW1 None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_NW2 None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_NW3 None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_S None Reaper Cowling 150000 BuildingPart
+   + B_STR_AD_W None Reaper Cowling 150000 BuildingPart
+   + B_STR_AD_Y_E None Reaper Cowling 150000 BuildingPart
+   + B_STR_AD_Y_N None Reaper Cowling 150000 BuildingPart
+   + B_STR_AD_Y_NE None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_Y_NE1 None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_Y_NE2 None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_Y_NE3 None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_Y_NW None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_Y_NW1 None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_Y_NW2 None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_Y_NW3 None Reaper Cap 150000 BuildingPart
+   + B_STR_AD_Y_S None Reaper Cowling 150000 BuildingPart
+   + B_STR_AD_Y_W None Reaper Cowling 150000 BuildingPart
+   + B_STR_AE_NE None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_NE1 None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_NE2 None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_NE3 None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_NW None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_NW1 None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_NW2 None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_NW3 None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_Y_NE None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_Y_NE1 None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_Y_NE2 None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_Y_NE3 None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_Y_NW None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_Y_NW1 None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_Y_NW2 None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AE_Y_NW3 None Phantom Aerofoil 150000 BuildingPart
+   + B_STR_AF_NE None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_NE1 None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_NE2 None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_NE3 None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_NW None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_NW1 None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_NW2 None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_NW3 None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_Y_NE None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_Y_NE1 None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_Y_NE2 None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_Y_NE3 None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_Y_NW None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_Y_NW1 None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_Y_NW2 None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AF_Y_NW3 None Blackthorn Cover 150000 BuildingPart
+   + B_STR_AG_NE None Scorpion Diffuser 150000 BuildingPart
+   + B_STR_AG_NE1 None Scorpion Diffuser 150000 BuildingPart
+   + B_STR_AG_NE2 None Scorpion Diffuser 150000 BuildingPart
+   + B_STR_AG_NE3 None Scorpion Diffuser 150000 BuildingPart
+   + B_STR_AG_Y_NE None Scorpion Diffuser 150000 BuildingPart
+   + B_STR_AG_Y_NE1 None Scorpion Diffuser 150000 BuildingPart
+   + B_STR_AG_Y_NE2 None Scorpion Diffuser 150000 BuildingPart
+   + B_STR_AG_Y_NE3 None Scorpion Diffuser 150000 BuildingPart
+   + B_STR_AH_NETB None Basilisk Rim 150000 BuildingPart
+   + B_STR_AH_NETB1 None Basilisk Rim 150000 BuildingPart
+   + B_STR_AH_NETB2 None Basilisk Rim 150000 BuildingPart
+   + B_STR_AH_NETB3 None Basilisk Rim 150000 BuildingPart
+   + B_STR_AH_NWTB None Basilisk Rim 150000 BuildingPart
+   + B_STR_AH_NWTB1 None Basilisk Rim 150000 BuildingPart
+   + B_STR_AH_NWTB2 None Basilisk Rim 150000 BuildingPart
+   + B_STR_AH_NWTB3 None Basilisk Rim 150000 BuildingPart
+   + B_STR_AI_NETB None Reaper Rim 150000 BuildingPart
+   + B_STR_AI_NETB1 None Reaper Rim 150000 BuildingPart
+   + B_STR_AI_NETB2 None Reaper Rim 150000 BuildingPart
+   + B_STR_AI_NETB3 None Reaper Rim 150000 BuildingPart
+   + B_STR_AI_NWTB None Reaper Rim 150000 BuildingPart
+   + B_STR_AI_NWTB1 None Reaper Rim 150000 BuildingPart
+   + B_STR_AI_NWTB2 None Reaper Rim 150000 BuildingPart
+   + B_STR_AI_NWTB3 None Reaper Rim 150000 BuildingPart
+   + B_STR_AJ_NETB None Phantom Rim 150000 BuildingPart
+   + B_STR_AJ_NETB1 None Phantom Rim 150000 BuildingPart
+   + B_STR_AJ_NETB2 None Phantom Rim 150000 BuildingPart
+   + B_STR_AJ_NETB3 None Phantom Rim 150000 BuildingPart
+   + B_STR_AJ_NWTB None Phantom Rim 150000 BuildingPart
+   + B_STR_AJ_NWTB1 None Phantom Rim 150000 BuildingPart
+   + B_STR_AJ_NWTB2 None Phantom Rim 150000 BuildingPart
+   + B_STR_AJ_NWTB3 None Phantom Rim 150000 BuildingPart
+   + B_STR_AK_NETB None Blackthorn Rim 150000 BuildingPart
+   + B_STR_AK_NETB1 None Blackthorn Rim 150000 BuildingPart
+   + B_STR_AK_NETB2 None Blackthorn Rim 150000 BuildingPart
+   + B_STR_AK_NETB3 None Blackthorn Rim 150000 BuildingPart
+   + B_STR_AK_NWTB None Blackthorn Rim 150000 BuildingPart
+   + B_STR_AK_NWTB1 None Blackthorn Rim 150000 BuildingPart
+   + B_STR_AK_NWTB2 None Blackthorn Rim 150000 BuildingPart
+   + B_STR_AK_NWTB3 None Blackthorn Rim 150000 BuildingPart
+   + B_STR_AM_NE None Marrow Cap 150000 BuildingPart
+   + B_STR_AM_NE1 None Marrow Cap 150000 BuildingPart
+   + B_STR_AM_NE2 None Marrow Cap 150000 BuildingPart
+   + B_STR_AM_NE3 None Marrow Cap 150000 BuildingPart
+   + B_STR_AM_NW None Marrow Cap 150000 BuildingPart
+   + B_STR_AM_NW1 None Marrow Cap 150000 BuildingPart
+ removed 0:
+ field stack changed on 1205 items
+     ABAND_BARREL Industrial Barrel null -> 0
+     ABAND_BENCH Industrial Bench null -> 0
+     ABAND_CASE Secure Briefcase null -> 0
+     ABAND_CRATE_L Storage Unit null -> 0
+     ABAND_CRATE_M Salvage Crate null -> 0
+     ABAND_CRATE_XL Large Storage Unit null -> 0
+     ABAND_SHELF Heavy-Duty Furniture null -> 0
+     AM_EXOCRAFTTREE Exocraft Research Station null -> 0
+     AM_SHIPTREE Ship Research Station null -> 0
+     AM_SUITTREE Exosuit Research Station null -> 0
+     AM_WEAPONTREE Multi-Tool Research Station null -> 0
+     ARCHIVE Secure Archive null -> 0
+     BASECAPSULE Base Salvage Capsule null -> 0
+     BASE_FLAG Base Computer null -> 0
+     BILLBOARD Station Billboard null -> 0
+     BIOROOM Bio-Dome null -> 0
+     BLDWALLUNIT Wall Unit null -> 0
+     BLD_RUINS_01 Ruined Slab null -> 0
+     BLD_RUINS_02 Ruined Monument null -> 0
+     BLD_RUINS_03 Ruined Wall null -> 0
+     BLD_RUINS_04 Ruined Totem null -> 0
+     BLD_RUINS_05 Ruined Arch null -> 0
+     BLD_RUINS_06 Ruined Gateway null -> 0
+     BLD_RUINS_07 Ruined Statue null -> 0
+     BLD_RUINS_08 Ruined Storehouse null -> 0
+     BLD_RUINS_09 Ruined Dome null -> 0
+     BLD_RUINS_10 Ruined Monolith null -> 0
+     BLD_RUINS_11 Large Ruined Archway null -> 0
+     BLD_RUINS_12 Ruined Column null -> 0
+     BOXEDSCREEN Oscilloscope null -> 0
+     BP_ANALYSER Construction Research Unit null -> 0
+     BRIDGECONNECTOR Freighter Interior Module null -> 0
+     BUILDAMCRATE Small Crate null -> 0
+     BUILDANTIMATTER Antimatter Reactor null -> 0
+     BUILDBEACON Save Beacon null -> 0
+     BUILDBED Bed null -> 0
+     BUILDCANRACK Canister Rack null -> 0
+     BUILDCHAIR Desk Chair null -> 0
+     BUILDCHAIR2 Armchair null -> 0
+     BUILDCHAIR3 Adjustable Chair null -> 0
+ field name changed on 4 items
+     B_GEN_4 Corvette Reactor Module "Corvette Reactor Module" -> "Limos-Class Generator"
+     B_GEN_5 Corvette Reactor Module "Corvette Reactor Module" -> "Vile Proboscis Generator"
+     B_TUR_F Corvette Weapon System "Corvette Weapon System" -> "Venom Spitter"
+     HULK1 Contaminated Metal "Contaminated Metal" -> "Isotopic Dust"

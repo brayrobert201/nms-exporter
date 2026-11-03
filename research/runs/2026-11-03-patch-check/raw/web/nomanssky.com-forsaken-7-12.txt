@@ -1,0 +1,21 @@
+
+Forsaken 7.12 - No Man's Sky
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+Forsaken 7.12
+October 30, 2026.
+Hello Everyone,
+Thank you to everyone playing No Man’s Sky – Forsaken, especially those taking the time to report any issues they encounter via Zendesk or console crash reporting.
+We are listening closely to your feedback, and have identified and resolved a number of issues. These fixes are included in patch 7.12, which is now live on PS5, and will be coming to other platforms as soon as possible.
+Bug Fixes
+- Fixed a crash that could occur when using the teleporter in the Anomaly.
+We will continue to release patches as issues are identified and resolved. If you experience any issues, let us know by submitting a bug report.
+Thank you,
+Hello Games

@@ -1,0 +1,769 @@
+[VERSION]: MBINCompiler v7.4.1.3
+[ARGS]: "convert" "-y" "--force" "-q" "/tmp/nms-extract-20261103/gcenvironmentglobals.global.mbin" "/tmp/nms-extract-20261103/gcfleetglobals.global.mbin" "/tmp/nms-extract-20261103/gcgameplayglobals.global.mbin" "/tmp/nms-extract-20261103/language/nms_loc10_english.mbin" "/tmp/nms-extract-20261103/language/nms_loc1_english.mbin" "/tmp/nms-extract-20261103/language/nms_loc4_english.mbin" "/tmp/nms-extract-20261103/language/nms_loc5_english.mbin" "/tmp/nms-extract-20261103/language/nms_loc6_english.mbin" "/tmp/nms-extract-20261103/language/nms_loc7_english.mbin" "/tmp/nms-extract-20261103/language/nms_loc8_english.mbin" "/tmp/nms-extract-20261103/language/nms_loc9_english.mbin" "/tmp/nms-extract-20261103/language/nms_update3_english.mbin" "/tmp/nms-extract-20261103/metadata/reality/tables/basebuildingobjectstable.mbin" "/tmp/nms-extract-20261103/metadata/reality/tables/frigatetraittable.mbin" "/tmp/nms-extract-20261103/metadata/reality/tables/nms_basepartproducts.mbin" "/tmp/nms-extract-20261103/metadata/reality/tables/nms_modularcustomisationproducts.mbin" "/tmp/nms-extract-20261103/metadata/reality/tables/nms_reality_gcproceduraltechnologytable.mbin" "/tmp/nms-extract-20261103/metadata/reality/tables/nms_reality_gcproducttable.mbin" "/tmp/nms-extract-20261103/metadata/reality/tables/nms_reality_gcrecipetable.mbin" "/tmp/nms-extract-20261103/metadata/reality/tables/nms_reality_gcsubstancetable.mbin" "/tmp/nms-extract-20261103/metadata/reality/tables/nms_reality_gctechnologytable.mbin" "/tmp/nms-extract-20261103/metadata/reality/tables/proceduralproducttable.mbin" "/tmp/nms-extract-20261103/metadata/reality/tables/rewardtable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/atlaspathtable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/basecomputermissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/communitymissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/coremissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/corvettemissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/debugmissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/deprecatedmissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/disablingconditionstable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/fleetmissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/missiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/modmissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/multiplayermissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/npcbuildersmissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/npcmissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/piratemissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/planetprocmissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/recurringmissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/seasonalbespokemissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/seasonalmissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/sentinelsettlementmissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/spaceoutpostmissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/spacepoimissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/startedonusemissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/statstoriesmissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/swarmmissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/tutorialmissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/watermissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/missions/tables/wikimissiontable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/scanning/regionhotspotstable.mbin" "/tmp/nms-extract-20261103/metadata/simulation/solarsystem/biomes/biomelistperstartype.mbin"
+
+If you encounter any errors, please submit a bug report and include this log file.
+Please check that there isn't already a similar issue open before creating a new one.
+https://github.com/monkeyman192/MBINCompiler/issues
+
+[INFO]: Auto-Detected --input-format=MBIN
+[INFO]: --input-format=MBIN --output-format=MXML
+[INFO]: /tmp/nms-extract-20261103/gcfleetglobals.global.mbin
+[INFO]: /tmp/nms-extract-20261103/gcenvironmentglobals.global.mbin
+[INFO]: /tmp/nms-extract-20261103/gcgameplayglobals.global.mbin
+[INFO]: /tmp/nms-extract-20261103/language/nms_loc10_english.mbin
+[INFO]: /tmp/nms-extract-20261103/language/nms_loc1_english.mbin
+[INFO]: /tmp/nms-extract-20261103/language/nms_loc4_english.mbin
+[INFO]: /tmp/nms-extract-20261103/language/nms_loc5_english.mbin
+[INFO]: /tmp/nms-extract-20261103/language/nms_loc6_english.mbin
+[INFO]: /tmp/nms-extract-20261103/language/nms_loc7_english.mbin
+[INFO]: /tmp/nms-extract-20261103/language/nms_loc8_english.mbin
+[INFO]: /tmp/nms-extract-20261103/language/nms_loc9_english.mbin
+[INFO]: /tmp/nms-extract-20261103/language/nms_update3_english.mbin
+[INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/basebuildingobjectstable.mbin
+[INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/frigatetraittable.mbin
+[INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_basepartproducts.mbin
+[INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_modularcustomisationproducts.mbin
+[INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_reality_gcproceduraltechnologytable.mbin
+[INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_reality_gcproducttable.mbin
+[INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_reality_gcrecipetable.mbin
+[INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_reality_gcsubstancetable.mbin
+[INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_reality_gctechnologytable.mbin
+[INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/proceduralproducttable.mbin
+[INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/rewardtable.mbin
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/atlaspathtable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/atlaspathtable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_modularcustomisationproducts.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	D648571CB22CFD4B	template:	GcProductTable
+  [EXPECTED INFO]: GUID: 54BB18AE8DD48E77
+  
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_reality_gcsubstancetable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	7E06AA18E2BF796D	template:	GcSubstanceTable
+  [EXPECTED INFO]: GUID: 131B84652F227744
+  
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/proceduralproducttable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	E3CE8BE487803AF4	template:	GcProceduralProductTable
+  [EXPECTED INFO]: GUID: DD8B22D310A29AD6
+  
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/basebuildingobjectstable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	F2A28AF70F065D9A	template:	GcBaseBuildingTable
+  [EXPECTED INFO]: GUID: 2BD89C5E79B3BF68
+  
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_basepartproducts.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	D648571CB22CFD4B	template:	GcProductTable
+  [EXPECTED INFO]: GUID: 54BB18AE8DD48E77
+  
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_reality_gcproducttable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	D648571CB22CFD4B	template:	GcProductTable
+  [EXPECTED INFO]: GUID: 54BB18AE8DD48E77
+  
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/gcgameplayglobals.global.mbin
+  [INFO]: MBIN	version:	69.168.128.44	guid:	2A047E72ABA68A0A	template:	GcGameplayGlobals
+  [EXPECTED INFO]: GUID: 4C263B506D5DFE1
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x470
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/atlaspathtable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/basecomputermissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/basecomputermissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x170
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/basecomputermissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/communitymissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/communitymissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x470
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/communitymissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/coremissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/coremissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x470
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/coremissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/corvettemissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/corvettemissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x170
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/corvettemissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/debugmissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/debugmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x270
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/debugmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/deprecatedmissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/deprecatedmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x270
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/deprecatedmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/disablingconditionstable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/disablingconditionstable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x90
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/disablingconditionstable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/fleetmissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/fleetmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x270
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/fleetmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/missiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/missiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x470
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/missiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/multiplayermissiontable.mbin
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/modmissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/multiplayermissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/modmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x270
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/multiplayermissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/npcbuildersmissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/npcbuildersmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x470
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/npcbuildersmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/npcmissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/npcmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x270
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/npcmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/piratemissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/piratemissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x170
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/piratemissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/planetprocmissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/planetprocmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x270
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/planetprocmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/recurringmissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/recurringmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x470
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/recurringmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/seasonalbespokemissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/seasonalbespokemissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x1070
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/seasonalbespokemissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/seasonalmissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/seasonalmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x1070
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/seasonalmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/sentinelsettlementmissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/sentinelsettlementmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x270
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/sentinelsettlementmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/spaceoutpostmissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/spaceoutpostmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0xF0
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/spaceoutpostmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/spacepoimissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/spacepoimissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x470
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/spacepoimissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/startedonusemissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/startedonusemissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0xF0
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/startedonusemissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/statstoriesmissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/statstoriesmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x270
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/statstoriesmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/swarmmissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/swarmmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0xB0
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/swarmmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/tutorialmissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/tutorialmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x870
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/tutorialmissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/watermissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/watermissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x170
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/watermissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/wikimissiontable.mbin
+
+[WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/wikimissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  [EXPECTED INFO]: GUID: 30A2F5F98E161786
+  
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 54504543 expected xxxxxx01 at 0x870
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/wikimissiontable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	80A986120C680086	template:	GcMissionTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/scanning/regionhotspotstable.mbin
+[INFO]: /tmp/nms-extract-20261103/metadata/simulation/solarsystem/biomes/biomelistperstartype.mbin
+
+[ERROR]: [MbinException]: Exception has been thrown by the target of an invocation.
+  [InvalidListException]: Invalid list read, magic 00000000 expected xxxxxx01 at 0x15B48
+  
+  [INFO]: /tmp/nms-extract-20261103/metadata/reality/tables/basebuildingobjectstable.mbin
+  [INFO]: MBIN	version:	0.0.0.0	guid:	F2A28AF70F065D9A	template:	GcBaseBuildingTable
+  
+     at libMBIN.NMSTemplate.DeserializeList[T](BinaryReader reader, FieldInfo field, NMSAttribute settings, Int64 templateStartOffset, NMSTemplate parent)
+     at InvokeStub_NMSTemplate.DeserializeList(Object, Span`1)
+     at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  
+
+[INFO]: 25 files converted.
+
+[INFO]: 28 FILES FAILED.
+
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/atlaspathtable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/basecomputermissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/communitymissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/coremissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/corvettemissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+[FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/debugmissiontable.mbin
+
+[ERROR]: Failed to read GcMissionTable from MBIN.
+[FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/deprecatedmissiontable.mbin
+
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/disablingconditionstable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/fleetmissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/missiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/multiplayermissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/npcbuildersmissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/npcmissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/piratemissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/planetprocmissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/recurringmissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/seasonalbespokemissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/seasonalmissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/sentinelsettlementmissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/spaceoutpostmissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/spacepoimissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/startedonusemissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/statstoriesmissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/swarmmissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/tutorialmissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/watermissiontable.mbin
+  
+  [ERROR]: Failed to read GcMissionTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/wikimissiontable.mbin
+  
+  [ERROR]: Failed to read GcBaseBuildingTable from MBIN.
+  [FILE]: /tmp/nms-extract-20261103/metadata/reality/tables/basebuildingobjectstable.mbin
+  
+[INFO]: 35 WARNINGS.
+
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/atlaspathtable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_modularcustomisationproducts.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_reality_gcsubstancetable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/reality/tables/proceduralproducttable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/reality/tables/basebuildingobjectstable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_basepartproducts.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/reality/tables/nms_reality_gcproducttable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/gcgameplayglobals.global.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/basecomputermissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/communitymissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/coremissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/corvettemissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/debugmissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/deprecatedmissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/disablingconditionstable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/fleetmissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/missiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/multiplayermissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/modmissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/npcbuildersmissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/npcmissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/piratemissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/planetprocmissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/recurringmissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/seasonalbespokemissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/seasonalmissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/sentinelsettlementmissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/spaceoutpostmissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/spacepoimissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/startedonusemissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/statstoriesmissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/swarmmissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/tutorialmissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/watermissiontable.mbin
+  
+  [WARN]: File not recognized. You may need to use an older (or newer) version of MBINCompiler.
+  [FILE]: /tmp/nms-extract-20261103/metadata/simulation/missions/tables/wikimissiontable.mbin
+  
+[INFO]: TIME: 6.875 seconds
