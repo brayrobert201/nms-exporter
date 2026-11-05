@@ -5,7 +5,8 @@ tags, or surveys (power / mineral / gas hotspots), and what they carry. Events
 only, never per-frame data; each marker is logged when first seen and again
 after MARKER_REPEAT_S.
 
-Hooks (all matched NMS.exe 181442 in the offline signature scan):
+Hooks (all matched NMS.exe 184850 with nmspy 184702.0 in the offline signature scan;
+nmspy 181442.1 misses TryAddMarker and matches UpdateTarget twice):
   cGcBinoculars::UpdateTarget          per frame while the visor is up -> open/close events
   cGcBinoculars::UpdateScanBarProgress scan bar -> scan start / complete / abandon
   cGcBinoculars::PopulateDiscoveryInfo a scan result being filled in

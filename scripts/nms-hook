@@ -19,8 +19,9 @@
 # PREREQUISITES (set up by the 2026-10-21 pymhf-proton trial, see
 # research/runs/2026-10-21-pymhf-proton/raw/notes.md):
 #   - Python 3.12.10 at C:\pymhf\python in compatdata/275850/pfx, with
-#     `pip install nmspy==181442.1` (pymhf 0.2.5). NMS.py 181442.x matches
-#     NMS.exe FileVersion 181442 (Cosmos 7.06, Steam build 25800958).
+#     `pip install nmspy==184702.0` (pymhf 0.2.5). NMS.py 184702.0 targets
+#     NMS.exe 184702 (Steam build 26413549); every hook the mods in pymhf_mods/
+#     use also matches 184850 (build 26438455) uniquely in an offline scan.
 #   - %APPDATA%\pymhf\nmspy\pymhf.local.toml with start_exe = false, so pyMHF
 #     attaches instead of launching the game through steam://.
 #   - Start NMS from Steam first and wait for the main menu (or load a save).
