@@ -103,19 +103,44 @@ def record_planets():
             print(f"planet facts: {type(e).__name__}: {e}", flush=True)
 
 
+_history = {"at": 0.0, "error": None, "lock": threading.Lock()}
+HISTORY_EVERY = 30.0
+
+
+def refresh_history() -> None:
+    """The planet centres and names the waypoints use, read from nms-db in the background, at
+    most every HISTORY_EVERY seconds and one at a time: /json is polled every few seconds by the
+    wall screens and the phone, and a request that waited on the database here piled the
+    requests up until the service hit its memory cap (2026-11-06)."""
+    if time.time() - _history["at"] < HISTORY_EVERY or not _history["lock"].acquire(blocking=False):
+        return
+
+    def run():
+        try:
+            if not db.configured():
+                raise psycopg.OperationalError(db_error())
+            live.elev.refresh()
+            live.systems.refresh()
+            _history["error"] = None
+        except psycopg.Error as e:
+            _history["error"] = f"nms-db unreachable: {e}".strip()
+        finally:
+            _history["at"] = time.time()
+            _history["lock"].release()
+    threading.Thread(target=run, name="nms-history", daemon=True).start()
+
+
 def mission_waypoints(ms: dict | None) -> bool:
-    """Names, planet position and live distance on the missions' waypoints (live.waypoints).
+    """Names, planet position and live distance on the missions' waypoints (live.waypoints),
+    from what the history caches hold now; they are brought up to date behind the request.
     With nms-db down the save's part stays and missions.waypoint_error says why."""
     if not ms:
         return False
-    try:
-        if not db.configured():
-            raise psycopg.OperationalError(db_error())
-        live.waypoints(ms, collector.raw_bases)
-        return True
-    except psycopg.Error as e:
-        ms["waypoint_error"] = f"nms-db unreachable: {e}".strip()
-        return False
+    refresh_history()
+    live.waypoints(ms, collector.raw_bases, refresh=False)
+    if _history["error"]:
+        ms["waypoint_error"] = _history["error"]
+    return not _history["error"]
 
 
 def page_html(name: str) -> bytes:

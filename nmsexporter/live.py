@@ -358,14 +358,15 @@ class Live:
         eta = storm_eta(w.get("storm"), p.get("storm_frequency"), sample.get("t", time.time()), p.get("intensity"))
         return {**w, "planet": p or None, "storm_eta": eta}
 
-    def waypoints(self, missions: dict, bases: list) -> None:
+    def waypoints(self, missions: dict, bases: list, refresh: bool = True) -> None:
         """Fills in each mission waypoint (Collector._waypoints) where the history knows more:
         planet and system names, light years away, the position on the planet (w, the frame of
         a base's Position) once the trail has the planet's centre, lat/lon and the planet map's
         x/y, and with the game live in that system the distance from the player now.
         Raises psycopg.Error when nms-db is down; the save's part is left as it was."""
-        self.elev.refresh()
-        self.systems.refresh()
+        if refresh:        # /json passes False: it is polled every few seconds and must not wait on the database
+            self.elev.refresh()
+            self.systems.refresh()
         sample, _ = read_sample()
         if sample and time.time() - sample.get("t", 0) > STALE_S:
             sample = None

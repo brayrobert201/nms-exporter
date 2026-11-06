@@ -79,7 +79,7 @@ class Finds:
             self.labels, self.planets, self._loaded = db.labels(), db.planets(), True
         new = self._pending
         self._pending = []
-        self._last, rows = db.tail("visor", self._last)
+        self._last, rows = db.tail("visor", self._last, events={"marker_add": tuple(TYPES), "label": None, "mark": None})
         for _, r in rows:
             if (r.get("event") == "marker_add" and r.get("type") in TYPES and r.get("rel")) \
                     or (r.get("event") in ("label", "mark") and r.get("rel")):

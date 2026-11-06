@@ -30,6 +30,10 @@ from psycopg.types.json import Jsonb
 
 STREAMS = ("trail", "visor", "systems", "weather")
 MARKER_M = 5.0
+# Markers that follow the player rather than mark a place: never the same position twice, so
+# the duplicate check lets every one in. 798,034 NeighbouringSystem lines in one evening
+# (2026-11-06, 420 MB of visor log) took the exporter past its memory cap at start.
+MOVING_MARKERS = ("NeighbouringSystem", "PlanetPoleWest", "PlanetPoleEast", "PlanetPoleNorth", "PlanetPoleSouth")
 
 SCHEMA_VERSION = 1
 SCHEMA = """
@@ -138,15 +142,25 @@ def migrate(live_dir: str):
                 pass
 
 
-def tail(stream: str, after: int, since: float | None = None) -> tuple[int, list[tuple[int | None, dict]]]:
+def tail(stream: str, after: int, since: float | None = None, events: dict | None = None) -> tuple[int, list[tuple[int | None, dict]]]:
     """Every row of one stream with id > after (and t >= since), oldest first, paged.
+    events = {event: marker types or None} keeps only those rows (finds.py: the visor stream is
+    mostly markers it has no use for, and they are not worth the memory).
     Returns (the last id seen, [(address, the hook's line as a dict)])."""
     c, out = connect(), []
+    only, args = "", []
+    if events:
+        parts = []
+        for ev, types in events.items():
+            parts.append("(data->>'event' = %s" + (" AND data->>'type' = ANY(%s))" if types else ")"))
+            args += [ev] + ([list(types)] if types else [])
+        only = " AND (" + " OR ".join(parts) + ")"
+    last = c.execute("SELECT max(id) FROM event WHERE stream = %s", (stream,)).fetchone()[0] or after
     while True:
-        rows = c.execute("SELECT id, address, data FROM event WHERE stream = %s AND id > %s AND t >= %s "
-                         "ORDER BY id LIMIT 50000", (stream, after, since or 0)).fetchall()
+        rows = c.execute("SELECT id, address, data FROM event WHERE stream = %s AND id > %s AND id <= %s AND t >= %s" + only
+                         + " ORDER BY id LIMIT 50000", (stream, after, last, since or 0, *args)).fetchall()
         if not rows:
-            return after, out
+            return max(after, last) if events else after, out
         after = rows[-1][0]
         out += [(a, d) for _, a, d in rows]
 
@@ -195,7 +209,8 @@ class Ingest:
             "WHERE stream = 'trail' AND address IS NOT NULL AND (address >> 52) & 15 > 0 AND data->'planet_pos' IS NOT NULL "
             "ORDER BY data->'planet_pos', id DESC") if pp}
         self._seen = set()
-        for (d,) in c.execute("SELECT data FROM event WHERE stream = 'visor' AND data->>'event' = 'marker_add'"):
+        for (d,) in c.execute("SELECT data FROM event WHERE stream = 'visor' AND data->>'event' = 'marker_add' "
+                              "AND NOT data->>'type' = ANY(%s)", (list(MOVING_MARKERS),)):
             self._seen.add(self._marker_key(d))
 
     def once(self) -> int:
@@ -225,7 +240,7 @@ class Ingest:
                 end = data.rfind(b"\n") + 1          # a half-written last line waits for next time
                 if not end:
                     continue
-                rows, keys = [], []
+                rows, keys = [], set()
                 for line in data[:end].splitlines():
                     try:
                         r = json.loads(line)
@@ -233,10 +248,12 @@ class Ingest:
                     except (ValueError, KeyError, TypeError):
                         continue
                     if stream == "visor" and r.get("event") == "marker_add":
+                        if r.get("type") in MOVING_MARKERS:
+                            continue
                         k = self._marker_key(r)
                         if k in self._seen or k in keys:
                             continue
-                        keys.append(k)
+                        keys.add(k)
                     rows.append((stream, t, self._address(r) if stream == "trail" else None, Jsonb(r)))
                 with c.transaction():
                     if rows:

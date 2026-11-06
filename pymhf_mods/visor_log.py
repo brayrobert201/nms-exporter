@@ -60,7 +60,10 @@ HELP = ("<TITLE>Map commands<> (nms-exporter)\n"
         "<TITLE>/help<>  this list")
 # SpacePoi moves every frame (879 of the first 902 lines, 2026-10-22).
 QUIET_TYPES = {"NetworkPlayer", "NetworkPlayerShip", "NetworkPlayerVehicle", "NetworkPlayerFireTeam",
-               "NetworkPlayerFireTeamShip", "NetworkPlayerFireTeamFreighter", "SpacePoi"}
+               "NetworkPlayerFireTeamShip", "NetworkPlayerFireTeamFreighter", "SpacePoi",
+               # these follow the player, so no two positions repeat and the 60 s rule never holds them
+               # back: 798,034 NeighbouringSystem lines (420 MB) in one evening, 2026-11-06
+               "NeighbouringSystem", "PlanetPoleWest", "PlanetPoleEast", "PlanetPoleNorth", "PlanetPoleSouth"}
 
 
 def _v(v):
