@@ -11,8 +11,8 @@ android {
         applicationId = "toys.bobs.nms"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1"
+        versionCode = 2
+        versionName = "0.2"
     }
     buildFeatures { buildConfig = true }
     buildTypes {
@@ -39,4 +39,7 @@ dependencies {
     implementation("androidx.window:window:1.4.0")
     implementation("androidx.webkit:webkit:1.14.0")
     implementation("com.google.android.material:material:1.13.0")
+    // JVM checks of WallMode; the real org.json stands in for Android's stubbed one
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20250517")
 }
