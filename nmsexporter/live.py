@@ -186,6 +186,7 @@ class Elevation:
         self._radii: dict = {}      # address -> Counter of |rel| - distance_from_planet
         self.water: dict = {}       # address -> water surface above the nominal radius (absent: no sea seen)
         self.anchor: dict = {}      # address -> first surface sample: the centre of a base-less planet's map
+        self.centre: dict = {}      # address -> the planet's centre in its star system's frame (mission markers)
         self.visited: dict = {}     # address -> the mod's ua dict, for naming base-less planets
         self.timeline: list = []    # [(t, address)] at each change of planet, for placing visor finds
         self.by_centre: dict = {}   # rounded nearest-planet centre -> address, for samples that lack one
@@ -216,6 +217,9 @@ class Elevation:
             c[round(math.hypot(*rel) - dfp)] += 1
             self.radius[address] = c.most_common(1)[0][0]
             self.anchor.setdefault(address, rel)
+            if s.get("planet_pos"):
+                # the same round numbers on every visit (126000, -14000, 19000): the system frame is fixed
+                self.centre[address] = s["planet_pos"]
             self.visited.setdefault(address, s.get("ua"))
             if s.get("sealevel"):
                 self.water[address] = s["sealevel"]
@@ -353,6 +357,68 @@ class Live:
             p["hazard"] = {k: dict(zip(HAZARD_SLOTS, v)) for k, v in p["hazard"].items()}
         eta = storm_eta(w.get("storm"), p.get("storm_frequency"), sample.get("t", time.time()), p.get("intensity"))
         return {**w, "planet": p or None, "storm_eta": eta}
+
+    def waypoints(self, missions: dict, bases: list) -> None:
+        """Fills in each mission waypoint (Collector._waypoints) where the history knows more:
+        planet and system names, light years away, the position on the planet (w, the frame of
+        a base's Position) once the trail has the planet's centre, lat/lon and the planet map's
+        x/y, and with the game live in that system the distance from the player now.
+        Raises psycopg.Error when nms-db is down; the save's part is left as it was."""
+        self.elev.refresh()
+        self.systems.refresh()
+        sample, _ = read_sample()
+        if sample and time.time() - sample.get("t", 0) > STALE_S:
+            sample = None
+        paddr = ua_int(sample.get("ua")) if sample else None
+        here = systems_mod.voxel(paddr) if paddr is not None else None
+        for r in missions.get("in_progress") or []:
+            for wp in ([r["waypoint"]] if r.get("waypoint") else []) + (r.get("waypoints") or []):
+                self._waypoint(wp, bases, sample, paddr, here)
+
+    def _waypoint(self, wp: dict, bases: list, sample, paddr, here) -> None:
+        a = maps._addr(wp.get("address"))
+        if a is None:
+            return
+        wp["planet_name"] = self.systems.planet_name(a) if wp.get("planet") else None
+        wp["system_name"] = self.systems.system_name(a)
+        wp["on_map"] = bool(wp.get("planet")) and (bool(_mine(bases, a)) or a in self.elev.radius)
+        loc, centre = wp.get("loc"), self.elev.centre.get(a)
+        if loc and centre and wp.get("planet"):
+            w = [loc[i] - centre[i] for i in range(3)]
+            mine = _mine(bases, a)
+            radius = self.elev.radius.get(a) or (maps.planet_projection(mine).r if mine else None)
+            if radius and abs(math.hypot(*w) - radius) < 0.03 * radius:   # on the surface: the frames agree
+                wp["w"] = [round(c, 1) for c in w]
+                wp["lat"], wp["lon"] = maps.latlon(w)
+                proj = self.projection(bases, a)
+                if proj:
+                    x, y = proj.xy(w)
+                    wp["x"], wp["y"] = round(x, 1), round(y, 1)
+        if paddr is None:
+            return
+        if (a & ~(0xF << 52)) != (paddr & ~(0xF << 52)):
+            if here is not None and (a >> 32) & 0xFF == (paddr >> 32) & 0xFF:
+                wp["distance_ly"] = round(math.dist(systems_mod.voxel(a), here) * systems_mod.LY_PER_VOXEL)
+            return
+        rel, at, pp = sample.get("rel"), sample.get("at"), sample.get("planet_pos")
+        if wp.get("w") and a == paddr and rel and (sample.get("in_atmosphere") or (sample.get("distance_from_planet") or 1e9) <= 20000):
+            heading = heading_deg(_norm(rel), at, sample.get("location")) if at else None
+            wp["live"] = {"on_planet": True, **nav(rel, heading, wp["w"])}
+        elif loc and rel and pp:
+            # elsewhere in the system: straight line in the system frame (player = planet centre + rel)
+            wp["live"] = {"on_planet": False, "dist": round(math.dist([pp[i] + rel[i] for i in range(3)], loc), 1)}
+
+    def map_points(self, missions: dict, planets: list) -> None:
+        """A "mission" point on each /api/map planet holding a waypoint with a position."""
+        by = {p.get("address"): p for p in planets}
+        for r in missions.get("in_progress") or []:
+            for wp in ([r["waypoint"]] if r.get("waypoint") else []) + (r.get("waypoints") or []):
+                pl = by.get(wp.get("address"))
+                if pl is None or wp.get("x") is None:
+                    continue
+                pl["points"].append({"kind": "mission", "name": r["title"], "mission": r["id"], "event": wp.get("event"),
+                                     "building": wp.get("building"), "x": wp["x"], "y": wp["y"], "w": wp["w"],
+                                     "lat": wp.get("lat"), "lon": wp.get("lon"), "focus": bool(r.get("focus"))})
 
     def finds_api(self, bases: list, address: int | None, base: str | None, tables: dict) -> dict:
         """Hotspots and deposits on a planet, placed on its map (and a base layout)."""

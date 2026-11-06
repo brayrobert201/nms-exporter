@@ -89,8 +89,12 @@ on, reading `/json` on loopback (`apt install conky-all`):
   full, plants by kind with what they yield and how much is in stock, and the
   largest inventory stacks (click to search). The almost-craftable and tidy
   sections still render on demand but are left off the screen so the search
-  stays in view. In **crafting mode** (switched on from the phone's Refine or
-  Build tab for a bulk craft; `/json` says `crafting_mode`) the same screen is
+  stays in view. Which panels show, and in what order, follows the **activity**
+  set from the phone (hold Config, or tap the mode pill in any header; `/json` says
+  `activity`): **idle**, the default, puts the inventory first (twice the rows)
+  then the planner, refiners, plants and farms; **gathering** puts the farms and
+  plants first, then the inventory; **crafting** (`/json` also says
+  `crafting_mode`) is for a bulk craft, and the same screen is
   the refinery board: every refiner with its output now and at the end of
   the run against the slot's cap, each input with what to add so the run
   ends exactly at the cap or what to take out when the output fills first,
@@ -98,6 +102,24 @@ on, reading `/json` on loopback (`apt install conky-all`):
   recipes take: in stock and where, loaded, what the top-ups need, short)
   and the refined output (per product: in the refiners now and at the end,
   the caps, per load, in stock). The planner and the search stay.
+  **mission** hides the refiners, farms and plants for the focus mission:
+  its title and class, whether the wall follows the game's selection or a
+  mission chosen on the phone, every stage the mission tables name (done ones
+  ticked and dimmed, the current one highlighted), stage x of y, a **Where**
+  line (planet · system, this planet / this system / another system or
+  galaxy with light years, what the game marked there, and the distance now
+  while the game runs in that system), the rewards and what it leads to; then
+  **Mission needs** (the items the current and later stages wait for: amount,
+  have, the container holding most, ok / short / can craft N / not yet; the
+  current stage bright, later ones dimmed; the panel takes no room when the
+  mission needs nothing); then the other missions in progress one line each
+  with a short where-tag, closest to done first, then the inventory.
+  Repeatable missions (Exploration Guide, Atlas loops: `repeatable` in the
+  tables) are left out of every panel and metric and counted (`missions.counts.repeatable`);
+  `/json` lists them under `missions.repeatable`, and the phone's Missions tab
+  keeps them in a folded "Repeatable" list that opens on a tap. The focus is the phone's choice
+  while that mission is in progress, else the game's selected mission, else
+  the one closest to done (`/json missions.focus`, `missions.focus_source`).
 
 Both carry the save's age, because every timer on them is projected from it.
 Text is drawn at 0.8 of the design size so everything fits; `NMS_CONKY_TEXT_SCALE`
@@ -227,8 +249,9 @@ in-game compass; the page says so until it is.
 
 ## Phone page and Android app
 
-`http://<host>:9877/mobile` is the phone-sized page: Map, Planets, Farms,
-Refine, Inventory and Build, one tab at a time, built from the same `/api/map`, `/json`,
+`http://<host>:9877/mobile` is the phone-sized page: Map, Missions, Planets, Farms,
+Refine, Inventory, Build and Config, one tab at a time (under 480 px wide the nav
+is icons, the active tab labelled), built from the same `/api/map`, `/json`,
 `/api/planets` and `/api/live` the map and the wall screens use (design: the "NMS Mobile" Claude
 Design project; tokens from its Refined Midnight system, Geist fonts served from
 `/fonts/`, the portal glyph font from `conky/fonts`).
@@ -261,10 +284,33 @@ Design project; tokens from its Refined Midnight system, Geist fonts served from
   optimum load, the most product that refiner gives from one load. A
   substance output stops at 4,095 whatever the refiner; inputs hold the
   save's stack-limits setting (9,999 on High), 4,096 on the corvette; the
-  page carries the exporter's projection forward by the second. The **crafting mode** switch at the top
-  (also on Build) turns the right wall screen into the refinery board for a
-  bulk craft, and back; `POST /api/mode {"crafting": true|false}` sets it,
-  `/api/mode` reports it beside the control mode, `/json` carries it.
+  page carries the exporter's projection forward by the second.
+- Missions: every mission in progress, closest to done first, with the current
+  objective, stage x of y and badges for the one selected in the game and the
+  one on the wall (`#missions/<id>` for one). A mission's page lists every
+  stage with the current one marked, the rewards and what it leads to, and
+  **Follow on wall**, which puts it on the right wall screen and switches to
+  mission mode (`POST /api/mission {"focus": "<id>"}` and the mode); once the
+  phone has chosen, **Follow the game's selection** hands it back
+  (`{"focus": null}`). An id not in progress is refused. Cards carry a
+  where-tag (⚑ planet · system · distance now); the page adds a **Where**
+  block with **Show on map** when the waypoint's planet is on the Map, and
+  **Needs** per stage with have / short / can craft, each item opening its
+  Build view when it has a recipe, else an Inventory search. On the Map the
+  waypoint is a ◇ mission point (`#map/<planet>/@<mission id>` selects it);
+  on that planet, live, **Go to** points the heading arrow and distance at it
+  (the usual `/api/live?target=w:x,y,z`).
+- Config, and the **wall screens** sheet: tap Config in the Android app for its
+  settings; in a browser, or held for half a second in either, it opens the
+  sheet that sets the activity, idle, gathering, crafting or mission, which
+  picks the right wall screen's panels (in mission mode the sheet also says
+  which mission the wall follows). Off idle, a pill beside the save pill on
+  every header names the mode and opens the same sheet; Farms (when idle) and
+  an open build plan offer a one-line "Turn on" for gathering or crafting,
+  dismissible for the session. `POST /api/mode {"activity":
+  "idle"|"gathering"|"crafting"|"mission"}` sets it (`{"crafting": true|false}`
+  still works); `GET /api/mode` reports it and `activities` beside the control
+  mode, `/json` carries it, and `nms_activity` is the metric.
 - Inventory: where everything is, per container; a search that matches a known
   blueprint also shows its ingredients with have/short and where they are.
 - Build: favourites (tap ☆ on any item; kept in the exporter's state file, so
@@ -342,8 +388,8 @@ adb install -r app/build/outputs/apk/release/app-release.apk
 
 The release build is signed with the debug key so it installs without a
 keystore of its own. On first start the app asks for the exporter's address
-(`http://host:9877`); the App tab in the page reopens that dialog and the
-keep-screen-on switch.
+(`http://host:9877`); tapping Config in the page reopens that dialog and the
+keep-screen-on switch (holding it opens the wall screens sheet instead).
 
 ## Mechanics compendium and research
 
@@ -412,6 +458,34 @@ Nothing under `knowledge/` or `research/` is installed to /opt.
   objective is the last stage whose number is at or below the saved progress.
   Rewards are the mission's own reward entries, so they show what finishing
   the whole mission pays, not what the next step pays.
+- Mission waypoints: `PlayerStateData.MarkerStack` and `NewMPMarkerStack`
+  hold a marker per active objective (`MissionID`, `MissionSeed`, `Event`,
+  `GalacticAddress`, `BuildingClass`, `BuildingLocation`). Markers are joined
+  to missions by id, and by seed for seeded missions; with several, the one
+  whose `Event` is the current step's (tables `events`) wins, else the
+  newest. `BuildingLocation` is in the star system's frame: minus the planet
+  centre (`planet_pos` in the live_position trail; the same round numbers on
+  every visit) it is the planet-relative point of a base's `Position`, which
+  matched the visor log's position for the same marker (UI_DROPPOD_FIX_MARKER)
+  to the metre. So a waypoint has a map position only on planets visited with
+  the mod. Markers without a location (the Space Anomaly's address 0, station
+  and settlement returns) give only the place. A settlement's `Position` is in
+  neither frame and is not used.
+  `/json missions.in_progress[].waypoint` = null or {event, building,
+  building_class, settlement, address, planet, in_space, loc (system frame),
+  here_system, here_planet, where ("this planet" | "this system" | "another
+  system" | "another galaxy" | null), and from nms-db: planet_name,
+  system_name, on_map, distance_ly, w (planet frame), lat, lon, x, y (the
+  planet map's), live {on_planet, dist, bearing, turn, h} while the game runs
+  in that system}; the other markers are in `waypoints`. `/api/map` adds a
+  point of kind `mission` (name = title, mission, event, building, w) per
+  placed waypoint. With nms-db down `missions.waypoint_error` says why.
+- Mission needs: `/json missions.in_progress[].needs` = [{progress, current,
+  id, item, amount (null: the game decides), kind (collect, have, use =
+  hand over, craft, build, know, install, repair), type, any (one of the set
+  is enough), have (stock; 1/0 for know/install/repair; placed in your bases
+  for build), short, ok, craftable, can_make}] for the current and later
+  steps, from the tables' `needs`.
 - Crafting: products expand through their blueprint; substances are treated
   as gathered and stop the tree, except the refined-only ones (chromatic
   metal, condensed carbon, pure and magnetised ferrite, ionised cobalt,

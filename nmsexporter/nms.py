@@ -124,6 +124,30 @@ MISSION_SKIP = re.compile(r"_HINT$|_WIKI$|_LORE$|_LORE_$|_DUMMY$|_FIX$|_FIX_\d$|
 MISSION_COMPLETE = 2147483647
 CLASS_RANK = {"X": 5, "S": 4, "A": 3, "B": 2, "C": 1}
 # VehicleOwnership is indexed by GcVehicleType: Buggy, Bike, Truck, WheeledBike, Hovercraft, Submarine, Mech.
+# A mission marker's BuildingClass in plain words (cGcBuildingClassification); others are split at capitals.
+BUILDING_WORDS = {"DamagedMachine": "damaged machinery", "CrashedFreighter": "crashed freighter", "RadioTower": "transmission tower",
+                  "LargeBuilding": "large building", "DigSite": "dig site", "DroneHive": "drone hive", "Abandoned": "abandoned building",
+                  "WaterAbandoned": "abandoned building underwater", "Settlement_Hub": "settlement", "Portal": "portal",
+                  "Outpost": "outpost", "Shelter": "shelter", "Ruin": "ruin", "Waypoint": "waypoint", "Monolith": "monolith",
+                  "Observatory": "observatory", "Library": "library", "Factory": "factory", "Depot": "depot", "Base": "base",
+                  "Terminal": "terminal", "Beacon": "beacon", "MissionTower": "mission tower", "Waystation": "waystation"}
+
+
+def _seed(v) -> int:
+    """A save seed as an int: the save writes them as hex strings or plain numbers."""
+    try:
+        return int(v, 16) if isinstance(v, str) else int(v or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _addr(a) -> int | None:
+    try:
+        return int(a, 16) if isinstance(a, str) else int(a)
+    except (TypeError, ValueError):
+        return None
+
+
 VEHICLE_NAMES = ["Roamer", "Nomad", "Colossus", "Pilgrim", "Hovercraft", "Nautilon", "Minotaur"]
 
 CONTAINER_KEYS = [  # (PlayerStateData key, location label)
@@ -544,15 +568,59 @@ class Collector:
         self._save_state()
         return {"routes": [{"id": k, "item": self.crafting.name(k), "route": v} for k, v in ch.items()]}
 
+    ACTIVITIES = ("idle", "gathering", "crafting", "mission")
+
+    def activity(self) -> str:
+        """What the player is doing, set from the phone: it picks the right wall screen's panels.
+        idle puts the inventory first, gathering the farms and plants, crafting the refinery
+        board, mission the focus mission's stages. Kept in the state file (an older state's crafting_mode true reads as crafting)."""
+        a = self.state.get("activity")
+        if a in self.ACTIVITIES:
+            return a
+        return "crafting" if self.state.get("crafting_mode") else "idle"
+
+    def set_activity(self, a: str) -> dict:
+        if a not in self.ACTIVITIES:
+            return {"error": f"activity: {' | '.join(self.ACTIVITIES)}"}
+        self.state["activity"] = a
+        self.state.pop("crafting_mode", None)
+        self._save_state()
+        return {"activity": a, "crafting": a == "crafting"}
+
     def crafting_mode(self) -> bool:
-        """Crafting mode: set from the phone for a bulk crafting session; the right wall
-        screen becomes the refinery board while it is on. Kept in the state file."""
-        return bool(self.state.get("crafting_mode"))
+        """Crafting mode: the crafting activity; the right wall screen is the refinery board."""
+        return self.activity() == "crafting"
 
     def set_crafting_mode(self, on: bool) -> dict:
-        self.state["crafting_mode"] = bool(on)
+        return self.set_activity("crafting" if on else "idle")
+
+    def set_mission_focus(self, mid: str | None) -> dict:
+        """The mission the wall follows, chosen on the phone; None follows the game's selection
+        again. Only a mission in progress can be chosen; one that later finishes or drops out
+        falls back to the game's selection without clearing the state (see _mission_focus)."""
+        rows = (self.snapshot.get("missions") or {}).get("in_progress", [])
+        if mid is None:
+            self.state.pop("mission_focus", None)
+        elif mid not in {r["id"] for r in rows}:
+            return {"error": f"{mid} is not a mission in progress"}
+        else:
+            self.state["mission_focus"] = mid
         self._save_state()
-        return {"crafting": self.crafting_mode()}
+        ms = self._mission_focus(dict(self.snapshot.get("missions") or {}))
+        return {"focus": ms.get("focus"), "focus_source": ms.get("focus_source"), "override": self.state.get("mission_focus")}
+
+    def _mission_focus(self, ms: dict) -> dict:
+        """missions.focus: the phone's choice while it is still in progress, else the game's
+        selection if in progress, else the closest to done; rows get focus true/false."""
+        rows = ms.get("in_progress") or []
+        ids = [r["id"] for r in rows]
+        pick, src = self.state.get("mission_focus"), "phone"
+        if pick not in ids:
+            pick, src = (ms.get("current") if ms.get("current") in ids else ids[0] if ids else None), "game"
+        ms["focus"], ms["focus_source"] = pick, src
+        for r in rows:
+            r["focus"] = r["id"] == pick
+        return ms
 
     def _crafting_summary(self, res: dict, stock: dict) -> dict:
         """Known blueprints that cannot be made now, and the ingredients standing in the way."""
@@ -730,11 +798,11 @@ class Collector:
             "known_runes": ps.get("KnownPortalRunes"),
         }
 
-        # missions, against the game's mission tables
-        snap["missions"] = self._missions(ps)
-
         # installed technology and how well it is placed
         snap["tech"] = self._tech(ps, name)
+
+        # missions, against the game's mission tables (after tech: install / repair needs read it)
+        snap["missions"] = self._missions(ps, snap)
 
         # storage against the plan, and the blueprints the player knows
         snap["tidy"] = self._tidy(ps, name)
@@ -1079,12 +1147,13 @@ class Collector:
         out.sort(key=lambda r: (-r["score"], -r["main_total"]))
         return out
 
-    def _missions(self, ps: dict) -> dict:
+    def _missions(self, ps: dict, snap: dict | None = None) -> dict:
         """Every mission in the save against the tables: status, and for the ones in
-        progress the current objective and what finishing them hands out."""
+        progress the current objective, what finishing them hands out, where the game's
+        marker for it is (waypoint) and the items its stages wait for (needs)."""
         table = self.tables.get("missions") or {}
         current = (ps.get("CurrentMissionID") or "").lstrip("^")
-        counts = {"in_progress": 0, "complete": 0, "not_started": 0, "unknown": 0}
+        counts = {"in_progress": 0, "complete": 0, "not_started": 0, "unknown": 0, "repeatable": 0}
         best: dict = {}        # seeded missions repeat per seed; an in-progress instance wins
         for m in ps.get("MissionProgress", []):
             mid = (m.get("Mission") or "").lstrip("^")
@@ -1103,25 +1172,152 @@ class Collector:
                     status = "in_progress"
             if mid not in best or (status == "in_progress" and best[mid][0] != "in_progress"):
                 best[mid] = (status, m)
+        markers: dict = {}     # mission id -> its markers, oldest first
+        for mk in (ps.get("MarkerStack") or []) + (ps.get("NewMPMarkerStack") or []):
+            mid = (mk.get("MissionID") or "").lstrip("^")
+            if mid:
+                markers.setdefault(mid, []).append(mk)
+        here = self._save_address(ps)
+        need_ctx = self._need_context(ps, snap or {})
         rows = []
         for mid, (status, m) in best.items():
+            if status == "in_progress" and table[mid].get("repeatable"):
+                status = "repeatable"     # Exploration Guide, Atlas loops: always running, never the one to follow
             counts[status] += 1
-            if status != "in_progress":
+            if status not in ("in_progress", "repeatable"):
                 continue
             t = table[mid]
             prog, final = m.get("Progress", -1), t.get("final")
-            objective = ""
-            for num, text in t.get("stages", []):
+            objective, stage = "", None
+            for i, (num, text) in enumerate(t.get("stages", [])):
                 if num is None or num > prog:
                     break
-                objective = text
+                objective, stage = text, i
+            if stage is None and t.get("stages"):
+                stage = 0      # before the first listed stage: that one is what is being worked on
             rewards = [d for _, ds in t.get("rewards", []) for d in ds]
+            wps = self._waypoints(ps, t, m, markers.get(mid) or [], here)
             rows.append(dict(id=mid, title=t["title"], progress=prog, final=final,
                              remaining=(final - prog) if final is not None else None,
                              objective=objective, rewards=rewards[:4], leads_to=t.get("leads_to", []),
-                             selected=mid == current))
+                             leads_to_titles=[(table.get(x) or {}).get("title") or x for x in t.get("leads_to", [])],
+                             selected=mid == current, **{"class": t.get("class")},
+                             stages=[[n, txt] for n, txt in t.get("stages", [])], stage=stage,
+                             waypoint=wps[0] if wps else None, waypoints=wps[1:],
+                             needs=self._needs(t, prog, need_ctx), repeatable=status == "repeatable"))
         rows.sort(key=lambda r: (r["remaining"] if r["remaining"] is not None else 10 ** 9, r["title"]))
-        return {"current": current, "tables": bool(table), "counts": counts, "in_progress": rows}
+        # the repeatable ones are their own list: out of every panel and metric, there for a client to unfold
+        return {"current": current, "tables": bool(table), "counts": counts,
+                "in_progress": [r for r in rows if not r["repeatable"]], "repeatable": [r for r in rows if r["repeatable"]],
+                "here": f"0x{here:X}" if here is not None else None}
+
+    @staticmethod
+    def _save_address(ps: dict) -> int | None:
+        """Where the save puts the player, packed like the save's GalacticAddress (as live.ua_int)."""
+        ua = ps.get("UniverseAddress") or {}
+        ga = ua.get("GalacticAddress") or {}
+        try:
+            x, y, z = int(ga["VoxelX"]), int(ga["VoxelY"]), int(ga["VoxelZ"])
+            return ((x & 0xFFF) | ((z & 0xFFF) << 12) | ((y & 0xFF) << 24) | (min(int(ua.get("RealityIndex") or 0), 0xFF) << 32)
+                    | (min(int(ga.get("SolarSystemIndex") or 0), 0xFFF) << 40) | ((int(ga.get("PlanetIndex") or 0) & 0xF) << 52))
+        except (KeyError, TypeError, ValueError):
+            return None
+
+    def _waypoints(self, ps: dict, t: dict, m: dict, mks: list, here: int | None) -> list:
+        """The save's markers for one mission in progress, the one for the current stage first.
+        A marker's BuildingLocation is in the star system's frame, not the planet's: minus the
+        planet's centre (live.py, from the trail) it matched the visor log's planet-relative
+        position of the same marker to the metre (UI_DROPPOD_FIX_MARKER, 2026-11-06).
+        Seeded missions repeat: the markers carrying this instance's seed are used when any do."""
+        seed = _seed(m.get("Seed"))
+        mine = [k for k in mks if _seed(k.get("MissionSeed")) == seed]
+        mks = mine or mks
+        if not mks:
+            return []
+        prog = m.get("Progress", -1)
+        evs = [(p, e) for p, e in t.get("events") or [] if p is not None and p <= prog]
+        top = max((p for p, _ in evs), default=None)
+        now = {e for p, e in evs if p == top}
+        pick = next((k for k in mks if (k.get("Event") or "").lstrip("^") in now), mks[-1])   # else the newest
+        out = []
+        for k in [pick] + [k for k in reversed(mks) if k is not pick]:
+            ga = _addr(k.get("GalacticAddress"))
+            if ga is None:
+                continue
+            ev = (k.get("Event") or "").lstrip("^")
+            bc = (k.get("BuildingClass") or {}).get("BuildingClass")
+            bc = None if bc in (None, "None") else bc
+            loc = k.get("BuildingLocation") or []
+            loc = [round(c, 1) for c in loc[:3]] if len(loc) >= 3 and any(loc[:3]) else None
+            building = BUILDING_WORDS.get(bc) or (re.sub(r"(?<=[a-z])(?=[A-Z])", " ", bc).replace("_", " ").lower() if bc else None)
+            settlement = None
+            if loc is None and "SETTLE" in ev:
+                # "return to the settlement": named from the save's settlement there. Its Position is in
+                # neither the planet's nor the system's frame (1.08 Mu from that planet's centre), so no position.
+                st = [x for x in ps.get("SettlementStatesV2") or [] if _addr(x.get("UniverseAddress")) == ga and x.get("Name")]
+                if len(st) == 1:
+                    settlement, building = st[0]["Name"], "settlement"
+            planet = (ga >> 52) & 0xF
+            if building is None and planet == 0:
+                building = "The Space Anomaly" if "NEXUS" in ev else "in space"   # the Nexus is the Anomaly's internal name
+            wp = {"event": ev, "building": building, "building_class": bc, "settlement": settlement,
+                  "address": None, "planet": planet, "in_space": planet == 0, "loc": loc,
+                  "here_system": False, "here_planet": False, "where": None}
+            if ga:            # 0: the Anomaly's markers, which go wherever it is summoned
+                same_sys = here is not None and (ga & ~(0xF << 52)) == (here & ~(0xF << 52))
+                same_planet = same_sys and planet != 0 and planet == (here >> 52) & 0xF
+                wp.update(address=f"0x{ga:X}", here_system=same_sys, here_planet=same_planet,
+                          where="this planet" if same_planet else "this system" if same_sys
+                          else "another galaxy" if here is not None and (ga >> 32) & 0xFF != (here >> 32) & 0xFF else "another system")
+            out.append(wp)
+        return out
+
+    def _need_context(self, ps: dict, snap: dict) -> dict:
+        """What the needs are checked against: stock, known blueprints, installed tech, placed parts."""
+        installed, broken = set(), set()
+        for inv in snap.get("tech") or []:
+            for sl in inv.get("slots") or []:
+                base = sl["id"].split("#", 1)[0]
+                (broken if sl.get("broken") else installed).add(base)
+        placed: dict = {}
+        for b in ps.get("PersistentPlayerBases") or []:
+            for o in b.get("Objects") or []:
+                oid = (o.get("ObjectID") or "").lstrip("^")
+                placed[oid] = placed.get(oid, 0) + 1
+        known = snap.get("known") or {}
+        return {"stock": {iid: rec["total"] for iid, rec in (snap.get("items") or {}).items()},
+                "known": set(known.get("products") or ()) | {k.lstrip("^") for k in ps.get("KnownTech") or []},
+                "installed": installed, "broken": broken - installed, "placed": placed}
+
+    @staticmethod
+    def _needs(t: dict, prog: int, ctx: dict) -> list:
+        """The items the current and later stages wait for (tables missions.<id>.needs), against
+        what the save holds. have: stock for collect / have / use / craft, 1 or 0 for know /
+        install / repair, the number placed in your bases for build. any: one of the set is enough."""
+        out, seen = [], set()
+        for p, ns in t.get("needs") or []:
+            if p is None or p < prog:
+                continue
+            for n in ns or []:
+                iid, kind, amt = n.get("id") or "", n.get("kind") or "have", n.get("amount")
+                if (iid, kind, amt) in seen:     # the same wait over consecutive steps (SENTINELS_3 46, 47): listed once
+                    continue
+                seen.add((iid, kind, amt))
+                if kind == "know":
+                    have = 1 if iid in ctx["known"] else 0
+                elif kind == "install":
+                    have = 1 if iid in ctx["installed"] else 0
+                elif kind == "repair":
+                    have = 0 if iid in ctx["broken"] or iid not in ctx["installed"] else 1
+                elif kind == "build":
+                    have = ctx["placed"].get(iid, 0)
+                else:
+                    have = ctx["stock"].get(iid, 0)
+                short = max(0, amt - have) if amt is not None else (0 if have else None)
+                out.append({"progress": p, "current": p == prog, "id": iid, "item": n.get("item") or iid,
+                            "amount": amt, "kind": kind, "type": n.get("type"), "any": bool(n.get("any")),
+                            "have": have, "short": short, "ok": short == 0})
+        return out[:24]
 
     def _tech(self, ps: dict, name) -> list:
         """Installed technology per inventory, with the placement review: which
@@ -1307,7 +1503,17 @@ class Collector:
             return snap
         snap["now"] = now
         snap["save"]["age"] = now - snap["save"]["mtime"]
-        snap["crafting_mode"] = self.crafting_mode()
+        snap["activity"] = self.activity()
+        snap["crafting_mode"] = snap["activity"] == "crafting"
+        if snap.get("missions"):
+            self._mission_focus(snap["missions"])
+            # how many the crafting search could make now: it lands after the snapshot, so filled in here
+            res = self.crafting_result or {}
+            for r in (snap["missions"].get("in_progress") or []) + (snap["missions"].get("repeatable") or []):
+                for n in r.get("needs") or []:
+                    c = res.get(n["id"])
+                    n["craftable"] = bool(c and c.get("routes"))
+                    n["can_make"] = c.get("makeable") if c else None
         ext = self.tables.get("extraction", {})
         upi = ext.get("resource_units_per_item", 1440)
         for r in snap["refiners"]:
@@ -1443,6 +1649,8 @@ class Collector:
         m("nms_refiner_output_cap", "What the output slot can hold (the location's stack cap).", "gauge", [(rl(r), r["output_cap"]) for r in R])
         m("nms_refiner_optimum_output", "Output of one optimum load: every input filled without stranding any.", "gauge", [(rl(r), r["optimum"]["output"]) for r in R])
         m("nms_crafting_mode", "Crafting mode on (1): the right wall screen is the refinery board.", "gauge", [({}, 1 if snap.get("crafting_mode") else 0)])
+        m("nms_activity", "The activity set from the phone (1 for the current one): picks the right wall screen's panels.", "gauge",
+          [({"activity": a}, 1 if snap.get("activity") == a else 0) for a in self.ACTIVITIES])
         m("nms_refiner_output_saved", "Output stack size as last saved.", "gauge", [(rl(r), r["output_amount"]) for r in R])
         m("nms_refiner_input_amount", "Input remaining (projected).", "gauge",
           [(dict(rl(r), input=i["item"]), v) for r in R for i, v in zip(r["inputs"], r["projected_inputs"])])

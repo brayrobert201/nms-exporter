@@ -69,20 +69,25 @@ input::placeholder { color: var(--dim); }
 .pill.warn { background: var(--warn-tint); color: var(--warn); }
 .pill.bad { background: var(--danger-tint); color: var(--danger); }
 .pill.off { color: var(--muted); }
+.pill.mode { background: var(--brand-tint); color: var(--brand); }
 .hdr .row.glyphrow { flex-wrap: nowrap; justify-content: flex-start; }
 .glyphrow { display: flex; align-items: center; gap: 10px; }
 .glyphs { font-family: 'NMS Glyphs', var(--font-mono); font-size: 19px; letter-spacing: 1px; line-height: 1; }
 .glyphcode { font: 500 10.5px var(--font-mono); color: var(--muted); }
 
+/* the nav is held, not read: no text selection or callout, and Config's long press opens the wall screen sheet */
 nav { flex: none; display: flex; justify-content: space-around; padding: 10px 0 calc(14px + var(--safe-bottom)); border-top: 1px solid var(--line);
-  background: rgba(10,10,16,.95); backdrop-filter: blur(12px); }
-nav button { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 54px; min-height: 44px; font-size: 9.5px; font-weight: 600;
-  letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
+  background: rgba(10,10,16,.95); backdrop-filter: blur(12px); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+nav button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 54px; min-height: 44px; font-size: 9.5px; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--dim); -webkit-touch-callout: none; }
 nav button.on { color: var(--brand); }
-nav button span { display: flex; align-items: center; gap: 4px; }
-nav .badge { min-width: 14px; height: 14px; padding: 0 4px; border-radius: 7px; background: var(--warn); color: #1A0E00; font: 700 9px/14px var(--font-mono); }
+nav .ic { position: relative; display: flex; }
+nav .lb { white-space: nowrap; }
+nav .badge { position: absolute; left: 15px; top: -5px; min-width: 14px; height: 14px; padding: 0 4px; border-radius: 7px; background: var(--warn); color: #1A0E00; font: 700 9px/14px var(--font-mono); letter-spacing: 0; text-align: center; }
 nav .badge.bad { background: var(--danger); color: #fff; }
 nav svg { width: 22px; height: 22px; }
+/* eight items: under 480 px (the Fold's cover screen, a narrow phone) icons only, the active one labelled */
+@media (max-width: 479px) { nav { padding-left: 2px; padding-right: 2px; } nav button { flex: 1 1 0; min-width: 0; } nav button.on { flex: 1.9 1 0; } nav button:not(.on) .lb { display: none; } nav button .lb { font-size: 8.5px; letter-spacing: .04em; } }
 
 /* ---- map ---- */
 .mapwrap { flex: 1; position: relative; min-height: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 42%, #14141D 0%, #0A0A10 72%); touch-action: none; }
@@ -164,6 +169,7 @@ nav svg { width: 22px; height: 22px; }
 .hero .bar { height: 10px; background: rgba(255,255,255,.08); border-radius: 5px; } .hero .bar i { box-shadow: 0 0 12px var(--brand-glow); border-radius: 5px; }
 .sect { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; padding: 16px 18px 8px; display: flex; justify-content: space-between; gap: 8px; }
 .sect span:last-child { text-transform: none; letter-spacing: 0; font-weight: 400; }
+button.sect.fold { width: 100%; text-align: left; } button.sect.fold span:last-child { color: var(--brand); }
 .list { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 0 14px; }
 .list .r { width: 100%; text-align: left; display: grid; grid-template-columns: 10px minmax(0, 1fr) 96px; gap: 10px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); }
 .list .r:last-child { border-bottom: 0; }
@@ -220,7 +226,7 @@ nav svg { width: 22px; height: 22px; }
 .almost .h .c { font-size: 11px; color: var(--muted); white-space: nowrap; }
 .almost .l { font-size: 12px; color: var(--text-dim); text-wrap: pretty; }
 .empty { padding: 28px 8px; text-align: center; font-size: 13px; color: var(--muted); }
-/* refiners: a row per refiner, the load and the optimum when open; the crafting mode switch */
+/* refiners: a row per refiner, the load and the optimum when open; the wall screen's activity */
 .rc .n small { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 4px; }
 .rc .foot2 { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--muted); margin-top: 5px; }
 .rc .foot2 .mono { font-family: var(--font-mono); color: var(--text-dim); font-variant-numeric: tabular-nums; }
@@ -231,12 +237,33 @@ nav svg { width: 22px; height: 22px; }
 .rc .opt { font-size: 12px; color: var(--text-dim); text-wrap: pretty; padding-top: 6px; border-top: 1px dashed var(--line); }
 .rc .opt b { color: var(--brand); font-weight: 600; } .rc .opt small { color: var(--muted); }
 .state.run { color: var(--brand); background: var(--brand-tint); } .state.ready { color: var(--success); background: var(--success-tint); }
-.cmode { margin: 10px 14px 0; width: calc(100% - 28px); display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); text-align: left; }
-.cmode.on { background: var(--brand-tint); border-color: rgba(123,108,255,.4); }
-.cmode .sw { flex: none; width: 40px; height: 24px; border-radius: 12px; background: var(--disabled); position: relative; transition: background .15s; }
-.cmode .sw i { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s; }
-.cmode.on .sw { background: var(--brand); } .cmode.on .sw i { left: 19px; }
-.cmode .t { display: block; font-size: 14px; font-weight: 600; } .cmode .d { display: block; font-size: 11px; color: var(--muted); text-wrap: pretty; }
+/* a one-line nudge toward the wall screen mode that fits what is open; the switch itself lives in the Config sheet */
+.hint { margin: 10px 16px 0; display: flex; align-items: center; gap: 8px; padding: 7px 6px 7px 12px; border-radius: 10px; background: var(--brand-tint); font-size: 12px; color: var(--text-dim); min-width: 0; }
+.hint > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hint button { flex: none; font-weight: 600; color: var(--brand); padding: 4px 6px; } .hint button.x { color: var(--dim); font-weight: 400; }
+.srow.act .s { white-space: normal; }
+.srow .on-dot { background: var(--brand); } .srow .off-dot { border: 1.5px solid var(--dim); }
+/* missions: a card per mission in progress, the detail lists every stage the tables name */
+.mc .h { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.mc .h .t { font-size: 14px; font-weight: 600; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc .o { font-size: 12px; color: var(--text-dim); text-wrap: pretty; }
+.mc .f { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--muted); }
+.mc.on { border-color: rgba(123,108,255,.45); }
+.mc .wt { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; } .mc .wt b { color: var(--text-dim); font-weight: 600; }
+.wpbox .wl { font-size: 14px; font-weight: 600; } .wpbox .ws { font-size: 12px; color: var(--text-dim); margin-top: 2px; text-wrap: pretty; } .wpbox .wa { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.wpbox .wa button { padding: 8px 12px; border-radius: 10px; background: var(--brand); color: #fff; font-size: 13px; font-weight: 600; } .wpbox .wa button.ghost { background: var(--surface); color: var(--text-dim); border: 1px solid var(--glass-border); }
+.needs { padding: 0 16px; } .nst { font-size: 11px; color: var(--muted); padding: 10px 0 4px; display: flex; gap: 6px; flex-wrap: wrap; } .nst b { color: var(--brand); font-weight: 600; } .nst.later b { color: var(--dim); }
+.nd { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: 9px 0; border-bottom: 1px solid var(--line); text-align: left; align-items: baseline; }
+.nd .n { font-size: 13px; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .nd .s { grid-column: 1; font-size: 11px; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nd .tag { grid-row: 1 / span 2; grid-column: 2; align-self: center; } .nd.later .n { color: var(--text-dim); } .nd.later { opacity: .75; }
+.tag.brand { background: var(--brand-tint); color: var(--brand); }
+.stages { padding: 4px 16px 0; display: flex; flex-direction: column; }
+.stg { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--text-dim); align-items: baseline; }
+.stg b { font-weight: 400; text-align: center; color: var(--dim); }
+.stg.done { color: var(--muted); } .stg.done b { color: var(--success); }
+.stg.now { color: var(--text); font-weight: 600; font-size: 14px; } .stg.now b { color: var(--brand); }
+.stg.now small { display: block; font-weight: 400; font-size: 11px; color: var(--brand); }
+.cta button.ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--glass-border); margin-top: 8px; }
 button.bp { width: 100%; }
 .rowcard.fav { display: grid; grid-template-columns: 44px minmax(0, 1fr); }
 .rowcard.fav > button:not(.star) { grid-template-columns: minmax(0, 1fr) auto; padding-left: 0; }
@@ -338,7 +365,7 @@ html[data-posture="flat"][data-fold="vertical"] .tiles, html[data-posture="book"
 <body>
 <section id="map" class="tab" hidden>
   <header class="hdr">
-    <div class="row"><span id="mapCrumb" class="eyebrow"></span><span class="pills"><button id="livePill" class="pill off" data-act="showme">○ no live data</button><span class="pill ok saveage">● save</span></span></div>
+    <div class="row"><span id="mapCrumb" class="eyebrow"></span><span class="pills"><button id="livePill" class="pill off" data-act="showme">○ no live data</button><button class="pill mode modepill" data-act="modesheet" hidden></button><span class="pill ok saveage">● save</span></span></div>
     <div class="row base"><h1 id="mapTitle"></h1><span id="mapSub" class="sub"></span></div>
     <div class="row glyphrow" id="mapGlyphs"></div>
   </header>
@@ -382,11 +409,11 @@ if (SHELL) document.documentElement.classList.add('app');
 const COL = { base: 'var(--svc-movement)', exocraft: 'var(--brand)', settlement: 'var(--tier-5)', deposit: 'var(--muted)',
   'extractor-mineral': 'var(--svc-movement)', 'extractor-gas': 'var(--success)', depot: 'var(--text-dim)', power: 'var(--svc-squash)',
   refiner: 'var(--svc-strength)', teleporter: 'var(--brand)', computer: 'var(--text)', structure: 'var(--dim)', plants: 'var(--success)',
-  pipe: 'var(--muted)', wire: 'var(--svc-squash)', link: 'var(--brand)', problem: 'var(--danger)' };
+  pipe: 'var(--muted)', wire: 'var(--svc-squash)', link: 'var(--brand)', mission: 'var(--text)', problem: 'var(--danger)' };
 const LABEL = { base: 'Base', exocraft: 'Exocraft', settlement: 'Settlement', deposit: 'Drained deposit', 'extractor-mineral': 'Mineral extractor',
   'extractor-gas': 'Gas extractor', depot: 'Depot', power: 'Power', refiner: 'Refiner', teleporter: 'Teleporter', computer: 'Base computer',
-  plants: 'Plants', structure: 'Buildings', pipe: 'Pipe', wire: 'Wire', link: 'Wire teleport' };
-const RADIUS = { base: 8, exocraft: 5, settlement: 6, deposit: 4, 'extractor-mineral': 5, 'extractor-gas': 5, computer: 5 };
+  plants: 'Plants', structure: 'Buildings', pipe: 'Pipe', wire: 'Wire', link: 'Wire teleport', mission: 'Mission' };
+const RADIUS = { base: 8, mission: 7, exocraft: 5, settlement: 6, deposit: 4, 'extractor-mineral': 5, 'extractor-gas': 5, computer: 5 };
 const POWER = { good: '✓', warning: '⚠', critical: '✕', none: '–' };
 const LOC = { FreighterInternals: 'Freighter', Freighter: 'In your corvette', IndoorInBase: 'In a base', PlanetOnFoot: 'On foot', PlanetInVehicle: 'In exocraft',
   PlanetInShip: 'In ship', SpaceStation: 'Space station', Underwater: 'Underwater', Cave: 'In a cave', Default: 'In space' };
@@ -399,15 +426,16 @@ const ICONS = {
   inv: ico(['M3.5 8 12 3.5 20.5 8v8L12 20.5 3.5 16V8Z', 'M3.5 8 12 12.5 20.5 8', 'M12 12.5v8']),
   build: ico(['M14.7 6.3a4 4 0 0 0-5.2 5.2L4 17l3 3 5.5-5.5a4 4 0 0 0 5.2-5.2l-2.4 2.4-2.6-.4-.4-2.6 2.4-2.4Z']),
   refine: ico(['M9 3h6', 'M10 3v6.5L4.5 19a1.5 1.5 0 0 0 1.3 2.2h12.4a1.5 1.5 0 0 0 1.3-2.2L14 9.5V3', 'M7 15.5h10']),
-  app: ico(['M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z', 'M12 2.5v3', 'M12 18.5v3', 'M2.5 12h3', 'M18.5 12h3', 'M5.3 5.3l2.1 2.1', 'M16.6 16.6l2.1 2.1', 'M5.3 18.7l2.1-2.1', 'M16.6 7.4l2.1-2.1']),
+  missions: ico(['M5 21V3.5', 'M5 4h12.5l-2.5 4.25 2.5 4.25H5']),
+  config: ico(['M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z', 'M12 2.5v3', 'M12 18.5v3', 'M2.5 12h3', 'M18.5 12h3', 'M5.3 5.3l2.1 2.1', 'M16.6 16.6l2.1 2.1', 'M5.3 18.7l2.1-2.1', 'M16.6 7.4l2.1-2.1']),
 };
 const turnWord = (t) => t == null ? '' : Math.abs(t) < 10 ? 'ahead' : Math.abs(t) > 170 ? 'behind' : `${Math.round(Math.abs(t))}° ${t < 0 ? 'left' : 'right'}`;
 const arrow = (t) => t == null ? '<span></span>' : `<svg viewBox="-10 -10 20 20" aria-label="${turnWord(t)}"><path transform="rotate(${t})" d="M 0 -9 L 7 7 L 0 3 L -7 7 Z" fill="currentColor"/></svg>`;
 const height = (h) => Math.abs(h || 0) < 2 ? '' : `${h > 0 ? '↑' : '↓'} ${Math.round(Math.abs(h))} m`;
 
 // ---- state ----
-const S = { tab: 'map', planet: null, level: 'planet', base: null, farm: null, sel: null, hidden: new Set(), query: '', type: 'All', exp: null, bkind: 'All', bexp: null, rexp: null, rkind: 'All', craft: null, cview: 'order', cmode: 'max', crefs: null, norefstock: false, closed: new Set(), pq: '', pkind: 'Explored', pexp: null,
-  target: null, follow: false, userChose: false, placed: false };
+const S = { tab: 'map', planet: null, level: 'planet', base: null, farm: null, sel: null, hidden: new Set(), query: '', type: 'All', exp: null, bkind: 'All', bexp: null, rexp: null, rkind: 'All', craft: null, mexp: null, cview: 'order', cmode: 'max', crefs: null, norefstock: false, closed: new Set(), pq: '', pkind: 'Explored', pexp: null,
+  target: null, follow: false, userChose: false, placed: false, mpin: null };
 let MAP = null, J = null, LIVE = null, mapAt = 0, jsonAt = 0, view = null, ERR = null, PL = null, plAt = 0;
 const elapsed = () => J ? J.save.age + (Date.now() - jsonAt) / 1000 : null;
 const planet = () => MAP && (MAP.planets.find((p) => p.address === S.planet) || null);
@@ -418,25 +446,29 @@ const onThisPlanet = () => LIVE && LIVE.on_planet && planet() && LIVE.address ==
 
 // ---- routing: the state lives in the hash so the system back button steps back through it ----
 function hash() {
-  if (S.tab === 'map') return S.planet ? (S.level === 'base' && S.base ? `#map/${S.planet}/${encodeURIComponent(S.base)}` : `#map/${S.planet}`) : '#map';
+  if (S.tab === 'map') return S.planet ? (S.level === 'base' && S.base ? `#map/${S.planet}/${encodeURIComponent(S.base)}` : S.mpin ? `#map/${S.planet}/@${encodeURIComponent(S.mpin)}` : `#map/${S.planet}`) : '#map';
   if (S.tab === 'farms') return S.farm ? `#farms/${encodeURIComponent(S.farm)}` : '#farms';
   if (S.tab === 'planets') return S.pexp ? `#planets/${S.pexp}` : '#planets';
+  if (S.tab === 'missions') return S.mexp ? `#missions/${encodeURIComponent(S.mexp)}` : '#missions';
   if (S.tab === 'build' && S.craft) return `#build/${S.craft.map(([i, n]) => `${encodeURIComponent(i)}:${n}`).join(',')}`;
   return '#' + S.tab;
 }
 function readHash() {
   const parts = (location.hash || '#map').slice(1).split('/');
   const tab = parts[0] || 'map';
-  if (tab === 'map') { S.tab = 'map'; if (parts[1]) S.planet = parts[1]; S.base = parts[2] ? decodeURIComponent(parts[2]) : null; S.level = S.base ? 'base' : 'planet'; }
+  if (tab === 'map') { S.tab = 'map'; if (parts[1]) S.planet = parts[1]; const p2 = parts[2] ? decodeURIComponent(parts[2]) : null;   // @id: a mission's waypoint selected
+    S.mpin = p2 && p2[0] === '@' ? p2.slice(1) : null; S.base = S.mpin ? null : p2; S.level = S.base ? 'base' : 'planet'; }
   else if (tab === 'farms') { S.tab = 'farms'; S.farm = parts[1] ? decodeURIComponent(parts[1]) : null; }
   else if (tab === 'build') { S.tab = 'build'; S.craft = parts[1] ? parts[1].split(',').map((x) => { const k = x.lastIndexOf(':'); return k < 0 ? [decodeURIComponent(x), 1] : [decodeURIComponent(x.slice(0, k)), Math.max(1, parseInt(x.slice(k + 1), 10) || 1)]; }) : null; }
   else if (tab === 'planets') { S.tab = 'planets'; S.pexp = parts[1] || null; }
+  else if (tab === 'missions') { S.tab = 'missions'; S.mexp = parts[1] ? decodeURIComponent(parts[1]) : null; }
   else if (tab === 'inv' || tab === 'refine') S.tab = tab;
   else S.tab = 'map';
 }
 function go(changes, opts = {}) {
   const before = hash(), wasMap = S.tab === 'map', wasLevel = S.level, wasBase = S.base, wasPlanet = S.planet;
   Object.assign(S, changes);
+  if (changes.mpin === undefined && (S.tab !== 'map' || S.planet !== wasPlanet || S.level !== 'planet')) S.mpin = null;
   if (S.tab !== 'map') S.sel = null;
   if (S.tab === 'map' && (S.planet !== wasPlanet || S.level !== wasLevel || S.base !== wasBase || !wasMap)) { S.sel = null; if (S.planet !== wasPlanet || S.level !== wasLevel || S.base !== wasBase) view = null; }
   if (changes.planet !== undefined || changes.base !== undefined) S.userChose = true;
@@ -481,20 +513,23 @@ function render() {
   if (isMap) renderMap();
   else if (S.tab === 'farms') renderFarms();
   else if (S.tab === 'planets') renderPlanets();
+  else if (S.tab === 'missions') renderMissions();
   else if (S.tab === 'inv') renderInv();
   else if (S.tab === 'refine') renderRefine();
   else if (S.tab === 'build') (S.craft ? renderCraft() : renderBuild());
+  const a = activity(), act = ACTS.find((x) => x[0] === a);    // the wall screen's mode, beside the save pill on every header, when not idle
+  document.querySelectorAll('.modepill').forEach((e) => { e.hidden = a === 'idle' || !act; if (act) { e.textContent = `● ${act[1]}`; e.title = `Wall screens: ${act[1].toLowerCase()} · tap to change`; } });
   document.querySelectorAll('.saveage').forEach((e) => { e.textContent = J ? `● save ${fdur(elapsed())} ago` : '● no save yet'; e.className = `pill saveage ${!J ? 'off' : elapsed() < 1800 ? 'ok' : 'warn'}`; });
 }
 function renderNav() {
   const full = J ? Object.values(J.farms || {}).filter((f) => f.full_in_seconds !== null && f.full_in_seconds !== undefined && f.full_in_seconds <= 0).length : 0;
   const loose = looseTotal();
   const todo = J ? (J.refiners || []).filter((r) => !r.active && (r.projected_output || 0) > 0).length : 0;   // ready to collect, or full
-  const items = [['map', 'Map', loose, 'bad'], ['planets', 'Planets', 0, ''], ['farms', 'Farms', full, ''], ['refine', 'Refine', todo, ''], ['inv', 'Inventory', 0, ''], ['build', 'Build', 0, '']];
-  if (SHELL) items.push(['app', 'App', 0, '']);
-  $('nav').innerHTML = items.map(([t, label, badge, cls]) => `<button class="${S.tab === t ? 'on' : ''}" data-act="tab" data-tab="${t}">${ICONS[t]}<span>${label}${badge ? `<span class="badge ${cls}">${badge}</span>` : ''}</span></button>`).join('');
+  // Config: the app's settings in the Android shell, the wall screen sheet in a browser; held, the wall screen sheet in both
+  const items = [['map', 'Map', loose, 'bad'], ['missions', 'Missions', 0, ''], ['planets', 'Planets', 0, ''], ['farms', 'Farms', full, ''], ['refine', 'Refine', todo, ''], ['inv', 'Inventory', 0, ''], ['build', 'Build', 0, ''], ['config', 'Config', 0, '']];
+  $('nav').innerHTML = items.map(([t, label, badge, cls]) => `<button class="${S.tab === t ? 'on' : ''}" data-act="tab" data-tab="${t}" aria-label="${label}"><span class="ic">${ICONS[t]}${badge ? `<span class="badge ${cls}">${badge}</span>` : ''}</span><span class="lb">${label}</span></button>`).join('');
 }
-const pillSave = () => `<span class="pill ok saveage">● save</span>`;
+const pillSave = () => `<button class="pill mode modepill" data-act="modesheet" hidden></button><span class="pill ok saveage">● save</span>`;
 const header = (eyebrow, title, sub, extra = '') => `<header class="hdr"><div class="row">${eyebrow}<span class="pills">${pillSave()}</span></div><h1>${title}</h1><div class="sub" style="white-space:normal">${sub}</div>${extra}</header>`;
 
 // ---- Map ----
@@ -516,6 +551,7 @@ function renderMap() {
   }
   $('mapGlyphs').innerHTML = pl.portal ? `<span class="glyphs" title="Portal glyphs">${esc(pl.portal)}</span><span class="glyphcode">${esc(pl.portal)}</span>` : '';
   tint(pl);
+  if (S.mpin && S.level === 'planet' && !S.sel) { const i = pl.points.findIndex((p) => p.kind === 'mission' && p.mission === S.mpin); if (i >= 0) S.sel = `p:${i}`; }
   if (!view) fitAll();
   drawMap();
   drawIssue();
@@ -558,7 +594,8 @@ function label(g, x, y, text, colour, fs, k, bold, dx = 10, pri = 2) {
 }
 function dot(g, x, y, kind, id, problem, k, selected) {
   const r = (RADIUS[kind] || 4) * k, c = COL[kind] || 'var(--text-dim)';
-  if (kind === 'base') {
+  if (kind === 'mission') el('rect', { x: x - r, y: y - r, width: 2 * r, height: 2 * r, transform: `rotate(45 ${x} ${y})`, style: `fill:var(--bg);stroke:${c};stroke-width:${2.5 * k}px` }, g);
+  else if (kind === 'base') {
     el('circle', { cx: x, cy: y, r: r + 3 * k, style: `fill:var(--bg);stroke:${problem ? COL.problem : c};stroke-width:${2.5 * k}px` }, g);
     el('circle', { cx: x, cy: y, r: 4 * k, style: `fill:${c}` }, g);
   } else el('circle', { cx: x, cy: y, r: problem ? r + 2 * k : r, style: `fill:${c};stroke:${problem ? COL.problem : 'var(--bg)'};stroke-width:${(problem ? 3 : 1) * k}px` }, g);
@@ -605,6 +642,7 @@ function drawPlanet(g, k, pl) {
     const x = p.x, y = -p.y, id = `p:${i}`;
     dot(g, x, y, p.kind, id, p.loose > 0, k, S.sel === id);
     if (p.kind === 'base') label(g, x + 4 * k, y, p.name + (p.loose ? `  ⚠ ${p.loose} loose` : ''), p.loose ? COL.problem : 'var(--text)', 13, k, true, 10, p.loose ? 5 : 4);
+    else if (p.kind === 'mission') label(g, x + 2 * k, y, '⚑ ' + p.name, 'var(--text)', 12, k, true, 10, 3);
     else if (zoomed && p.kind !== 'deposit') label(g, x, y, p.name, 'var(--text-dim)', 11, k, false);
   });
 }
@@ -682,8 +720,13 @@ function selInfo() {
       if (pl.layouts[p.name]) actions.push(act('Open layout', 'openbase', true, { base: p.name }));
       const fs = farmsAt(p.name);
       if (fs.length) actions.push(act(fs.length > 1 ? `${fs.length} farms` : 'Farm details', fs.length > 1 ? 'farms' : 'farm', !actions.length, { farm: fs[0].id }));
+    } else if (p.kind === 'mission') {
+      const r = (MS().in_progress || []).find((x) => x.id === p.mission);
+      lines.push(...[r && r.objective, [p.building, p.lat != null ? `lat ${p.lat.toFixed(1)}°, lon ${p.lon.toFixed(1)}°` : ''].filter(Boolean).join(' · '), dist].filter(Boolean));
+      if (!onThisPlanet()) lines.push(LIVE && LIVE.state === 'live' ? 'Distance and heading show once you are on this planet' : 'Distance and heading show while the game runs, on this planet');
+      actions.push(act('Mission', 'mexp', !onThisPlanet(), { m: p.mission }));
     } else lines.push(dist);
-    if (onThisPlanet()) actions.push(act(S.target && S.target.key === keyOf(p) ? 'Stop' : 'Go to', 'target', false, { key: keyOf(p), label: p.name }));
+    if (onThisPlanet()) actions.push(act(S.target && S.target.key === keyOf(p) ? 'Stop' : 'Go to', 'target', p.kind === 'mission', { key: keyOf(p), label: p.name }));
     return { title: p.name, kind: p.kind === 'base' ? 'Base' : LABEL[p.kind] || p.kind, color: p.loose ? COL.problem : COL[p.kind], lines, tags, actions };
   }
   const lay = layout(); if (!lay) return null;
@@ -723,7 +766,7 @@ function drawLegend() {
   const lay = layout(); let kinds, segs = [];
   if (lay) { const order = ['extractor-mineral', 'extractor-gas', 'depot', 'power', 'refiner', 'teleporter', 'plants', 'computer', 'structure'];
     kinds = [...new Set(lay.items.map((i) => i.kind))].sort((a, b) => order.indexOf(a) - order.indexOf(b)); segs = [...new Set(lay.segments.map((s) => s.kind))]; }
-  else kinds = ['base', 'exocraft', 'settlement', 'deposit'].filter((k) => pl.points.some((p) => p.kind === k));
+  else kinds = ['base', 'mission', 'exocraft', 'settlement', 'deposit'].filter((k) => pl.points.some((p) => p.kind === k));
   const chip = (k, line) => `<button class="glass ${S.hidden.has(k) ? 'off' : ''}" data-act="kind" data-kind="${k}"><i class="${line ? 'line' : ''}" style="background:${COL[k]}"></i>${LABEL[k] || k}</button>`;
   const near = onThisPlanet() && LIVE.nearby && LIVE.nearby.length ? `<button class="glass live" data-act="nearby">◎ Nearby <span class="mono" style="opacity:.6">${LIVE.nearby.length}</span></button>` : '';
   L.innerHTML = near + kinds.map((k) => chip(k, false)).join('') + segs.map((k) => chip(k, true)).join('');
@@ -777,6 +820,7 @@ function renderFarms() {
   const farms = farmList(), full = farms.filter((f) => f.full), filling = farms.filter((f) => !f.full && f.rate > 0);
   const next = filling.length ? Math.min(...filling.map((f) => f.left)) : null;
   P.innerHTML = header(`<span class="eyebrow">Bases · projected</span>`, 'Extraction farms', J ? `Last save ${clock(J.save.timestamp)} · fills keep rising between saves` : 'Waiting for the exporter')
+    + hint('gathering', 'idle', 'Gathering?')
     + `<div class="tiles"><div class="tile"><div class="l">Full</div><div class="v">${full.length} / ${farms.length}</div></div><div class="tile"><div class="l">Next full</div><div class="v" data-f="next">${next === null ? '—' : fdur(next)}</div></div><div class="tile"><div class="l">Loose</div><div class="v ${looseTotal() ? 'bad' : ''}">${looseTotal()}</div></div></div>`
     + `<div class="cards">${farms.map(farmCard).join('')}</div>` + (farms.length ? '' : `<div class="empty">No extraction farms in the save.</div>`);
 }
@@ -868,18 +912,112 @@ function refCard(r) {
       <div class="foot2"><span class="mono" data-r="out">${refOutText(r)}</span><span>stops at ${fnum(r.cap)}</span></div></div>
     <span class="state ${r.state}" data-r="state">${refStateText(r)}</span></button>${body}</div>`;
 }
-// crafting mode: set from here for a bulk crafting session; the exporter keeps it, and while it is on the
-// right wall screen (conky/right.conf) is the refinery board instead of farms and plants
-function cmodeBar() {
-  const on = !!(J && J.crafting_mode);
-  return `<button class="cmode ${on ? 'on' : ''}" data-act="cmode" aria-pressed="${on}"><span class="sw"><i></i></span><span style="min-width:0"><span class="t">Crafting mode ${on ? 'on' : 'off'}</span><span class="d">${on ? 'The right wall screen is the refinery board: every refiner, what to add, what the runs end at' : 'For a bulk craft: the right wall screen becomes the refinery board until this is turned off'}</span></span></button>`;
+// the activity: set from the Config sheet (hold Config, or tap the mode pill), kept by the exporter
+// (/json activity), and it picks the right wall screen's panels (LAYOUT in conky/nms_conky.py)
+const ACTS = [['idle', 'Idle', 'Inventory first, then the planner, refiners and plants'],
+  ['gathering', 'Gathering', 'Farms and plants at the top, then the inventory'],
+  ['crafting', 'Crafting', 'The refinery board: every refiner, what to add, stock and output'],
+  ['mission', 'Mission', 'The mission you follow, every stage, then the rest in progress']];
+const activity = () => (J && (J.activity || (J.crafting_mode ? 'crafting' : 'idle'))) || 'idle';
+const MS = () => (J && J.missions) || {};
+const focusRow = () => (MS().in_progress || []).find((r) => r.id === MS().focus) || null;
+function modeSheet() {
+  const a = activity(), f = focusRow();
+  const rows = ACTS.map(([k, l, dsc]) => `<button class="srow act ${a === k ? 'on' : ''}" data-act="activity" data-a="${k}" aria-pressed="${a === k}"><i class="${a === k ? 'on-dot' : 'off-dot'}"></i><div style="min-width:0"><div class="n">${l}</div><div class="s">${dsc}</div></div><span class="d">${a === k ? 'on' : ''}</span></button>`).join('');
+  const fol = a === 'mission' ? `<div class="sect" style="padding:12px 8px 4px"><span>The wall follows</span><span>${MS().focus_source === 'phone' ? 'chosen here' : "the game's selection"}</span></div>`
+    + `<button class="srow" data-act="tab" data-tab="missions"${f ? ` data-m="${esc(f.id)}"` : ''}><span></span><div style="min-width:0"><div class="n">${f ? esc(f.title) : 'No mission in progress'}</div><div class="s">${f ? esc(f.objective || 'in progress') : 'pick one up in the game'}</div></div><span class="d">Missions ›</span></button>` : '';
+  openSheet('Wall screens', 'what the right screen shows', rows + fol);
+}
+// one line, not the switch: offered where the mode would fit, dismissed for the session
+const HINTS = new Set(JSON.parse(sessionStorage.getItem('nmsHintsOff') || '[]'));
+function hint(to, when, text) {
+  const a = activity();
+  if (HINTS.has(to) || a === to || (when === 'idle' && a !== 'idle')) return '';
+  return `<div class="hint"><span>${text}</span><button data-act="activity" data-a="${to}">Turn on</button><button class="x" data-act="hintoff" data-a="${to}" aria-label="Dismiss">×</button></div>`;
+}
+// ---- Missions ----
+const stageOf = (r) => { const st = r.stages || []; return st.length > 1 && r.stage != null ? [r.stage + 1, st.length, 'stage'] : r.final != null ? [r.progress + 1, r.final, 'step'] : null; };
+const stageText = (r) => { const x = stageOf(r); return x ? `${x[2]} ${x[0]} of ${x[1]}` : ''; };
+const mclass = (r) => (r.class || '').replace(/([a-z])([A-Z])/g, '$1 $2');
+const onWall = (r) => r.focus && activity() === 'mission';
+// a waypoint (/json missions.in_progress[].waypoint) in words: where, how far, what the game marked
+const wpPlace = (w) => !w.address ? '' : w.planet ? (w.planet_name || `planet ${w.planet}`) : 'in space';
+const wpFar = (w) => !w.address ? '' : (w.where || '') + (!w.here_system && w.distance_ly != null ? (w.distance_ly ? ` · ${fnum(w.distance_ly)} ly` : ' · same region') : '');
+const wpTag = (w) => { if (!w) return ''; const live = w.live && w.live.dist != null ? ` · ${fdist(w.live.dist)}` : '';
+  if (!w.address) return esc(w.building || '');
+  return `<b>${esc(wpPlace(w))}</b>${w.here_planet ? '' : ` · ${esc(w.here_system ? 'this system' : w.system_name || w.where || '')}`}${w.here_planet ? ' · this planet' : ''}${live}`; };
+const mapPlanet = (w) => w && w.address && MAP && MAP.planets.find((p) => p.address === w.address);
+function missionCard(r) {
+  const frac = r.final ? Math.min(1, r.progress / r.final) : 0;
+  return `<button class="card mc ${onWall(r) ? 'on' : ''}" data-act="mexp" data-m="${esc(r.id)}"><div class="h"><span class="t">${esc(r.title)}</span>${onWall(r) ? '<span class="tag brand">on the wall</span>' : ''}${r.selected ? '<span class="tag off">selected in game</span>' : ''}</div>`
+    + `<div class="o">${esc(r.objective || 'in progress')}</div>${r.waypoint ? `<div class="wt">⚑ ${wpTag(r.waypoint)}</div>` : ''}<div class="bar"><i style="width:${(frac * 100).toFixed(1)}%"></i></div><div class="f"><span>${esc(mclass(r))}</span><span class="mono">${stageText(r)}</span></div></button>`;
+}
+function renderMissions() {
+  const P = $('page'), m = MS(), rows = m.in_progress || [], k = m.counts || {};
+  // the repeatable ones (Exploration Guide, Atlas Eternal: never done for good) are a list of their own, folded until asked for
+  const reps = m.repeatable || [], open = localStorage.getItem('nmsRepeatable') === '1';
+  if (S.mexp) return renderMission(P, rows.concat(reps).find((r) => r.id === S.mexp));
+  const sub = J ? `${fnum(k.in_progress || 0)} in progress · ${fnum(k.complete || 0)} done · closest to done first` : 'Waiting for the exporter';
+  P.innerHTML = header(`<span class="eyebrow">From the save · mission tables</span>`, 'Missions', sub)
+    + (J && !m.tables ? `<div class="empty">No mission tables in data/nms_tables.json; run scripts/nms-extract-tables.py.</div>` : '')
+    + `<div class="cards">${rows.map(missionCard).join('')}</div>` + (J && m.tables && !rows.length ? `<div class="empty">No missions in progress.</div>` : '')
+    + (rows.length ? `<div class="note">Tap one for every stage, and to put it on the right wall screen. The wall follows the mission selected in the game unless you pick one here.</div>` : '')
+    + (reps.length ? `<button class="sect fold" data-act="mrep" aria-expanded="${open}"><span>${open ? '▾' : '▸'} Repeatable · ${reps.length}</span><span>${open ? 'hide' : 'show'}</span></button>` + (open ? `<div class="cards" style="padding-bottom:12px">${reps.map(missionCard).join('')}</div>` : '') : '');
+}
+function renderMission(P, r) {
+  if (!r) { P.innerHTML = header(`<button class="back" data-act="mexp" data-m="">‹ Missions</button>`, 'Mission', J ? 'Not in progress in this save' : 'Waiting for the exporter') + (J ? `<div class="empty">Finished, or not in this save.</div>` : ''); return; }
+  const st = r.stages || [], cur = r.stage, frac = r.final ? Math.min(1, r.progress / r.final) : 0, m = MS();
+  const stages = st.length ? st.map(([, t], i) => { const c = cur == null ? '' : i < cur ? 'done' : i === cur ? 'now' : '';
+    return `<div class="stg ${c}"><b>${c === 'done' ? '✓' : c === 'now' ? '▶' : '○'}</b><span>${esc(t)}${c === 'now' ? '<small>now</small>' : ''}</span></div>`; }).join('')
+    : `<div class="stg now"><b>▶</b><span>${esc(r.objective || 'in progress')}</span></div>`;
+  const nxt = [...new Set(r.leads_to_titles || r.leads_to || [])];
+  const kv = [r.rewards && r.rewards.length ? ['Rewards', r.rewards.map(esc).join(', ')] : null, nxt.length ? ['Leads to', nxt.map(esc).join(', ')] : null].filter(Boolean);
+  // following: this one on the wall; when the phone chose it, the way back is the game's selection
+  const btn = onWall(r) ? (m.focus_source === 'phone' ? `<button class="ghost" data-act="unfollow">Follow the game's selection</button>` : `<div class="note" style="padding:4px 0 0">On the wall · following the game's selection</div>`)
+    : r.repeatable ? `<div class="note" style="padding:4px 0 0">Repeatable: it never finishes for good, so the wall does not follow it</div>`
+    : `<button data-act="follow" data-m="${esc(r.id)}">Follow on wall</button>`;
+  P.innerHTML = header(`<button class="back" data-act="mexp" data-m="">‹ Missions</button>`, esc(r.title), [mclass(r), stageText(r), r.selected ? 'selected in game' : ''].filter(Boolean).join(' · '),
+    `<div class="bar" style="margin-top:6px"><i style="width:${(frac * 100).toFixed(1)}%"></i></div>`)
+    + whereBlock(r)
+    + `<div class="sect"><span>Stages</span><span>${st.length ? `${plural(st.length, 'stage')} the game names` : ''}</span></div><div class="stages">${stages}</div>`
+    + needsBlock(r)
+    + (kv.length ? `<div class="cards"><div class="card"><dl class="pf">${kv.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl></div></div>` : '')
+    + `<div class="cta">${btn}</div>`;
+}
+function whereBlock(r) {
+  const w = r.waypoint; if (!w) return '';
+  const pl = mapPlanet(w), live = w.live && w.live.dist != null ? `${fdist(w.live.dist)} away now${w.live.on_planet && w.live.bearing != null ? ` · ${compass(w.live.bearing)}` : ''}` : '';
+  const line = w.address ? [wpPlace(w), w.system_name].filter(Boolean).join(' · ') : (w.building || 'Marked');
+  const sub = [w.address ? wpFar(w) : 'wherever you summon it', w.address ? (w.settlement || w.building) : '', w.lat != null ? `lat ${w.lat.toFixed(1)}°, lon ${w.lon.toFixed(1)}°` : '', live].filter(Boolean).join(' · ');
+  const btn = pl ? `<div class="wa"><button data-act="mapwp" data-m="${esc(r.id)}">${w.x != null ? 'Show on map' : 'Open the planet map'}</button></div>` : '';
+  return `<div class="sect"><span>Where</span><span>the game's marker</span></div><div class="cards"><div class="card wpbox"><div class="wl">⚑ ${esc(line)}</div>${sub ? `<div class="ws">${esc(sub)}</div>` : ''}${btn}</div></div>`;
+}
+const NEED_VERB = { collect: 'Collect', have: 'Have', use: 'Use / hand over', craft: 'Craft', build: 'Build', know: 'Learn', install: 'Install', repair: 'Repair' };
+function needsBlock(r) {
+  const ns = r.needs || []; if (!ns.length) return '';
+  const st = r.stages || [], by = new Map();
+  for (const n of ns) { if (!by.has(n.progress)) by.set(n.progress, []); by.get(n.progress).push(n); }
+  const flag = (k) => ['know', 'install', 'repair'].includes(k);
+  const body = [...by.entries()].map(([p, g]) => {
+    const cur = g[0].current, title = (st.filter(([num]) => num != null && num <= p).pop() || [null, ''])[1], any = g.some((n) => n.any), anyOk = any && g.some((n) => n.any && n.ok);
+    return `<div class="nst ${cur ? '' : 'later'}"><b>${cur ? 'Now' : 'Later'}</b><span>${esc(title)}</span>${any ? `<span>· any one of${anyOk ? ' ✓' : ''}</span>` : ''}</div>`
+      + g.map((n) => { const amt = n.amount != null && !flag(n.kind) && n.kind !== 'build' ? `${fnum(n.amount)} ` : '';
+        const have = flag(n.kind) ? (n.have ? { know: 'known', install: 'installed', repair: 'working' }[n.kind] : 'not yet') : n.kind === 'build' ? `${fnum(n.have)} placed in your bases` : `have ${fnum(n.have)}`;
+        const ok = n.ok || (n.any && anyOk), tag = ok ? '<span class="tag ok">✓ ok</span>' : n.can_make > 0 ? `<span class="tag warn">can craft ${fnum(n.can_make)}</span>` : flag(n.kind) || n.kind === 'build' ? `<span class="tag ${cur ? 'bad' : 'off'}">not yet</span>` : n.short != null ? `<span class="tag ${cur ? 'bad' : 'off'}">short ${fnum(n.short)}</span>` : `<span class="tag ${cur ? 'bad' : 'off'}">needed</span>`;
+        const act = n.craftable ? `data-act="craft" data-id="${esc(n.id)}"` : `data-act="invq" data-q="${esc(n.item)}"`;
+        return `<button class="nd ${cur ? '' : 'later'}" ${act}><span class="n">${esc(NEED_VERB[n.kind] || n.kind)} ${amt}${esc(n.item)}</span>${tag}<span class="s">${esc(have)}${n.craftable ? ' · Build ›' : ' · Inventory ›'}</span></button>`; }).join('');
+  }).join('');
+  return `<div class="sect"><span>Needs</span><span>this stage and later ones</span></div><div class="needs">${body}</div>`;
+}
+async function postJson(path, body) {
+  const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  return r.json();
 }
 function renderRefine() {
   const P = $('page'), all = refList(), refs = all.filter((r) => S.rkind === 'All' || r.kindGroup === S.rkind);
   const running = all.filter((r) => r.state === 'run'), ready = all.filter((r) => r.state === 'ready'), full = all.filter((r) => r.state === 'full');
   const next = running.length ? Math.min(...running.map((r) => r.left)) : null;
   P.innerHTML = header(`<span class="eyebrow">Refinery · projected</span>`, 'Refiners', J ? `Last save ${clock(J.save.timestamp)} · ${plural(all.length, 'refiner')} · outputs keep rising between saves` : 'Waiting for the exporter')
-    + cmodeBar()
     + `<div class="tiles"><div class="tile"><div class="l">Running</div><div class="v">${running.length}</div><div class="n" data-r="next">${next === null ? 'none' : 'next done in ' + fdur(next)}</div></div><div class="tile"><div class="l">Ready</div><div class="v ${ready.length ? '' : ''}">${ready.length}</div><div class="n">collect the output</div></div><div class="tile"><div class="l">Full</div><div class="v ${full.length ? 'bad' : ''}">${full.length}</div><div class="n">at the cap with input left</div></div></div>`
     + `<div class="chips pad">${RKINDS.map((k) => `<button class="${S.rkind === k ? 'on' : ''}" data-act="rkind" data-kind="${k}">${k}<span>${all.filter((r) => k === 'All' || r.kindGroup === k).length}</span></button>`).join('')}</div>`
     + `<div class="cards tight" style="padding-bottom:12px">${refs.map(refCard).join('')}</div>` + (refs.length ? '' : `<div class="empty">No refiners ${S.rkind === 'All' ? 'in the save' : 'there'}.</div>`)
@@ -1025,7 +1163,6 @@ function renderBuild() {
   const make = (can || []).filter((m) => S.bkind === 'All' || KINDS[m.route] === S.bkind);
   const recount = cr.counts === 'search' ? `<div class="note" style="padding-bottom:6px">Recounting through every recipe; the numbers below settle in a minute.</div>` : '';
   P.innerHTML = header(`<span class="eyebrow">From stock · known blueprints</span>`, 'Build', 'Counts are what can be made from stock through every recipe, not counting what you already hold')
-    + cmodeBar()
     // favourites: starred items, kept by the exporter so every phone and browser sees the same list
     + `<div class="sect"><span>Favourites</span><span>${favs.length ? 'tap for every level' : ''}</span></div><div class="cards tight">`
     + (favs.length > 1 ? `<button class="card" data-act="craftfavs" style="flex-direction:row;align-items:center;justify-content:space-between"><span><span style="font-size:14px;font-weight:600">Build order for all ${favs.length}</span><span class="sub" style="display:block">one of each, sharing the stock; set the numbers there</span></span><span style="color:var(--brand);font-size:18px">›</span></button>` : '')
@@ -1169,7 +1306,7 @@ function renderCraft() {
       + d.raw.map((x) => `<div class="ing" style="padding:5px 0;border-bottom:1px solid var(--line)"><span>${esc(x.item)}</span><span>${fnum(x.amount)} <small>of ${fnum(x.have + (x.in_refiners || 0))}${x.in_refiners ? ` · ${fnum(x.in_refiners)} in refiners` : ''}</small></span></div>`).join('') + `</div></div>`;
   }
   P.innerHTML = `<header class="hdr"><div class="row"><button class="back" data-act="craftback">‹ Build</button><span class="pills">${pillSave()}</span></div><h1 style="white-space:normal">${esc(title)}</h1><div class="sub" style="white-space:normal">Bottom up from raw materials, net of what you hold; an ingredient used twice is counted once</div></header>`
-    + qty + body;
+    + hint('crafting', 'notcrafting', 'Crafting mode for this?') + qty + body;
   if (d && S.cview === 'tree') drawTree();
 }
 function drawTree() {
@@ -1221,7 +1358,32 @@ function toast(text) { const T = $('toast'); T.textContent = text; T.hidden = fa
 
 // ---- actions (every tappable thing carries data-act) ----
 const ACT = {
-  tab: (d) => { if (d.tab === 'app') { SHELL && SHELL.openSettings(); return; } go({ tab: d.tab, farm: d.tab === 'farms' ? null : S.farm }); },
+  tab: (d) => { if (d.tab === 'config') { if (SHELL && SHELL.openSettings) SHELL.openSettings(); else modeSheet(); return; }
+    go({ tab: d.tab, farm: d.tab === 'farms' ? null : S.farm, mexp: d.tab === 'missions' ? d.m || null : S.mexp }); },
+  modesheet: () => modeSheet(),
+  mexp: (d) => go({ tab: 'missions', mexp: d.m || null }),
+  mrep: () => { localStorage.setItem('nmsRepeatable', localStorage.getItem('nmsRepeatable') === '1' ? '0' : '1'); renderMissions(); },
+  mapwp: (d) => { const r = (MS().in_progress || []).find((x) => x.id === d.m), w = r && r.waypoint; if (!w || !w.address) return;
+    go({ tab: 'map', planet: w.address, level: 'planet', base: null, mpin: w.x != null ? d.m : null, sel: null }); if (onThisPlanet() && w.w) ACT.target({ key: `w:${w.w.join(',')}`, label: r.title }); },
+  invq: (d) => { S.query = d.q || ''; S.type = 'All'; go({ tab: 'inv' }); },
+  hintoff: (d) => { HINTS.add(d.a); sessionStorage.setItem('nmsHintsOff', JSON.stringify([...HINTS])); render(); },
+  follow: async (d) => {
+    try {
+      const out = await postJson('/api/mission', { focus: d.m });
+      if (out.error) { toast(out.error); return; }
+      const mo = await postJson('/api/mode', { activity: 'mission' });
+      if (J) { J.activity = mo.activity || J.activity; J.crafting_mode = !!mo.crafting; Object.assign(J.missions, { focus: out.focus, focus_source: out.focus_source }); (J.missions.in_progress || []).forEach((r) => { r.focus = r.id === out.focus; }); }
+      toast('On the wall · mission mode'); render();
+    } catch (e) { toast('Could not reach the exporter'); }
+  },
+  unfollow: async () => {
+    try {
+      const out = await postJson('/api/mission', { focus: null });
+      if (out.error) { toast(out.error); return; }
+      if (J) { Object.assign(J.missions, { focus: out.focus, focus_source: out.focus_source }); (J.missions.in_progress || []).forEach((r) => { r.focus = r.id === out.focus; }); }
+      toast("The wall follows the game's selection"); render();
+    } catch (e) { toast('Could not reach the exporter'); }
+  },
   planets: () => planetsSheet(),
   openplanet: (d) => { closeSheet(); go({ tab: 'map', planet: d.planet, level: 'planet', base: null }); },
   planet: () => go({ level: 'planet', base: null }),
@@ -1236,7 +1398,7 @@ const ACT = {
   findme: () => { if (!me()) return; S.follow = !S.follow; $('findme').classList.toggle('on', S.follow); if (S.follow) centreOnMe(); },
   showme: () => showMe(),
   kind: (d) => { if (S.hidden.has(d.kind)) S.hidden.delete(d.kind); else S.hidden.add(d.kind); drawMap(); drawLegend(); },
-  closesel: () => { S.sel = null; drawMap(); drawSel(); drawIssue(); },
+  closesel: () => { S.sel = null; if (S.mpin) { S.mpin = null; history.replaceState(null, '', hash()); } drawMap(); drawSel(); drawIssue(); },
   target: (d) => { closeSheet(); if (S.target && S.target.key === d.key) { S.target = null; toast('Navigation stopped'); } else { S.target = { key: d.key, label: d.label || (S.target && S.target.label) || '' }; toast(`Navigating to ${S.target.label}`); }
     S.sel = null; drawSel(); drawIssue(); pollLive(true); },
   nearby: () => nearbySheet(),
@@ -1251,15 +1413,14 @@ const ACT = {
   bexp: (d) => { S.bexp = S.bexp === d.id ? null : d.id; renderBuild(); },
   rexp: (d) => { S.rexp = S.rexp === d.key ? null : d.key; renderRefine(); },
   rkind: (d) => { S.rkind = d.kind; renderRefine(); },
-  cmode: async () => {
-    const on = !(J && J.crafting_mode);
+  activity: async (d) => {
+    if (d.a === activity()) { closeSheet(); return; }
     try {
-      const r = await fetch('/api/mode', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ crafting: on }) });
-      const out = await r.json();
+      const out = await postJson('/api/mode', { activity: d.a });
       if (out.error) { toast(out.error); return; }
-      if (J) J.crafting_mode = out.crafting;
-      toast(out.crafting ? 'Crafting mode on · the right wall screen is the refinery board' : 'Crafting mode off');
-      render();
+      if (J) { J.activity = out.activity; J.crafting_mode = out.crafting; }
+      toast({ idle: 'Idle · inventory first on the wall screen', gathering: 'Gathering · farms and plants first on the wall screen', crafting: 'Crafting · the right wall screen is the refinery board', mission: 'Mission · the right wall screen follows a mission' }[out.activity] || out.activity);
+      closeSheet(); render();
     } catch (e) { toast('Could not reach the exporter'); }
   },
   craft: (d) => { S.closed = new Set(); go({ tab: 'build', craft: [[d.id, 1]] }); },
@@ -1330,9 +1491,21 @@ document.addEventListener('click', (e) => {
   const fn = ACT[a.dataset.act]; if (fn) fn(a.dataset, a, e);
 });
 $('sheet').addEventListener('click', (e) => { if (e.target.classList.contains('scrim')) closeSheet(); });
+(() => {
+  let t = null, x0 = 0, y0 = 0, held = false;
+  const stop = () => { clearTimeout(t); t = null; };
+  document.addEventListener('pointerdown', () => { held = false; }, true);
+  document.addEventListener('click', (e) => { if (held) { held = false; e.stopPropagation(); e.preventDefault(); } }, true);
+  const N = $('nav');
+  N.addEventListener('pointerdown', (e) => { if (!e.target.closest('[data-tab="config"]')) return; x0 = e.clientX; y0 = e.clientY; stop();
+    t = setTimeout(() => { t = null; held = true; if (navigator.vibrate) navigator.vibrate(12); modeSheet(); }, 500); });
+  N.addEventListener('pointermove', (e) => { if (t && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) stop(); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) => N.addEventListener(ev, stop));
+  N.addEventListener('contextmenu', (e) => e.preventDefault());
+})();
 document.addEventListener('input', (e) => { const s = e.target.closest('input[data-sl]'); if (!s) return; const n = s.closest('.qty').querySelector('.n'); if (n) n.textContent = fnum(+s.value); });
 document.addEventListener('change', (e) => { const s = e.target.closest('input[data-sl]'); if (s) ACT.craftn({ i: s.dataset.sl, n: s.value }); });
-function select(id) { S.sel = id; drawMap(); drawSel(); drawIssue(); }
+function select(id) { S.sel = id; if (S.mpin) { S.mpin = null; history.replaceState(null, '', hash()); } drawMap(); drawSel(); drawIssue(); }
 
 // ---- map gestures: one finger pans, two pinch, the wheel zooms; a still tap selects ----
 (() => {

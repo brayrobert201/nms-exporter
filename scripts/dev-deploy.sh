@@ -47,7 +47,10 @@ if [ "$RENDER" = 1 ]; then
   mkdir -p "$T/xdg" && chmod 700 "$T/xdg"
   (cd "$HERE/conky" && XDG_RUNTIME_DIR="$T/xdg" NMS_CONKY_URL="http://127.0.0.1:$PORT/json" \
     xvfb-run -a -s "-screen 0 2160x3840x24 -dpi 96" sh -c 'conky -c right.conf >'"$T"'/conky.log 2>&1 & CP=$!; sleep 25; import -window root '"$T"'/right.png; kill $CP' >/dev/null 2>&1)
-  pgrep -f "nms_search.py --watch" | xargs -r kill 2>/dev/null
+  # only the click watcher this render started (its XDG_RUNTIME_DIR is $T/xdg), never the live screen's
+  for p in $(pgrep -f "nms_search.py --watch"); do
+    tr '\0' '\n' < /proc/$p/environ 2>/dev/null | grep -qx "XDG_RUNTIME_DIR=$T/xdg" && kill "$p" 2>/dev/null
+  done
   [ -s "$T/right.png" ] && echo "rendered $T/right.png" || echo "render failed, see $T/conky.log"
 fi
 

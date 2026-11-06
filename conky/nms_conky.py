@@ -5,6 +5,10 @@
     nms_conky.py right <section>    # the bases: refiners, farms, plants, inventory (crafting and tidy exist but are off the screen)
                                     # in crafting mode (/json crafting_mode, set from the phone) the same sections
                                     # draw the refinery board: every refiner's load, what to add, stock and output
+    nms_conky.py right slot<N>      # the Nth panel of the right screen for the activity set from the phone
+                                    # (/json activity): idle puts the inventory first, gathering the farms and
+                                    # plants, crafting the refinery board, mission the focus mission's
+                                    # stages (/json missions.focus) and the rest in progress (LAYOUT below)
 
 Each call prints one section as conky markup; left.conf and right.conf stitch
 the sections together with ${execpi}. Data is the exporter's own /json on
@@ -952,10 +956,189 @@ def right_search(d, query: str, show: int = 10) -> str:
     return "\n".join(out)
 
 
-def right_inventory(d, show: int = 16) -> str:
+def _stage_of(r: dict) -> str:
+    """Against the stages the tables name when there are several (what the mission panel lists),
+    else the game's internal steps, which run finer than the named stages."""
+    st, cur = r.get("stages") or [], r.get("stage")
+    if len(st) > 1 and _ok(cur):
+        return f"stage {cur + 1} of {len(st)}"
+    prog, final = r.get("progress"), r.get("final")
+    return f"step {fnum(prog + 1)} of {fnum(final)}" if _ok(prog) and _ok(final) else ""
+
+
+def _class(r: dict) -> str:
+    return re.sub(r"(?<=[a-z])(?=[A-Z])", " ", r.get("class") or "")    # ChainedSecondary -> Chained Secondary
+
+
+def _clip(s: str, n: int) -> str:
+    s = str(s or "")
+    return s if len(s) <= n else s[:n - 1] + "…"
+
+
+def _where_words(wp: dict | None, short: bool = False) -> str:
+    """A waypoint (/json missions.in_progress[].waypoint) in words: the planet and system, how far
+    from where the save (or the game, live) has the player, what the game marked there."""
+    if not wp:
+        return ""
+    live = wp.get("live") or {}
+    if wp.get("address") is None:                     # the Anomaly's markers go wherever it is
+        return wp.get("building") or ""
+    place = wp.get("planet_name") or (f"planet {wp['planet']}" if wp.get("planet") else "in space")
+    if short:
+        if wp.get("here_planet"):
+            far = "this planet"
+        elif wp.get("here_system"):
+            far = f"{place} · this system"
+        else:
+            far = f"{place} · {wp.get('system_name') or 'another system'}"
+        return far + (f" · {fkm(live['dist'])}" if _ok(live.get("dist")) else "")
+    bits = [place if wp.get("planet") else "", wp.get("system_name") or ""]
+    far = wp.get("where") or "another system"
+    if wp.get("distance_ly") is not None and not wp.get("here_system"):
+        far += f", {fnum(wp['distance_ly'])} ly" if wp["distance_ly"] else ", same region"
+    if _ok(live.get("dist")):
+        far += f", {fkm(live['dist'])} away now"
+    what = wp.get("settlement") or wp.get("building") or ""
+    return "  ·  ".join(b for b in [" · ".join(x for x in bits if x), far, what] if b)
+
+
+def right_mission(d) -> str:
+    """The focus mission (/json missions.focus): the game's selected one unless the phone
+    picked another. Every stage the tables list, done ones dimmed and the current one
+    marked, then what finishing it hands out and where it leads."""
+    m = d.get("missions") or {}
+    rows = m.get("in_progress") or []
+    r = next((x for x in rows if x.get("id") == m.get("focus")), None)
+    if not r:
+        out = [header("Mission", f"{c('ink-muted')}nothing to follow")]
+        out.append(empty("no mission tables in data/nms_tables.json - run scripts/nms-extract-tables.py"
+                         if not m.get("tables") else "no missions in progress - pick one up in the game"))
+        return "\n".join(out)
+    src = "chosen on the phone" if m.get("focus_source") == "phone" else "following the game's selection"
+    out = [header("Mission", f"{c('ink-muted')}{esc(src)}")]
+    tag = f"  {pill('idle', 'selected in game', 26)}" if r.get("selected") and m.get("focus_source") == "phone" else ""
+    out.append(f"${{voffset 4}}{font(52, bold=True)}{c('ink-1')}{esc(_clip(r.get('title', '?'), 60))}"
+               f"{font(30)}{c('ink-muted')}  {esc(_class(r))}{tag}"
+               f"${{alignr}}{font(30, mono=True)}{c('ink-2')}{_stage_of(r)}")
+    prog, final = r.get("progress"), r.get("final")
+    if _ok(prog) and _ok(final) and final:
+        out.append(bar(prog / final, "series-1", px=14))
+    wp = r.get("waypoint")
+    if wp:
+        out.append(f"${{voffset 2}}{font(26)}{c('ink-muted')}Where  {font(30)}{c('ink-1')}{esc(_clip(_where_words(wp), 120))}")
+    stages, cur = r.get("stages") or [], r.get("stage")
+    if not stages:
+        out.append(f"{font(32)}{c('ink-1')}{esc(r.get('objective') or 'in progress')}")
+    for i, (_, text) in enumerate(stages):
+        if cur is not None and i < cur:          # done: dimmed and ticked
+            out.append(f"{c('good')}{glyph('✔', 28)} {font(28)}{c('ink-muted')}{esc(_clip(text, 130))}")
+        elif i == cur:                           # now: the brightest line on the panel
+            out.append(f"${{voffset 2}}{c('series-1')}{glyph('▶', 34)} {font(36, bold=True)}{c('ink-1')}"
+                       f"{esc(_clip(text, 100))}{font(26)}{c('series-1')}  now")
+        else:                                    # still ahead
+            out.append(f"{c('ink-muted')}{glyph('○', 28)} {font(28)}{c('ink-2')}{esc(_clip(text, 130))}")
+    if r.get("rewards"):
+        out.append(f"${{voffset 6}}{font(26)}{c('ink-muted')}Rewards  {font(28)}{c('ink-2')}"
+                   f"{esc(_clip(', '.join(r['rewards']), 130))}")
+    nxt = r.get("leads_to_titles") or r.get("leads_to") or []
+    if nxt:
+        nxt = list(dict.fromkeys(nxt))           # seeded follow-ups repeat a title
+        out.append(f"{font(26)}{c('ink-muted')}Leads to  {font(28)}{c('ink-2')}{esc(_clip(', '.join(nxt), 130))}")
+    return "\n".join(out)
+
+
+NEED_VERB = {"collect": "collect", "have": "have", "use": "use / hand over", "craft": "craft", "build": "build",
+             "know": "learn", "install": "install", "repair": "repair"}
+
+
+def right_mission_needs(d, show: int = 10) -> str:
+    """The items the focus mission's current and later stages wait for: have against the
+    amount, where it is, and short / ok / can craft. Nothing at all when it needs none,
+    so the slot takes no room (right_slot)."""
+    m = d.get("missions") or {}
+    r = next((x for x in (m.get("in_progress") or []) if x.get("id") == m.get("focus")), None)
+    needs = (r or {}).get("needs") or []
+    if not needs:
+        return ""
+    out = [header("Mission needs", f"{c('ink-muted')}current stage first, later ones dimmed")]
+    stages = r.get("stages") or []
+    any_ok = {}                                  # per stage: one of an any-of set is enough
+    for n in needs:
+        if n.get("any"):
+            any_ok[n["progress"]] = any_ok.get(n["progress"], False) or bool(n.get("ok"))
+    last = None
+    for n in needs[:show]:
+        p = n.get("progress")
+        if p != last:
+            title = next((t for num, t in reversed(stages) if num is not None and num <= p), None)
+            lead = "now" if n.get("current") else "later"
+            any_word = "  ·  any one of" if any(x.get("any") for x in needs if x.get("progress") == p) else ""
+            out.append(f"${{voffset 4}}{font(24)}{c('series-1' if n.get('current') else 'ink-muted')}{lead}"
+                       f"{c('ink-muted')}  {esc(_clip(title or '', 80))}{any_word}")
+            last = p
+        cur = n.get("current")
+        ink, ink2 = ("ink-1", "ink-2") if cur else ("ink-muted", "ink-muted")
+        amt = n.get("amount")
+        verb = NEED_VERB.get(n.get("kind"), n.get("kind") or "")
+        qty = f"{fnum(amt)} " if _ok(amt) and n.get("kind") not in ("know", "install", "repair", "build") else ""
+        have = n.get("have") or 0
+        if n.get("kind") in ("know", "install", "repair"):
+            got = {"know": "known", "install": "installed", "repair": "working"}[n["kind"]] if have else "--"
+        elif n.get("kind") == "build":
+            got = f"{fnum(have)} placed"
+        else:
+            got = f"have {fnum(have)}"
+        where = _where(d, n.get("id"), 1) if n.get("kind") not in ("know", "install", "repair", "build") and have else ""
+        if n.get("ok") or (n.get("any") and any_ok.get(p)):
+            tone, word = "good", "ok"
+        elif _ok(n.get("can_make")) and n["can_make"] > 0:
+            tone, word = "warning", f"can craft {fnum(n['can_make'])}"
+        elif n.get("kind") in ("know", "install", "repair", "build"):
+            tone, word = "serious", "not yet"
+        elif _ok(n.get("short")):
+            tone, word = "serious", f"short {fnum(n['short'])}"
+        else:
+            tone, word = "serious", "needed"           # no amount: the game decides how many
+        st = pill(tone if cur else "idle", word, 24)
+        out.append(f"{font(30 if cur else 26)}{c(ink)}{esc(verb)} {qty}{esc(_clip(n.get('item'), 46))}"
+                   f"${{goto {MARGIN + 1100}}}{font(26, mono=True)}{c(ink2)}{esc(got)}"
+                   f"${{goto {MARGIN + 1380}}}{font(24)}{c('ink-muted')}{esc(_clip(where, 26))}"
+                   f"${{alignr}}{font(24)}{st}")
+    if len(needs) > show:
+        out.append(empty(f"+ {len(needs) - show} more"))
+    return "\n".join(out)
+
+
+def right_missions(d, show: int = 8) -> str:
+    """The other missions in progress, one line each, closest to done first
+    (the exporter sorts them that way)."""
+    m = d.get("missions") or {}
+    rows = [r for r in (m.get("in_progress") or []) if not r.get("focus")]
+    k = m.get("counts") or {}
+    rep = f"  ·  {fnum(k['repeatable'])} repeatable, listed on the phone" if k.get("repeatable") else ""
+    out = [header("Also in progress", f"{c('ink-muted')}{fnum(k.get('in_progress'))} in progress  ·  "
+                                      f"{fnum(k.get('complete'))} done{rep}  ·  closest to done first")]
+    if not rows:
+        out.append(empty("nothing else in progress"))
+        return "\n".join(out)
+    for r in rows[:show]:
+        tag = f"{c('ink-muted')}{glyph('●', 22)} " if r.get("selected") else ""
+        wt = _where_words(r.get("waypoint"), short=True)
+        out.append(f"{tag}{font(30)}{c('ink-1')}{esc(_clip(r.get('title', '?'), 40))}"
+                   f"{font(26)}{c('ink-2')}  ·  {esc(_clip(r.get('objective') or 'in progress', 70 if wt else 90))}"
+                   + (f"{font(24)}{c('ink-muted')}  ·  {esc(_clip(wt, 40))}" if wt else "")
+                   + f"${{alignr}}{font(26, mono=True)}{c('ink-muted')}{_stage_of(r)}")
+    if len(rows) > show:
+        out.append(empty(f"+ {len(rows) - show} more"))
+    return "\n".join(out)
+
+
+def right_inventory(d, show: int | None = None) -> str:
     query = _search()
     if query:
         return right_search(d, query)
+    if show is None:
+        show = 32 if (d.get("activity") or "idle") == "idle" else 16   # first on the screen when idle: room for more
     items = sorted((d.get("items") or {}).values(), key=lambda i: -(i.get("total") or 0))
     out = [header("Inventory", f"{c('ink-muted')}{len(items)} kinds  ·  "
                                f"{sum(i.get('stacks') or 0 for i in items)} stacks  ·  click to search")]
@@ -999,9 +1182,34 @@ SECTIONS = {
              "fleet": left_fleet, "missions": left_missions, "tech": left_tech, "collection": left_collections,
              "lifetime": left_lifetime},
     "right": {"summary": right_summary, "planner": right_planner, "refiners": right_refiners, "farms": right_farms,
-              "plants": right_plants, "crafting": right_crafting, "tidy": right_tidy, "inventory": right_inventory},
+              "plants": right_plants, "crafting": right_crafting, "tidy": right_tidy, "inventory": right_inventory,
+              "mission": right_mission, "mission_needs": right_mission_needs, "missions": right_missions},
 }
 SUBTITLE = {"left": "traveller", "right": "bases"}
+
+# The right screen's panels per activity (set from the phone, /json activity), top to bottom;
+# right.conf draws slot1..slotN and a slot past the end of the list is blank. Not gathering
+# or crafting, the inventory comes first; gathering puts the farms and plants up top; crafting
+# is the refinery board (the refiners/farms/plants sections draw the board, stock and output);
+# mission is the focus mission's stages and the rest in progress, the bases' panels hidden.
+LAYOUT = {
+    "idle": ["summary", "inventory", "planner", "refiners", "plants", "farms"],
+    "gathering": ["summary", "farms", "plants", "inventory"],
+    "crafting": ["summary", "planner", "refiners", "farms", "plants", "inventory"],
+    "mission": ["summary", "mission", "mission_needs", "missions", "inventory"],
+}
+SLOTS = max(len(v) for v in LAYOUT.values())
+COLLAPSE = {"mission_needs"}
+
+
+def right_slot(d, n: int) -> str:
+    panels = LAYOUT.get(d.get("activity") or ("crafting" if d.get("crafting_mode") else "idle"), LAYOUT["idle"])
+    # a panel with nothing to say (mission_needs) drops out, so the ones below move up into its slot
+    panels = [p for p in panels if p not in COLLAPSE or SECTIONS["right"][p](d)]
+    if n > len(panels):
+        return ""
+    out = SECTIONS["right"][panels[n - 1]](d)
+    return out if n == 1 else "${voffset 24}" + out     # the gap above, only when the slot draws
 
 
 def main(argv: list[str]) -> int:
@@ -1012,10 +1220,13 @@ def main(argv: list[str]) -> int:
     try:
         d, err, age = load()
         if section == "head":
-            sub = "refinery" if screen == "right" and d and d.get("crafting_mode") else SUBTITLE[screen]
+            act = (d.get("activity") or ("crafting" if d.get("crafting_mode") else "idle")) if d else "idle"
+            sub = {"crafting": "refinery", "gathering": "gathering", "mission": "mission"}.get(act, SUBTITLE[screen]) if screen == "right" else SUBTITLE[screen]
             out = masthead(d, err, age, sub)
         elif d is None:
             out = ""                     # the masthead already says why
+        elif screen == "right" and section.startswith("slot") and section[4:].isdigit():
+            out = right_slot(d, int(section[4:]))
         else:
             out = SECTIONS[screen][section](d)
     except Exception as e:               # noqa: BLE001 - a bug shows, it doesn't blank

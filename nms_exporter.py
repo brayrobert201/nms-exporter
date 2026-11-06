@@ -103,6 +103,21 @@ def record_planets():
             print(f"planet facts: {type(e).__name__}: {e}", flush=True)
 
 
+def mission_waypoints(ms: dict | None) -> bool:
+    """Names, planet position and live distance on the missions' waypoints (live.waypoints).
+    With nms-db down the save's part stays and missions.waypoint_error says why."""
+    if not ms:
+        return False
+    try:
+        if not db.configured():
+            raise psycopg.OperationalError(db_error())
+        live.waypoints(ms, collector.raw_bases)
+        return True
+    except psycopg.Error as e:
+        ms["waypoint_error"] = f"nms-db unreachable: {e}".strip()
+        return False
+
+
 def page_html(name: str) -> bytes:
     """Read on each request so an edited page needs no restart."""
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "nmsexporter", "web", name), "rb") as f:
@@ -144,7 +159,9 @@ class Handler(BaseHTTPRequestHandler):
                          f"# TYPE nms_db_up gauge\nnms_db_up {up}\n")
                 return self._send((collector.metrics() + extra).encode(), "text/plain; version=0.0.4")
             if path == "/json":
-                return self._send(json.dumps(collector.projected()).encode(), "application/json")
+                snap = collector.projected()
+                mission_waypoints(snap.get("missions"))
+                return self._send(json.dumps(snap).encode(), "application/json")
             if path == "/diff":
                 try:
                     against = int(params.get("against", "1"))
@@ -188,10 +205,15 @@ class Handler(BaseHTTPRequestHandler):
                     pl["planet_name"], pl["system_name"] = live.systems.planet_name(a), live.systems.system_name(a)
                     pl["portal"] = portal(a) if a is not None else None
                     pl["tile_colours"] = (live.finds.planets.get(a) or {}).get("tile_colours") if a is not None else None
+                # the missions' waypoints as points of kind "mission" (their "w:" key works as an /api/live target)
+                ms = json.loads(json.dumps(collector.snapshot.get("missions") or {}))
+                if ms and mission_waypoints(collector._mission_focus(ms)):
+                    live.map_points(ms, m["planets"])
                 return self._send(json.dumps(m).encode(),
                                   "application/json")
             if path == "/api/mode":  # polled by the Stream Deck plugin; no save refresh
-                return self._send(json.dumps(dict(control_mode(), crafting=collector.crafting_mode())).encode(), "application/json")
+                return self._send(json.dumps(dict(control_mode(), activity=collector.activity(), activities=list(collector.ACTIVITIES),
+                                                  crafting=collector.crafting_mode())).encode(), "application/json")
             if path == "/api/live":
                 return self._send(json.dumps(live.build(collector.raw_bases, unquote_plus(params.get("base", "")) or None,
                                                         unquote_plus(params.get("target", "")) or None,
@@ -279,7 +301,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 return
             if path == "/":
-                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /api/craft?id=&n=|items=&mode=max|fast|now&refiners=N&pins=0&refstock=0 /api/pins /api/routes /api/mode /map /mobile /api/map /api/live /api/elevation /api/finds /api/sectors /systems /api/systems /api/planets /healthz\n", "text/plain")
+                return self._send(b"nms-exporter: /metrics /json /diff?against=N /raw/bases /api/craft?id=&n=|items=&mode=max|fast|now&refiners=N&pins=0&refstock=0 /api/pins /api/routes /api/mode /api/mission /map /mobile /api/map /api/live /api/elevation /api/finds /api/sectors /systems /api/systems /api/planets /healthz\n", "text/plain")
             self._send(b"not found", "text/plain", 404)
         except BrokenPipeError:
             pass
@@ -317,11 +339,23 @@ class Handler(BaseHTTPRequestHandler):
             out = collector.set_route(str(body.get("id") or "") or None, body.get("route") or None, bool(body.get("clear")))
             return self._send(json.dumps(out).encode(), "application/json", 400 if "error" in out else 200)
         if path == "/api/mode":
-            # {"crafting": true|false}: crafting mode, set from the phone for a bulk crafting
-            # session; while on, the right wall screen is the refinery board (/json crafting_mode)
-            if "crafting" not in body:
-                return self._send(b'{"error": "crafting: true|false"}', "application/json", 400)
-            return self._send(json.dumps(collector.set_crafting_mode(bool(body["crafting"]))).encode(), "application/json")
+            # {"activity": "idle"|"gathering"|"crafting"|"mission"}, set from the phone: which panels the right wall
+            # screen shows (/json activity). {"crafting": true|false} still works: crafting, or back to idle.
+            if "activity" in body:
+                out = collector.set_activity(str(body["activity"]))
+            elif "crafting" in body:
+                out = collector.set_crafting_mode(bool(body["crafting"]))
+            else:
+                out = {"error": f"activity: {' | '.join(collector.ACTIVITIES)}"}
+            return self._send(json.dumps(out).encode(), "application/json", 400 if "error" in out else 200)
+        if path == "/api/mission":
+            # {"focus": mission id}: the mission the wall's mission panel follows, chosen on the phone;
+            # {"focus": null} follows the game's selected mission again (/json missions.focus, focus_source).
+            if "focus" not in body:
+                out = {"error": "focus: a mission id in progress, or null"}
+            else:
+                out = collector.set_mission_focus(str(body["focus"]) if body["focus"] else None)
+            return self._send(json.dumps(out).encode(), "application/json", 400 if "error" in out else 200)
         if path == "/api/finds/class":
             # the player records a hotspot's class from the visor (the marker does not carry it readably)
             try:
