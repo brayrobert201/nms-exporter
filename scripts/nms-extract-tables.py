@@ -442,8 +442,191 @@ def reward_descs(entry, loc, items):
     return descs
 
 
+# --- mission stage needs and scan events -----------------------------------------
+# How the mission tables gate a stage (read off the MXML, see
+# knowledge/mechanics/mission-stage-needs.md):
+#  * a WaitForConditions stage waits until its ConditionTest over its Conditions
+#    holds (AllTrue / AnyTrue / AllFalse / AnyFalse);
+#  * a Group's Conditions are its exit test: the group runs its stages until the
+#    test holds, and is skipped if it holds already. Most item conditions on
+#    groups are therefore branch guards ("does not have treat" = exit once you
+#    have it, "has treat" = leave once you lose it), not "collect this";
+#  * a Stop stage (or a WaitForConditions with no conditions) blocks until the
+#    enclosing group exits.
+# Conditions carry no polarity of their own; only ConditionTest does.
+NEED_CONDS = {"GcMissionConditionHasProduct": ("Product", "product", "have"),
+              "GcMissionConditionHasSubstance": ("Substance", "substance", "have"),
+              "GcMissionConditionHasTechnology": ("Technology", "tech", "install"),
+              "GcMissionConditionProductKnown": ("Product", "product", "know"),
+              "GcMissionConditionBasePartNear": ("PartID", "part", "build")}
+# leaves that block on something the player does, so an objective group's
+# exit condition is what they wait for (not rewards, messages, timers)
+BLOCKING = {"WaitForConditions", "Stop", "WaitForScanEvent", "GetToScanEvent", "WaitForMessage",
+            "CollectSubstance", "CollectProduct", "CollectMultiProducts", "CraftProduct", "Build", "Construct"}
+EVENT_STAGES = {"StartScanEvent": "Event", "WaitForScanEvent": "Event", "GetToScanEvent": "Event",
+                "WaitForFriendlyDroneScanEvent": "Event", "StartScanEventSpecific": "Event",
+                "OpenSettlementBuildingWithScanEvent": "ScanEvent",
+                "ConstructSettlementBuildingWithScanEvent": "ScanEvent"}
+
+
+def _kids(el, name):
+    p = props(el).get(name)
+    return list(p) if p is not None else []
+
+
+def _sub(el, name):
+    """Value of a one-field wrapper struct (Default{DefaultProductType=..}, ConditionTest{ConditionTest=..})."""
+    p = props(el).get(name)
+    return p[0].get("value") if p is not None and len(p) else None
+
+
+def _cond_list(inner):
+    w = props(inner).get("Conditions")
+    return [c for c in (w.findall("Property") if w is not None else []) if c.get("value")]
+
+
+def _true(v):
+    return v == "true"
+
+
+def _need_from_cond(c):
+    """A need entry from an item condition, or None when the item is procedural / season-driven."""
+    t = c.get("value")
+    field, typ, kind = NEED_CONDS[t]
+    b = props(c).get(t)
+    if b is None:
+        return None
+    iid = val(b, field)
+    if not iid or _true(val(b, "TakeIdFromSeasonData")) or _true(val(b, "TakeIDFromSeasonData")) \
+            or _true(val(b, "TakeProductFromSeasonData")) or _true(val(b, "TakeTechFromSeasonData")) \
+            or (_sub(b, "Default") or "None") != "None":
+        return None
+    amount = 1
+    if kind == "have":
+        amount = None if _true(val(b, "TakeAmountFromSeasonData")) or _true(val(b, "UseDefaultAmount")) \
+            else int(num(val(b, "Amount") or 1))
+    return {"id": iid, "amount": amount, "kind": kind, "type": typ}
+
+
+def _cond_needs(conds, test, negative_ok):
+    """Needs implied by waiting until `test` holds over `conds`.
+    Positive tests: AllTrue -> every item condition is required; AnyTrue -> only
+    when every condition is an item one (else the item is just one way out), any-of
+    when there are several. Negative tests (wait until you no longer hold it) are
+    "use" -- deploy / hand over -- and only for plain HasProduct/HasSubstance."""
+    item = [c for c in conds if c.get("value") in NEED_CONDS]
+    if not item:
+        return []
+    if test == "AllTrue":
+        pick, anyof = item, False
+    elif test == "AnyTrue" and len(item) == len(conds):
+        pick, anyof = item, len(item) > 1
+    elif negative_ok and test in ("AllFalse", "AnyFalse") and len(item) == len(conds) \
+            and all(c.get("value") in ("GcMissionConditionHasProduct", "GcMissionConditionHasSubstance") for c in item):
+        pick, anyof = item, test == "AnyFalse" and len(item) > 1
+    else:
+        return []
+    out = []
+    for c in pick:
+        n = _need_from_cond(c)
+        if n is None:
+            if anyof:           # an any-of with an unknown member is not a requirement on the rest
+                return []
+            continue
+        if test in ("AllFalse", "AnyFalse"):
+            n["kind"] = "use"
+        if anyof:
+            n["any"] = True
+        out.append(n)
+    return out
+
+
+def _leaf_needs(kind, inner, groups):
+    """Needs of one leaf stage. `groups` = enclosing group bodies, innermost last."""
+    out = []
+    if kind in ("CollectSubstance", "CollectProduct"):
+        field, typ = ("Substance", "substance") if kind == "CollectSubstance" else ("Product", "product")
+        iid = val(inner, field)
+        lo, hi = val(inner, "AmountMin"), val(inner, "AmountMax")
+        if iid and not _true(val(inner, "UseDefaultValue")) and (_sub(inner, "Default") or "None") == "None":
+            amount = int(num(lo)) if lo == hi and lo and not _true(val(inner, "TakeAmountFromSeasonData")) else None
+            out.append({"id": iid, "amount": amount, "kind": "collect", "type": typ})
+    elif kind == "CollectMultiProducts":
+        for p in _kids(inner, "Products"):
+            if p.get("value") == "GcProductToCollect" and val(p, "Product"):
+                out.append({"id": val(p, "Product"), "amount": int(num(val(p, "Amount") or 1)),
+                            "kind": "collect", "type": "product"})
+    elif kind == "CraftProduct":
+        iid = val(inner, "TargetProductID")
+        if iid and not _true(val(inner, "TakeIDFromSeasonData")):
+            amount = None if _true(val(inner, "TakeAmountFromSeasonData")) else int(num(val(inner, "TargetAmount") or 1))
+            out.append({"id": iid, "amount": amount, "kind": "craft", "type": "product"})
+    elif kind == "Build":
+        iid = val(inner, "Part")
+        if iid and not _true(val(inner, "TakePartFromSeasonData")):
+            out.append({"id": iid, "amount": 1, "kind": "build", "type": "part"})
+    elif kind == "Construct":
+        # NumUniquePartsRequired of PotentialParts, picked at random unless that is all of them
+        parts = [p for p in _kids(inner, "PotentialParts") if p.get("value") == "GcConstructionPart"]
+        groups_ = [p for p in _kids(inner, "PotentialPartGroups") if p.get("value")]
+        n = int(num(val(inner, "NumUniquePartsRequired") or 0))
+        if parts and not groups_ and n >= len(parts):
+            out += [{"id": val(p, "Part"), "amount": int(num(val(p, "Amount") or 1)), "kind": "build", "type": "part"}
+                    for p in parts if val(p, "Part")]
+    elif kind == "RepairTech":
+        for t in _kids(inner, "TechsToRepair"):
+            if t.get("value"):
+                out.append({"id": t.get("value"), "amount": 1, "kind": "repair", "type": "tech"})
+    elif kind == "WaitForConditions" and _cond_list(inner):
+        out += _cond_needs(_cond_list(inner), _sub(inner, "ConditionTest"), True)
+    if (kind == "Stop" or (kind == "WaitForConditions" and not _cond_list(inner))) and groups:
+        g = groups[-1]          # blocks until the innermost group's exit test holds
+        out += _cond_needs(_cond_list(g), _sub(g, "ConditionTest"), True)
+    if not out and kind in BLOCKING:
+        # a stage that does not itself ask for an item, inside an objective group (one the
+        # log shows with its own objective): the group is done when its exit test holds, so
+        # that is what the stage works towards. Innermost such group only. Silent groups
+        # are branch guards and say nothing about what the player needs.
+        for g in groups[::-1]:
+            if val(g, "ObjectiveID") and not _true(val(g, "Silent")):
+                out = _cond_needs(_cond_list(g), _sub(g, "ConditionTest"), False)
+                break
+    must = {n["id"] for n in out if not n.get("any")}
+    if any(n.get("any") and n["id"] in must for n in out):   # an any-of already met by a must-have
+        out = [n for n in out if not n.get("any")]
+    seen, uniq = set(), []
+    for n in out:
+        if n["id"] not in seen:
+            seen.add(n["id"])
+            uniq.append(n)
+    return uniq
+
+
+def _leaf_events(kind, inner, groups):
+    """Scan events a leaf starts / waits for / travels to: its own Event field, any scan
+    event its own conditions test (IsScanEventLocal, NearScanEvent, IsScanEventRepaired, ...),
+    then IsScanEventLocal on enclosing groups, innermost first (a group that runs until you
+    reach the event's system). Other group-level event tests ("bail if the event vanishes")
+    are too broad to pin a stage."""
+    out = []
+    if kind in EVENT_STAGES and val(inner, EVENT_STAGES[kind]):
+        out.append(val(inner, EVENT_STAGES[kind]))
+    for c in _cond_list(inner):
+        b = props(c).get(c.get("value"))
+        if b is not None and (val(b, "Event") or val(b, "EventID")):
+            out.append(val(b, "Event") or val(b, "EventID"))
+    for g in groups[::-1]:
+        for c in _cond_list(g):
+            if c.get("value") == "GcMissionConditionIsScanEventLocal":
+                b = props(c).get(c.get("value"))
+                if b is not None and val(b, "Event"):
+                    out.append(val(b, "Event"))
+    return list(dict.fromkeys(out))
+
+
 def parse_missions(work, loc, items):
-    """Titled missions: terminal progress value, stage objectives by progress number, rewards."""
+    """Titled missions: terminal progress value, stage objectives by progress number, rewards,
+    and per progress number what the stage needs and which scan events it is about."""
     seqs = {}
     for tbl in MISSION_TABLE_ORDER:
         path = find(work, rf"^{tbl}\.mxml$")
@@ -455,6 +638,9 @@ def parse_missions(work, loc, items):
             mid = val(e, "MissionID")
             if mid and mid not in seqs:
                 seqs[mid] = e
+
+    def name(i):
+        return items.get(i, {}).get("name") or clean_text(loc.get(i + "_NAME_L") or loc.get(i + "_NAME") or "") or i
 
     def version_progress(versions):
         vp = {int(val(x, "Version")): int(val(x, "Progress")) for x in versions}
@@ -469,9 +655,9 @@ def parse_missions(work, loc, items):
             continue
         fsv = pp.get("FinalStageVersions")
         final = version_progress(fsv) if fsv is not None and len(fsv) else None
-        stages = []
+        stages, needs, events = [], {}, {}
 
-        def walk(stage_list, objective):
+        def walk(stage_list, objective, groups):
             for s in stage_list:
                 sp = props(s)
                 st = sp.get("Stage")
@@ -482,17 +668,26 @@ def parse_missions(work, loc, items):
                 objective2 = (clean_text(loc.get(obj, "")) if obj else "") or objective
                 sub = props(inner).get("Stages")
                 if sub is not None and len(sub):
-                    walk(sub, objective2)
+                    walk(sub, objective2, groups + [inner])
                     continue
                 vers = sp.get("Versions")
                 if vers is None or not len(vers):
                     continue
+                prog = version_progress(vers)
+                kind = (st.get("value") or "").replace("GcMissionSequence", "")
+                for n in _leaf_needs(kind, inner, groups):
+                    lst = needs.setdefault(prog, [])
+                    if all(x["id"] != n["id"] for x in lst):
+                        lst.append({"id": n["id"], "item": name(n["id"]), **{k: v for k, v in n.items() if k != "id"}})
+                for ev in _leaf_events(kind, inner, groups):
+                    if ev not in events.setdefault(prog, []):
+                        events[prog].append(ev)
                 msg = val(inner, "Message")
                 text = objective2 or (clean_text(loc.get(msg, "")) if msg else "")
                 if text:
-                    stages.append((version_progress(vers), text))
+                    stages.append((prog, text))
 
-        walk(pp["Stages"], "")
+        walk(pp["Stages"], "", [])
         compact = []
         for num, text in sorted(stages):
             if not compact or compact[-1][1] != text:
@@ -506,7 +701,13 @@ def parse_missions(work, loc, items):
             if descs:
                 rewards.append([val(r, "Id"), descs])
         out[mid] = {"title": title, "class": val(e, "MissionClass"), "final": final, "stages": compact,
-                    "rewards": rewards, "leads_to": sorted(set(leads)), "recurring": val(e, "IsRecurring") == "true"}
+                    "rewards": rewards, "leads_to": sorted(set(leads)), "recurring": val(e, "IsRecurring") == "true",
+                    # never finished for good: it restarts, runs in the background with no way to cancel
+                    # (Exploration Guide), or is a named loop (Atlas Eternal); the exporter hides these
+                    "repeatable": (val(e, "RestartOnCompletion") == "true" or val(e, "StartIsCancel") == "true"
+                                   or bool(re.search(r"_LOOP(_|$)|_REPEAT$", mid))),
+                    "needs": [[p, needs[p]] for p in sorted(needs)],
+                    "events": [[p, ev] for p in sorted(events) for ev in events[p]]}
     return out
 
 
@@ -525,9 +726,13 @@ def main():
     ap.add_argument("--out", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "nms_tables.json"))
     ap.add_argument("--hgpaktool", default="/opt/nmstools/hgpaktool")
     ap.add_argument("--mbincompiler", default="/opt/nmstools/MBINCompiler-linux")
+    ap.add_argument("--no-extract", action="store_true",
+                    help="parse the MXML already in --work; do not unpack or convert anything")
+    ap.add_argument("--build-id", help="game build the --work files came from (default: the installed one)")
     args = ap.parse_args()
 
-    extract(args)
+    if not args.no_extract:
+        extract(args)
     loc = parse_loc(args.work)
     items = parse_items(args.work, loc)
     made, falloff = parse_globals(args.work)
@@ -550,7 +755,7 @@ def main():
     out = {
         "meta": {
             "generated": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
-            "game_build_id": game_build(),
+            "game_build_id": args.build_id or game_build(),
             "mbincompiler_version": libmbin,
             "save_key_mapping_url": MAPPING_URL,
             "source": "NMSARC.MetadataEtc/globals/misc/Precache .pak via hgpaktool + MBINCompiler",
@@ -573,7 +778,7 @@ def main():
             "extraction.survey_max_distance_m": "how far the survey device detects a hotspot (SurveyMaxDistance)",
             "items.<id>.category": "substance Category or product Type from the game tables, the grouping data/nms_storage_plan.json sorts by",
             "items.<id>.stat": "technology only: the stat family (BaseStat) adjacency bonuses group by; procedural modules take it from their template",
-            "missions.<id>": "final = the save's MissionProgress.Progress value once the mission is complete (-1 = never started); stages = [progress number, objective] for the latest mission version, so the current objective is the last stage whose number <= Progress; rewards = [reward id, descriptions]; leads_to = missions this one starts",
+            "missions.<id>": "final = the save's MissionProgress.Progress value once the mission is complete (-1 = never started); stages = [progress number, objective] for the latest mission version, so the current objective is the last stage whose number <= Progress; rewards = [reward id, descriptions]; leads_to = missions this one starts; needs = [progress number, [{id, item, amount, kind, type}]] for the stages that need an item: kind collect (gather amount), have (hold amount), use (hold it until the stage spends / deploys it), craft, build (place the part, or be near one), know (blueprint), install (tech), repair (tech); type product / substance / tech / part; amount null when the game fills it from season data; entries flagged any: true are alternatives, one of them is enough (at most one such set per stage, in table order). Only leaf Collect/Craft/Build/Construct/RepairTech stages, a WaitForConditions stage's own item conditions, a Stop's enclosing group, and, for a blocking stage that asks for no item itself, the exit test of its innermost objective (non-silent) group count; silent branch-guard groups and procedural items are left out. events = [progress number, scan event name] the stage starts, waits for or travels to (its own Event field, scan events its own conditions test, IsScanEventLocal on its groups), to match against the save's MarkerStack[].Event",
             "save.base_object.UserData": "for U_EXTRACTOR_S / U_SILO_S the upper 32 bits hold the current fill in resource units (divide by resource_units_per_item); the base's LastUpdateTimestamp says when",
         },
         "refiner": {"made_in_time": made},
